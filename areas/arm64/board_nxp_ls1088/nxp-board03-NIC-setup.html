@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NXP LS1088A - NIC setup</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">NXP LS1088A - NIC setup</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orga5811e2">Add/setup DPPA2 network interfaces</a>
+<ul>
+<li><a href="#org353e7ea">Manual setup</a></li>
+<li><a href="#org3471c60">DPL (Data Path Layout) file</a>
+<ul>
+<li><a href="#org438fd44">Compiling DPL/DTS to DTB</a></li>
+<li><a href="#orgf6c5ec4">Loading DPL</a></li>
+<li><a href="#org57e7ede">Saving DPL in SD-card (mmc)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#orgbd04d03">Ubuntu network setup</a>
+<ul>
+<li><a href="#org4ef6c02">Ubuntu netplan setup</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+Board LS1088ARDB-PB.
+</p>
+
+<p>
+The default config DPL (Data Path Layout) enables only one network interface on
+DPAA2, which shows up as <code>eth0</code>. This document describe howto configure the
+hardware to create the network interfaces.
+</p>
+
+<div id="outline-container-orga5811e2" class="outline-2">
+<h2 id="orga5811e2">Add/setup DPPA2 network interfaces</h2>
+<div class="outline-text-2" id="text-orga5811e2">
+<p>
+The default config DPL (Data Path Layout) enables only one network interface
+on DPAA2, which shows up as <code>eth0</code>.
+</p>
+
+<p>
+As described in: "4.1.7.4 Bringing up DPPA2 network interfaces".
+</p>
+
+<p>
+To configure/create more interfaces from Linux the tool 'restool' can be
+used.  The doc says it was part of the Ubuntu install, this was not the case
+for me, so I git-cloned and compiled it on the board:
+</p>
+<ul class="org-ul">
+<li><a href="https://source.codeaurora.org/external/qoriq/qoriq-components/restool/">https://source.codeaurora.org/external/qoriq/qoriq-components/restool/</a></li>
+<li><a href="https://lsdk.github.io/components.html">https://lsdk.github.io/components.html</a></li>
+</ul>
+
+<p>
+Example output for default config:
+</p>
+<pre class="example">
+root@localhost:~/git/restool# ls-listmac 
+dprc.1/dpmac.10 
+dprc.1/dpmac.9 
+dprc.1/dpmac.8 
+dprc.1/dpmac.7 
+dprc.1/dpmac.6 
+dprc.1/dpmac.5 (end point: dpni.0)
+dprc.1/dpmac.4 
+dprc.1/dpmac.3 
+dprc.1/dpmac.2 
+dprc.1/dpmac.1 
+
+root@localhost:~/git/restool# ls-listni  
+dprc.1/dpni.0 (interface: eth0, end point: dpmac.5)
+</pre>
+</div>
+
+<div id="outline-container-org353e7ea" class="outline-3">
+<h3 id="org353e7ea">Manual setup</h3>
+<div class="outline-text-3" id="text-org353e7ea">
+<p>
+Create interface:
+</p>
+<pre class="example">
+ls-addni dpmac.9
+Created interface: eth1 (object:dpni.1, endpoint: dpmac.9)
+</pre>
+
+<p>
+Info for interface:
+</p>
+<pre class="example">
+# restool dpni info dpni.1
+dpni version: 7.9
+dpni id: 1
+plugged state: plugged
+endpoint state: 0
+endpoint: dpmac.9, link is down
+link status: 0 - down
+mac address: ca:b3:a4:6a:c6:53
+dpni_attr.options value is: 0
+num_queues: 8
+num_cgs: 1
+num_rx_tcs: 1
+num_tx_tcs: 1
+mac_entries: 16
+vlan_entries: 0
+qos_entries: 0
+fs_entries: 64
+qos_key_size: 0
+fs_key_size: 56
+ingress_all_frames: 0
+ingress_all_bytes: 0
+ingress_multicast_frames: 0
+ingress_multicast_bytes: 0
+ingress_broadcast_frames: 0
+ingress_broadcast_bytes: 0
+egress_all_frames: 0
+egress_all_bytes: 0
+egress_multicast_frames: 0
+egress_multicast_bytes: 0
+egress_broadcast_frames: 0
+egress_broadcast_bytes: 0
+ingress_filtered_frames: 0
+ingress_discarded_frames: 0
+ingress_nobuffer_discards: 0
+egress_discarded_frames: 0
+egress_confirmed_frames: 0
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org3471c60" class="outline-3">
+<h3 id="org3471c60">DPL (Data Path Layout) file</h3>
+<div class="outline-text-3" id="text-org3471c60">
+<p>
+The configuration can also be saved into a DPL file, as described in:
+"4.1.7.4.4 Save configuration to a custom DPL file (Optional)"
+</p>
+
+<p>
+I got a new DPL file from NXP.
+</p>
+<ul class="org-ul">
+<li>dpl-ls1088-2x10-2x1.dts - a Data Path Layout (DPL) file which describes
+the configuration of the hardware (this should be compiled into a dtb)</li>
+</ul>
+
+<p>
+Install the compile tool software package:
+</p>
+<ul class="org-ul">
+<li>Fedora: "dtc" (Device Tree Compiler)</li>
+<li>Ubuntu: device-tree-compiler</li>
+</ul>
+</div>
+
+<div id="outline-container-org438fd44" class="outline-4">
+<h4 id="org438fd44">Compiling DPL/DTS to DTB</h4>
+<div class="outline-text-4" id="text-org438fd44">
+<p>
+Compiling the file:
+</p>
+
+<pre class="example">
+dtc -I dts -O dtb dpl-ls1088-2x10-2x1.dts -o dpl-ls1088-2x10-2x1.dtb
+</pre>
+
+<p>
+File seems to work, but it give some warnings (reduced output):
+</p>
+<pre class="example">
+$ dtc -I dts -O dtb dpl-ls1088-2x10-2x1.dts -o dpl-ls1088-2x10-2x1.dtb
+dpl-ls1088-2x10-2x1.dtb: Warning (unit_address_vs_reg): /containers/dprc@1: node has a unit name, but no reg property
+dpl-ls1088-2x10-2x1.dtb: Warning (unit_address_vs_reg): /containers/dprc@1/objects/obj_set@dpbp: node has a unit name, but no reg property
+[...]
+dpl-ls1088-2x10-2x1.dtb: Warning (unit_address_vs_reg): /objects/dpbp@0: node has a unit name, but no reg property
+dpl-ls1088-2x10-2x1.dtb: Warning (unit_address_vs_reg): /objects/dpbp@1: node has a unit name, but no reg property
+[...]
+dpl-ls1088-2x10-2x1.dtb: Warning (unit_address_vs_reg): /connections/connection@4: node has a unit name, but no reg property
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgf6c5ec4" class="outline-4">
+<h4 id="orgf6c5ec4">Loading DPL</h4>
+<div class="outline-text-4" id="text-orgf6c5ec4">
+<p>
+The DPL file can be flashed onto the board and used to boot to Linux.
+</p>
+
+<p>
+Reset board and "break" in U-Boot.
+</p>
+
+<p>
+Copied these files over to board <i>boot</i> partition (but I don't know howto
+access and load these files during U-boot). The contents of the SD-card MMC
+device can be listed via command: <code>ext4ls mmc 0:2</code>.
+</p>
+
+<p>
+U-Boot setup network with static IP (for dynamic-IP use cmd <code>dhcp</code>):
+</p>
+<pre class="example">
+setenv ipaddr 192.168.42.10
+setenv netmask 255.255.255.0
+setenv serverip 192.168.42.3
+saveenv
+</pre>
+
+<p>
+Setup on TFTP server on 192.168.42.3 in /var/lib/tftpboot.
+</p>
+
+<p>
+Start service:
+</p>
+<pre class="example">
+sudo systemctl start tftp.service
+</pre>
+
+<p>
+Loading via TFTP failed as wrong port was used (see "Using DPMAC1@xgmii
+device"):
+</p>
+<pre class="example">
+=&gt; tftp 0x80010000 dpl-ls1088-2x10-2x1.dtb
+Using DPMAC1@xgmii device
+TFTP from server 192.168.42.3; our IP address is 192.168.42.10
+Filename 'dpl-ls1088-2x10-2x1.dtb'.
+Load address: 0x80010000
+Loading: *
+ARP Retry count exceeded; starting again
+</pre>
+
+<p>
+The port chosen for the connection to the TFTP server dictates the value of
+the 'ethact' u-boot variable. For example, if using the MAC1, the ethact is
+DPMAC1@xgmii. If wanting to use MAC5 the port is DPMAC5@qsgmii.
+</p>
+
+<p>
+Loading via TFTP:
+</p>
+<pre class="example">
+setenv ethact DPMAC5@qsgmii
+setenv serverip 192.168.42.3
+tftp 0x80010000 dpl-ls1088-2x10-2x1.dtb
+</pre>
+
+<p>
+After loading use the NXP/freescale command 'fsl_mc' to apply the data path
+layout (DPL):
+</p>
+<pre class="example">
+=&gt; fsl_mc apply dpl 0x80010000
+fsl-mc: Deploying data path layout ... SUCCESS
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org57e7ede" class="outline-4">
+<h4 id="org57e7ede">Saving DPL in SD-card (mmc)</h4>
+<div class="outline-text-4" id="text-org57e7ede">
+<p>
+You can load via tftp and apply via <code>fsl_mc</code> as desc above, but it only
+works for a single boot. After reboot/power-cycle the board the DPL setup is
+gone.
+</p>
+
+<p>
+For storing the DPL on the SD-card/mmc media, reference Chapter "4.4 LSDK
+Memory Layout" to identify the location. The DPL file should be put starting
+with block # 0x06800 onto the SD card.
+</p>
+
+<p>
+To do this, you can use the following u-boot commands. The first step is to
+tftp the DPL into the 0x80010000 RAM address and them write from it to the
+SD card.
+</p>
+
+<p>
+Step-1: tftp load into memory as above:
+</p>
+<pre class="example">
+setenv ethact DPMAC5@qsgmii
+tftp 0x80010000 dpl-ls1088-2x10-2x1.dtb
+</pre>
+
+<p>
+Step-2: store into SD-card/mmc device. The 0x800 is the size, in blocks of
+512 bytes, reserved for the DPL image in the SD memory layout:
+</p>
+<pre class="example">
+mmc write 0x80010000 0x06800 0x800
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orgbd04d03" class="outline-2">
+<h2 id="orgbd04d03">Ubuntu network setup</h2>
+<div class="outline-text-2" id="text-orgbd04d03">
+</div>
+<div id="outline-container-org4ef6c02" class="outline-3">
+<h3 id="org4ef6c02">Ubuntu netplan setup</h3>
+<div class="outline-text-3" id="text-org4ef6c02">
+<p>
+From: "4.1.7.4.5 Assign IP addresses to network interfaces".
+</p>
+
+<p>
+Static IP addresses can also be assigned using netplan. Create a file called
+<code>config.yaml</code> in /etc/netplan. Using atext editor, add the following lines
+to this config file and save it:
+</p>
+
+<p>
+File: /etc/netplan/config.yaml
+</p>
+<div class="org-src-container">
+<pre class="src src-yaml">network:
+  version: 2
+  renderer: networkd
+  ethernets: 
+    eth0:
+      addresses:
+	- 192.168.42.10/24
+</pre>
+</div>
+
+<p>
+After saving this file, run the following command to apply this netplan
+configuration and then reboot the board.
+</p>
+
+<pre class="example">
+netplan apply
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

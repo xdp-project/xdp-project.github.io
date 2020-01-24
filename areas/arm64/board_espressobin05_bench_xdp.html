@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Benchmarks for branch mvneta_04_page_pool_recycle_xdp</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Benchmarks for branch mvneta_04_page_pool_recycle_xdp</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgf8eee0e">Patch desc notes</a>
+<ul>
+<li><a href="#org1712c79">Patch desc: net: mvneta: Add basic XDP support</a></li>
+</ul>
+</li>
+<li><a href="#org61c126f">Testing with board operating at 800MHz</a>
+<ul>
+<li><a href="#orgc060061">XDP_DROP, net.core.bpf_jit_enable=0, 64b packets</a></li>
+<li><a href="#org8d0dac5">XDP_DROP, net.core.bpf_jit_enable=1, 64b packets</a></li>
+<li><a href="#org6fa86bd">XDP_DROP, net.core.bpf_jit_enable=1, 64b packet, Instruction cache misses</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+Benchmark investigations and experiments on git branch
+mvneta_04_page_pool_recycle_xdp located here:
+</p>
+<ul class="org-ul">
+<li><a href="https://github.com/apalos/bpf-next/tree/mvneta_04_page_pool_recycle_xdp">https://github.com/apalos/bpf-next/tree/mvneta_04_page_pool_recycle_xdp</a></li>
+</ul>
+
+<p>
+This doc describes some experiments done on top of mentioned branch.
+This branch is based on mvneta_03_page_pool_recycle.
+Details on the page pool recycle results can be found here:
+</p>
+<ul class="org-ul">
+<li><a href="board_espressobin03_bench_page_pool.html">board_espressobin03_bench_page_pool.html</a></li>
+</ul>
+
+<div id="outline-container-orgf8eee0e" class="outline-2">
+<h2 id="orgf8eee0e">Patch desc notes</h2>
+<div class="outline-text-2" id="text-orgf8eee0e">
+<p>
+For branch mvneta_04_page_pool_recycle_xdp
+All patches from mvneta_03_page_pool_recycle are included
+</p>
+</div>
+
+<div id="outline-container-org1712c79" class="outline-3">
+<h3 id="org1712c79">Patch desc: net: mvneta: Add basic XDP support</h3>
+<div class="outline-text-3" id="text-org1712c79">
+<p>
+Adds basic XDP support (only XDP_DROP/XDP_REDIRECT)
+</p>
+
+<p>
+TODO: This is still incomplete for upstream, since there's no
+XDP_TX or ndo_xdp_xmit support.
+</p>
+
+<p>
+This patch also moves the bogus prefetch() to be executed
+after the dma_sync calls
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org61c126f" class="outline-2">
+<h2 id="org61c126f">Testing with board operating at 800MHz</h2>
+<div class="outline-text-2" id="text-org61c126f">
+<p>
+Notice below <code>perf stat</code> cycles counter reveled that the CPU as
+operating at 800MHz, while it should operate at 1GHz. Thus, below PPS
+number are lower than expected.
+</p>
+
+<p>
+This was tracked down to CPU "governors" kernel config.  And
+documented in kernel config recommendations <a href="configs/README_espressobin.html">configs/README_espressobin.html</a>
+</p>
+</div>
+
+<div id="outline-container-orgc060061" class="outline-3">
+<h3 id="orgc060061">XDP_DROP, net.core.bpf_jit_enable=0, 64b packets</h3>
+<div class="outline-text-3" id="text-orgc060061">
+<p>
+pps: 389660 pkt/s
+</p>
+
+<pre class="example">
+xdp1 `cat /sys/class/net/eth0/ifindex` &amp;
+perf stat -C0 -r3 sleep 1
+
+Performance counter stats for 'CPU(s) 0' (3 runs):
+
+    1005.47 msec cpu-clock         #    1.000 CPUs utilized            ( +-  0.00% )
+        274      context-switches  #  272.968 M/sec                    ( +-  1.89% )
+          0      cpu-migrations    #    0.000 K/sec
+          0      page-faults       #    0.000 K/sec
+  800838872      cycles            # 796854.599 GHz                    ( +-  0.00% )
+  354067461      instructions      #    0.44  insn per cycle           ( +-  0.01% )
+   36061456      branches          # 35882046.103 M/sec                ( +-  0.01% )
+    1114089      branch-misses     #    3.09% of all branches          ( +-  0.46% )
+
+  1.0056889 +- 0.0000422 seconds time elapsed  ( +-  0.00% )
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org8d0dac5" class="outline-3">
+<h3 id="org8d0dac5">XDP_DROP, net.core.bpf_jit_enable=1, 64b packets</h3>
+<div class="outline-text-3" id="text-org8d0dac5">
+<p>
+pps: 514312 pkt/s
+</p>
+
+<pre class="example">
+xdp1 `cat /sys/class/net/eth0/ifindex` &amp;
+perf stat -C0 -r3 sleep 1
+
+Performance counter stats for 'CPU(s) 0' (3 runs):
+
+           1005.60 msec cpu-clock                 #    1.000 CPUs utilized            ( +-  0.01% )
+               260      context-switches          #  259.038 M/sec                    ( +-  2.11% )
+                 0      cpu-migrations            #    0.000 K/sec
+                 3      page-faults               #    2.985 M/sec                    ( +-100.00% )
+         800937795      cycles                    # 796953.030 GHz                    ( +-  0.01% )
+         312413374      instructions              #    0.39  insn per cycle           ( +-  0.02% )
+          30277527      branches                  # 30126892.537 M/sec                ( +-  0.03% )
+            922725      branch-misses             #    3.05% of all branches          ( +-  0.06% )
+
+          1.005799 +- 0.000128 seconds time elapsed  ( +-  0.01% )
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org6fa86bd" class="outline-3">
+<h3 id="org6fa86bd">XDP_DROP, net.core.bpf_jit_enable=1, 64b packet, Instruction cache misses</h3>
+<div class="outline-text-3" id="text-org6fa86bd">
+<pre class="example">
+perf stat -C0 -r 3 -e L1-icache-load -e L1-icache-load-misses \
+                   -e L1-dcache-loads -e L1-dcache-load-misses \
+		   -e L1-dcache-stores -e L1-dcache-store-misses \
+		   sleep 1
+
+Performance counter stats for 'CPU(s) 0' (3 runs):
+
+         196802264      L1-icache-load                                                ( +-  0.04% )
+            843051      L1-icache-load-misses     #    0.43% of all L1-icache hits    ( +-  0.59% )
+         118669618      L1-dcache-loads                                               ( +-  0.05% )
+           1800140      L1-dcache-load-misses     #    1.52% of all L1-dcache hits    ( +-  0.27% )
+         118670252      L1-dcache-stores                                              ( +-  0.05% )
+           1800147      L1-dcache-store-misses                                        ( +-  0.27% )
+
+         1.0057090 +- 0.0000860 seconds time elapsed  ( +-  0.01% )
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

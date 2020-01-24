@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>People involved in XDP development</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">People involved in XDP development</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org2639fce">Intro</a></li>
+<li><a href="#orgfec84be">History</a></li>
+<li><a href="#org24c598a">XDP developers</a></li>
+<li><a href="#org4e62c9c">Working groups</a>
+<ul>
+<li><a href="#org5c0e508">page_pool</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org2639fce" class="outline-2">
+<h2 id="org2639fce">Intro</h2>
+<div class="outline-text-2" id="text-org2639fce">
+<p>
+Lets record people involved on XDP development.
+Need this to Cc the right people on the mailing list.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgfec84be" class="outline-2">
+<h2 id="orgfec84be">History</h2>
+<div class="outline-text-2" id="text-orgfec84be">
+<p>
+The early "moonshot" ideas behind having a step before allocating the
+SKB, was presented by Jesper at NetDev 1.1 (Feb 2016), who also did
+PoC experiments (with mlx5) extrapolating a performance could reach
+19Mpps per core. Today we are seeing between 16Mpps to 24Mpps per core
+depending on which NIC HW used (mlx5 driver).
+</p>
+
+<p>
+<a href="http://people.netfilter.org/hawk/presentations/NetDev1.1_2016/net_performance_BoF.pdf">http://people.netfilter.org/hawk/presentations/NetDev1.1_2016/net_performance_BoF.pdf</a>
+</p>
+
+<p>
+The initial XDP patchset was developed by:
+ Brenden Blanco &lt;bblanco@gmail.com&gt; / &lt;bblanco@vmware.com&gt;
+After this Brenden have not been active developing XDP.
+</p>
+
+<p>
+The XDP name was coined by Tom Herbert.  Tom Herbert and Alexei
+Starovoitov did the first presentation about XDP, while both working
+for Facebook.
+</p>
+
+<p>
+<a href="https://github.com/iovisor/bpf-docs/blob/master/Express_Data_Path.pdf">https://github.com/iovisor/bpf-docs/blob/master/Express_Data_Path.pdf</a>
+</p>
+</div>
+</div>
+
+<div id="outline-container-org24c598a" class="outline-2">
+<h2 id="org24c598a">XDP developers</h2>
+<div class="outline-text-2" id="text-org24c598a">
+<p>
+eBPF maintainers:
+</p>
+<ul class="org-ul">
+<li>Alexei Starovoitov</li>
+<li>Daniel Borkmann</li>
+</ul>
+
+<p>
+Core XDP developers:
+</p>
+<ul class="org-ul">
+<li>Brenden Blanco &lt;bblanco@gmail.com&gt; (initial XDP patchset)</li>
+<li>Tom Herbert &lt;tom@herbertland.com&gt; (coined XDP)</li>
+<li>John Fastabend &lt;john.fastabend@gmail.com&gt;</li>
+<li>Jakub Kicinski &lt;jakub.kicinski@netronome.com&gt; (netronome + core work)</li>
+<li>Quentin Monnet &lt;quentin.monnet@netronome.com&gt; (netronome + core work)</li>
+<li>David Ahern (fib lookup helper)</li>
+<li>Jesper Brouer &lt;brouer@redhat.com&gt;</li>
+<li>Toke Høiland-Jørgensen &lt;toke@redhat.com&gt;</li>
+</ul>
+
+<p>
+eBPF core developers influencing XDP:
+</p>
+<ul class="org-ul">
+<li>Martin KaFai Lau &lt;kafai@fb.com&gt;</li>
+</ul>
+
+<p>
+Driver developers:
+</p>
+<ul class="org-ul">
+<li>Andy Gospodarek (bnxt_en + presentations)</li>
+<li>Michael Chan (bnxt_en)</li>
+<li>Saeed Mahameed (mlx5)</li>
+<li>Tariq Toukan (mlx4)</li>
+<li>Björn Töpel (i40e + ixgbe + AF_XDP)</li>
+<li>Magnus Karlsson (i40e + AF_XDP)</li>
+<li>Yuval Mintz (qede)</li>
+<li>Sunil Goutham (thunderx)</li>
+<li>Jason Wang (VM)</li>
+<li>Michael S. Tsirkin (ptr_ring)</li>
+<li>Edward Cree (sfc)</li>
+<li>Toshiaki Makita &lt;makita.toshiaki@lab.ntt.co.jp&gt; (veth)</li>
+<li>Ilias Apalodimas &lt;ilias.apalodimas@linaro.org&gt; (netsec)</li>
+</ul>
+
+<p>
+Developers unsorted:
+</p>
+<ul class="org-ul">
+<li>PJ (still waiting for data_meta work)</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org4e62c9c" class="outline-2">
+<h2 id="org4e62c9c">Working groups</h2>
+<div class="outline-text-2" id="text-org4e62c9c">
+</div>
+<div id="outline-container-org5c0e508" class="outline-3">
+<h3 id="org5c0e508">page_pool</h3>
+<div class="outline-text-3" id="text-org5c0e508">
+<p>
+Proposal for evolving API see: <a href="areas/mem/page_pool01_evolving_API.html">areas/mem/page_pool01_evolving_API.html</a>
+</p>
+
+<p>
+People interested in working on page_pool API:
+</p>
+<ul class="org-ul">
+<li>Tariq Toukan &lt;tariqt@mellanox.com&gt; / &lt;ttoukan.linux@gmail.com&gt;</li>
+<li>Ilias Apalodimas &lt;ilias.apalodimas@linaro.org&gt;</li>
+</ul>
+
+<p>
+Potential people interested:
+</p>
+<ul class="org-ul">
+<li>Willy Tarreau &lt;w@1wt.eu&gt;</li>
+<li>mykyta.iziumtsev@gmail.com (Ericsson engineer)</li>
+<li>ard.biesheuvel@linaro.org (from Linaro)</li>
+</ul>
+
+<p>
+People to keep in loop:
+</p>
+<ul class="org-ul">
+<li>Toke</li>
+<li>Andy Gospodarek &lt;gospo@broadcom.com&gt;</li>
+<li>Daniel</li>
+<li>Alexei?</li>
+</ul>
+
+<p>
+Drivers that will get XDP and use page_pool:
+</p>
+<ul class="org-ul">
+<li>driver: mlx5</li>
+<li>driver: mvpp2  board: Macchiatobin</li>
+<li>driver: mvneta board: espressobin + Turris-Omnia</li>
+</ul>
+
+<p>
+Drivers with XDP and page_pool usage:
+</p>
+<ul class="org-ul">
+<li>driver: netsec board: Socionext DeveloperBox</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

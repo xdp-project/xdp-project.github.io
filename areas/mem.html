@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Project management for areas/mem</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Project management for areas/mem</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org2156c5a">Important medium-term tasks</a>
+<ul>
+<li><a href="#org63ab995"><span class="todo TODO">TODO</span> Implementing page_pool return-hook via SKB</a>
+<ul>
+<li><a href="#org0b141b7"><span class="done DONE">DONE</span> Post RFC-patchset for page_pool recycle with mvneta use-case</a></li>
+<li><a href="#org6d85660"><span class="done DONE">DONE</span> Prioritize page_pool options for skb_try_coalesce</a></li>
+<li><a href="#org39bdaff"><span class="todo TODO">TODO</span> Doc code where netstack manipulate skb-&gt;head page</a></li>
+<li><a href="#org285a0ed"><span class="todo TODO">TODO</span> Add testing procedures actvating TCP coalesce code</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#org40b3ab8"><span class="todo TODO">TODO</span> page_pool handling in-flight frames during shutdown</a>
+<ul>
+<li><a href="#org5ca89c7"><span class="done DONE">DONE</span> Test if __xdp_return() can hit no page_pool id issue</a></li>
+<li><a href="#org6477960"><span class="done DONE">DONE</span> xdp_rxq_info_unreg_mem_model take over calling page_pool_destroy</a></li>
+<li><a href="#org546dc77"><span class="todo TODO">TODO</span> page_pool inflight: howto delay/postpone work in kernel</a></li>
+<li><a href="#orgd7fe5b3"><span class="todo NEXT">NEXT</span> page_pool inflight: Code solution#3</a></li>
+<li><a href="#org81036c9"><span class="todo TODO">TODO</span> Create tracepoints for page_pool</a></li>
+<li><a href="#org889071a"><span class="todo TODO">TODO</span> Create bpftrace scripts monitoring page_pool stats (via tracepoints)</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+This document contains <b>org-mode tasks</b> and TODOs for files under: <a href="mem/">areas/mem/</a>.
+It is recommended to use emacs when viewing and editing these <code>.org</code> files, as
+the github rendering view removes the <code>TODO</code> and <code>DONE</code> marking on the tasks.
+</p>
+
+<p>
+Top-level headings indicate category, as explained in <a href="../xdp-project.html">../xdp-project.html</a>.
+</p>
+
+
+<div id="outline-container-org2156c5a" class="outline-2">
+<h2 id="org2156c5a">Important medium-term tasks</h2>
+<div class="outline-text-2" id="text-org2156c5a">
+</div>
+<div id="outline-container-org63ab995" class="outline-3">
+<h3 id="org63ab995"><span class="todo TODO">TODO</span> Implementing page_pool return-hook via SKB</h3>
+<div class="outline-text-3" id="text-org63ab995">
+<p>
+The work is recorded in <a href="mem/page_pool02_SKB_return_callback.html">mem/page_pool02_SKB_return_callback.html</a>
+</p>
+</div>
+
+<div id="outline-container-org0b141b7" class="outline-4">
+<h4 id="org0b141b7"><span class="done DONE">DONE</span> Post RFC-patchset for page_pool recycle with mvneta use-case</h4>
+<div class="outline-text-4" id="text-org0b141b7">
+<p>
+Org-link to section:
+<a href="mem/page_pool02_SKB_return_callback.html#org62e4da5">mem/page_pool02_SKB_return_callback.html#org62e4da5</a>
+</p>
+</div>
+</div>
+
+<div id="outline-container-org6d85660" class="outline-4">
+<h4 id="org6d85660"><span class="done DONE">DONE</span> Prioritize page_pool options for skb_try_coalesce</h4>
+<div class="outline-text-4" id="text-org6d85660">
+</div>
+</div>
+
+<div id="outline-container-org39bdaff" class="outline-4">
+<h4 id="org39bdaff"><span class="todo TODO">TODO</span> Doc code where netstack manipulate skb-&gt;head page</h4>
+</div>
+
+<div id="outline-container-org285a0ed" class="outline-4">
+<h4 id="org285a0ed"><span class="todo TODO">TODO</span> Add testing procedures actvating TCP coalesce code</h4>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org40b3ab8" class="outline-2">
+<h2 id="org40b3ab8"><span class="todo TODO">TODO</span> page_pool handling in-flight frames during shutdown</h2>
+<div class="outline-text-2" id="text-org40b3ab8">
+<p>
+See <a href="mem/page_pool03_shutdown_inflight.html">mem/page_pool03_shutdown_inflight.html</a>
+</p>
+</div>
+
+<div id="outline-container-org5ca89c7" class="outline-3">
+<h3 id="org5ca89c7"><span class="done DONE">DONE</span> Test if __xdp_return() can hit no page_pool id issue</h3>
+<div class="outline-text-3" id="text-org5ca89c7">
+<p>
+Confirmed this can happen.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org6477960" class="outline-3">
+<h3 id="org6477960"><span class="done DONE">DONE</span> xdp_rxq_info_unreg_mem_model take over calling page_pool_destroy</h3>
+<div class="outline-text-3" id="text-org6477960">
+<p>
+When delaying freeing the registered XDP memory model, then we cannot have
+drivers calling page_pool_destroy() directly. Figure out a clean code way to do
+this.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org546dc77" class="outline-3">
+<h3 id="org546dc77"><span class="todo TODO">TODO</span> page_pool inflight: howto delay/postpone work in kernel</h3>
+<div class="outline-text-3" id="text-org546dc77">
+<p>
+What is the best way to delay taking down page_pool object when driver calls
+xdp_rxq_info_unreg_mem_model(), in the case page_pool detect/have in-flight
+frames?
+</p>
+
+<p>
+Should we create a workqueue?
+</p>
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">#include</span> <span style="font-style: italic;">&lt;linux/workqueue.h&gt;</span>
+<span style="font-weight: bold;">static</span> <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">workqueue_struct</span> *<span style="font-weight: bold; font-style: italic;">wq</span>;
+wq = alloc_workqueue(<span style="font-style: italic;">"xdp_mem_dismantle_wq"</span>, 0, 0);
+<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">work_struct</span> <span style="font-weight: bold; font-style: italic;">free_work</span>; <span style="font-weight: bold; font-style: italic;">// </span><span style="font-weight: bold; font-style: italic;">embed in struct xdp_mem_allocator?</span>
+INIT_WORK(&amp;free_work, __unreg_mem_model_schedule);
+<span style="font-weight: bold;">queue_work</span>(wq, &amp;free_work);
+<span style="font-weight: bold;">queue_delayed_work</span>(wq, <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">delayed_work</span> *<span style="font-weight: bold; font-style: italic;">dwork</span>, delay);
+</pre>
+</div>
+
+<p>
+It might be overkill to create a new workqueue, what about instead using the
+default worker thread 'events/n'.
+</p>
+
+<p>
+The function calls used instead of <code>queue_work</code> and <code>queue_delayed_work</code>.
+</p>
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">schedule_work</span>(wq);
+<span style="font-weight: bold;">schedule_delayed_work</span>(wq, delay);
+</pre>
+</div>
+
+<p>
+There is an example in function <code>amba_deferred_retry_func()</code> how to reschedule
+the work-queue function from itself via <code>schedule_delayed_work</code>.
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-orgd7fe5b3" class="outline-3">
+<h3 id="orgd7fe5b3"><span class="todo NEXT">NEXT</span> page_pool inflight: Code solution#3</h3>
+</div>
+
+<div id="outline-container-org81036c9" class="outline-3">
+<h3 id="org81036c9"><span class="todo TODO">TODO</span> Create tracepoints for page_pool</h3>
+</div>
+
+<div id="outline-container-org889071a" class="outline-3">
+<h3 id="org889071a"><span class="todo TODO">TODO</span> Create bpftrace scripts monitoring page_pool stats (via tracepoints)</h3>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

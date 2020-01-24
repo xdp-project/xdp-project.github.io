@@ -1,0 +1,1818 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CPUMAP optimizations patchset-V1</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">CPUMAP optimizations patchset-V1</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgb6c5d56">WARNING: F27 issue</a></li>
+<li><a href="#org9595627">Testlab machine</a></li>
+<li><a href="#org07d874f">patch descriptions / notes</a>
+<ul>
+<li><a href="#org612a09a">Cover letter</a>
+<ul>
+<li><a href="#orgac1c7e7">stg mail V1</a></li>
+</ul>
+</li>
+<li><a href="#org5c962a1">baseline</a>
+<ul>
+<li><a href="#orgd30184c">NIC: i40e1 - Kernel: 5.1.0-rc2-bpf-next-cpumap-baseline+</a></li>
+<li><a href="#orgb802f9f">NIC: i40e1 - UDP socket baseline</a></li>
+<li><a href="#org2dca788">NIC: i40e1 - baseline cpumap redirect</a></li>
+</ul>
+</li>
+<li><a href="#org97a3183">Patch: bpf: cpumap use ptr_ring_consume_batched</a>
+<ul>
+<li><a href="#org6e2e5ec">benchmarks on this patch</a></li>
+</ul>
+</li>
+<li><a href="#org7e561ff">Patch: bpf: cpumap send a SKB-list towards network stack.</a>
+<ul>
+<li><a href="#org81a9dee">benchmark01 on this patch</a></li>
+<li><a href="#org0680948">benchmark02 on this patch</a></li>
+<li><a href="#org50e3141">benchmark03 more reorg</a></li>
+</ul>
+</li>
+<li><a href="#orgdc7e5a2">Patch: net: core: introduce build_skb_around</a>
+<ul>
+<li><a href="#orga0fbe38">benchmarks on this patch</a></li>
+</ul>
+</li>
+<li><a href="#org01422b3">Patch: bpf: cpumap do bulk allocation of SKBs</a>
+<ul>
+<li><a href="#orga7e635a">benchmarks on this patch</a></li>
+</ul>
+</li>
+<li><a href="#org3a97ff9">Patch: bpf: cpumap memory prefetchw optimizations for struct page</a>
+<ul>
+<li><a href="#org9cb3c50">benchmarks on this patch</a></li>
+</ul>
+</li>
+<li><a href="#orga1169a3">test reorg</a>
+<ul>
+<li><a href="#org4c36383">benchmarks on experimental patch</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#org1dd092f">notes</a></li>
+<li><a href="#org9428ef2">Evaluating effect of page-prefetchw</a>
+<ul>
+<li><a href="#orge132edc">page-prefetchw + i40e + batch-16 + iptables-raw-drop</a></li>
+<li><a href="#org50f1413">page-prefetch (non-W) + i40e + batch-16 + iptables-raw-drop</a></li>
+</ul>
+</li>
+<li><a href="#orgc14af9b">Eval prefetch of xdp_frame area</a>
+<ul>
+<li><a href="#org44cebb0">prefetchw xdp_frame</a></li>
+<li><a href="#org3ebd124">remove any prefetch of xdp_frame</a></li>
+<li><a href="#org6fe5e60">test reduce CPUMAP_BATCH to 8</a></li>
+<li><a href="#org1d292de">Test: prefetchw single + i+1</a></li>
+<li><a href="#org50159c7">Test: Remove all prefetches</a></li>
+</ul>
+</li>
+<li><a href="#org0d6645a">Hack use Felix kfree_skb_list bulk</a>
+<ul>
+<li><a href="#org55ace9f">test: remove kmem_cache_free_bulk</a></li>
+</ul>
+</li>
+<li><a href="#orgd358d97">notes</a>
+<ul>
+<li><a href="#org2e32b3f">Experiments</a></li>
+<li><a href="#orgddc2cc4">Experiment: cut-out netfilter-code-path</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+Next benchmark iteration in <a href="cpumap03-optimizations.html">cpumap03-optimizations.html</a>.
+</p>
+
+<div id="outline-container-orgb6c5d56" class="outline-2">
+<h2 id="orgb6c5d56">WARNING: F27 issue</h2>
+<div class="outline-text-2" id="text-orgb6c5d56">
+<p>
+A lot of the test-results have to be redone, because Fedora release 27 (F27)
+have been loading iptables-filter behind my back&#x2026;
+</p>
+
+<p>
+When testing I've been unloading all the iptables/netfilter modules, as they
+have a fairly high base-cost, even when no rules are present.
+</p>
+
+<p>
+I found that F27 periodically or on some event (I have yet to figure out)
+will reload the modules ip6table_filter and iptable_filter (and
+ip_tables+x_tables) which activate the iptables filter hooks. (Strangely
+there is no rules inserted, the tables are empty).
+</p>
+
+<p>
+This unfortunately invalidates a lot of the test results, as I don't know if
+the result recored with or without iptables filter loaded.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org9595627" class="outline-2">
+<h2 id="org9595627">Testlab machine</h2>
+<div class="outline-text-2" id="text-org9595627">
+<p>
+The testlab machine:
+</p>
+<ul class="org-ul">
+<li>Intel CPU E5-1650 v4 @ 3.60GHz</li>
+<li>Disabled HT (HyperThreading)</li>
+<li>Fedora 27</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org07d874f" class="outline-2">
+<h2 id="org07d874f">patch descriptions / notes</h2>
+<div class="outline-text-2" id="text-org07d874f">
+</div>
+<div id="outline-container-org612a09a" class="outline-3">
+<h3 id="org612a09a">Cover letter</h3>
+<div class="outline-text-3" id="text-org612a09a">
+<p>
+Bulk optimization for XDP cpumap redirect
+</p>
+
+<p>
+This patchset utilize a number of different kernel bulk APIs for optimizing
+the performance for the XDP cpumap redirect feature.
+</p>
+
+<p>
+Patch-1: ptr_ring batch consume
+Patch-2: Send SKB-lists to network stack
+Patch-3: Introduce SKB helper to alloc SKB outside net-core
+Patch-4: kmem_cache bulk alloc of SKBs
+Patch-5: Prefetch struct page to solve CPU stall
+</p>
+</div>
+
+<div id="outline-container-orgac1c7e7" class="outline-4">
+<h4 id="orgac1c7e7">stg mail V1</h4>
+<div class="outline-text-4" id="text-orgac1c7e7">
+<pre class="example">
+stg mail --version=bpf-next --edit-cover --cc meup \
+ --to netdev --cc bpf@vger.kernel.org \
+ --to daniel --to alexei --to davem \
+ --cc toke --cc ilias \
+ use--ptr_ring_consume_batched..optimizations
+</pre>
+
+<p>
+<a href="https://patchwork.ozlabs.org/project/netdev/list/?series=101964&amp;state=%2a">https://patchwork.ozlabs.org/project/netdev/list/?series=101964&amp;state=%2a</a>
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org5c962a1" class="outline-3">
+<h3 id="org5c962a1">baseline</h3>
+<div class="outline-text-3" id="text-org5c962a1">
+</div>
+<div id="outline-container-orgd30184c" class="outline-4">
+<h4 id="orgd30184c">NIC: i40e1 - Kernel: 5.1.0-rc2-bpf-next-cpumap-baseline+</h4>
+<div class="outline-text-4" id="text-orgd30184c">
+<p>
+Below tests done on top of bpf-next on base commit dd399ac9e343c.
+</p>
+
+<p>
+The processing and (deliberate) packet drops happens on same CPU as packet
+was RX-ed on, which have many cache advantages.
+</p>
+
+<pre class="example">
+$ uname -a
+Linux broadwell 5.1.0-rc2-bpf-next-cpumap-baseline+ #113 SMP PREEMPT Wed Apr 10 16:24:18 CEST 2019 x86_64 x86_64 x86_64 GNU/Linux
+</pre>
+
+<p>
+NIC: i40e1
+</p>
+<pre class="example">
+$ ethtool -i i40e1
+driver: i40e
+version: 2.8.10-k
+firmware-version: 5.05 0x80002924 1.1313.0
+expansion-rom-version: 
+bus-info: 0000:04:00.0
+supports-statistics: yes
+supports-test: yes
+supports-eeprom-access: yes
+supports-register-dump: yes
+supports-priv-flags: yes
+</pre>
+</div>
+
+<ul class="org-ul">
+<li><a id="org02eac4c"></a>baseline: UdpNoPorts: 3,326,983 pps<br />
+<div class="outline-text-5" id="text-org02eac4c">
+<p>
+Unloaded all netfilter/iptables modules.
+</p>
+
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    3326983            0.0
+IpInDelivers                    3326984            0.0
+IpOutRequests                   1                  0.0
+IcmpOutMsgs                     1                  0.0
+IcmpOutDestUnreachs             1                  0.0
+IcmpMsgOutType3                 1                  0.0
+UdpNoPorts                      3326982            0.0
+IpExtInOctets                   153042460          0.0
+IpExtOutOctets                  74                 0.0
+IpExtInNoECTPkts                3327010            0.0
+</pre>
+</div>
+</li>
+
+<li><a id="org4aa8689"></a>baseline: iptables-raw drop: 5,705,245 pps (GRO-enabled)<br />
+<div class="outline-text-5" id="text-org4aa8689">
+<p>
+Command used to drop packets:
+</p>
+<ul class="org-ul">
+<li>iptables -t raw -I PREROUTING -p udp &#x2013;dport 9 -j DROP</li>
+</ul>
+
+<p>
+With (default) GRO enabled:
+</p>
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    5705245            0.0
+IpExtInOctets                   262445778          0.0
+IpExtInNoECTPkts                5705343            0.0
+</pre>
+</div>
+</li>
+
+<li><a id="orgaaa1319"></a>baseline: iptables-raw drop: 6,701,692 pps (GRO-disabled)<br />
+<div class="outline-text-5" id="text-orgaaa1319">
+<p>
+Command to disable GRO:
+</p>
+<ul class="org-ul">
+<li>ethtool -K i40e1 gro off tso off</li>
+</ul>
+
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    6701692            0.0
+IpExtInOctets                   308276958          0.0
+IpExtInNoECTPkts                6701673            0.0
+</pre>
+</div>
+</li>
+</ul>
+</div>
+
+<div id="outline-container-orgb802f9f" class="outline-4">
+<h4 id="orgb802f9f">NIC: i40e1 - UDP socket baseline</h4>
+<div class="outline-text-4" id="text-orgb802f9f">
+<p>
+Testing with UDP socket sink program:
+</p>
+<ul class="org-ul">
+<li><a href="https://github.com/netoptimizer/network-testing/blob/master/src/udp_sink.c">https://github.com/netoptimizer/network-testing/blob/master/src/udp_sink.c</a></li>
+</ul>
+
+<p>
+In these situations where the system is overloaded with packets, it is NOT
+an advantage to run the UDP socket program on the same CPU as the NAPI
+RX-CPU. The reason is that softirq takes up too many resources. (We/kernel
+community have solved this to give 50% CPU to each, but still softirq-side
+spend all its time dropping packet on the full-socket-queue, that is it
+stealing CPU-time-slices from).
+</p>
+</div>
+
+<ul class="org-ul">
+<li><a id="org29a9227"></a>udp_sink: same CPU as RX = 718,135 pps<br />
+<div class="outline-text-5" id="text-org29a9227">
+<pre class="example">
+[jbrouer@broadwell src]$ sudo taskset -c 1 ./udp_sink --port 9 --recvmsg --repeat 1000 --reuse
+          	run      count   	ns/pkt	pps		cycles	payload
+recvmsg   	run:  0	 1000000	1435.21	696761.84	5166	18	 demux:1
+recvmsg   	run:  1	 1000000	1392.46	718153.22	5012	18	 demux:1
+recvmsg   	run:  2	 1000000	1392.50	718135.42	5013	18	 demux:1
+recvmsg   	run:  3	 1000000	1395.57	716553.74	5024	18	 demux:1
+recvmsg   	run:  4	 1000000	1390.34	719249.54	5005	18	 demux:1
+recvmsg   	run:  5	 1000000	1400.70	713930.03	5042	18	 demux:1
+recvmsg   	run:  6	 1000000	1387.11	720924.95	4993	18	 demux:1
+recvmsg   	run:  7	 1000000	1398.32	715144.81	5033	18	 demux:1
+recvmsg   	run:  8	 1000000	1392.27	718250.94	5012	18	 demux:1
+</pre>
+</div>
+</li>
+
+<li><a id="orgb502148"></a>udp_sink: another CPU than RX = 2,311,585 pps<br />
+<div class="outline-text-5" id="text-orgb502148">
+<pre class="example">
+[jbrouer@broadwell src]$ sudo taskset -c 3 ./udp_sink --port 9 --recvmsg --repeat 1000 --reuse
+          	run      count   	ns/pkt	pps		cycles	payload
+recvmsg   	run:  0	 1000000	441.01	2267502.40	1587	18	 demux:1
+recvmsg   	run:  1	 1000000	432.89	2310074.13	1558	18	 demux:1
+recvmsg   	run:  2	 1000000	432.60	2311585.12	1557	18	 demux:1
+recvmsg   	run:  3	 1000000	432.48	2312230.99	1556	18	 demux:1
+recvmsg   	run:  4	 1000000	433.49	2306867.38	1560	18	 demux:1
+recvmsg   	run:  5	 1000000	432.44	2312474.25	1556	18	 demux:1
+recvmsg   	run:  6	 1000000	432.46	2312345.45	1556	18	 demux:1
+recvmsg   	run:  7	 1000000	432.39	2312702.92	1556	18	 demux:1
+recvmsg   	run:  8	 1000000	432.54	2311903.29	1557	18	 demux:1
+recvmsg   	run:  9	 1000000	432.62	2311479.47	1557	18	 demux:1
+</pre>
+</div>
+</li>
+</ul>
+</div>
+
+<div id="outline-container-org2dca788" class="outline-4">
+<h4 id="org2dca788">NIC: i40e1 - baseline cpumap redirect</h4>
+<div class="outline-text-4" id="text-org2dca788">
+<p>
+What is the baseline CPUMAP redirect performance.
+</p>
+</div>
+
+<ul class="org-ul">
+<li><a id="orgcb3fc27"></a>baseline-redirect: UdpNoPorts: 2,727,840 pps<br />
+<div class="outline-text-5" id="text-orgcb3fc27">
+<pre class="example">
+sudo ./xdp_redirect_cpu --dev i40e1 --qsize 128 --cpu 4 --prog xdp_cpu_map0
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          1       15,198,085     0           0          
+XDP-RX          total   15,198,085     0          
+cpumap-enqueue    1:4   15,198,122     12,470,287  8.00       bulk-average
+cpumap-enqueue  sum:4   15,198,122     12,470,287  8.00       bulk-average
+cpumap_kthread  4       2,727,840      0           0          
+cpumap_kthread  total   2,727,840      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    2701784            0.0
+IpInDelivers                    2701783            0.0
+IpOutRequests                   1                  0.0
+IcmpOutMsgs                     1                  0.0
+IcmpOutDestUnreachs             1                  0.0
+IcmpMsgOutType3                 1                  0.0
+UdpNoPorts                      2701775            0.0
+IpExtInOctets                   124283720          0.0
+IpExtOutOctets                  74                 0.0
+IpExtInNoECTPkts                2701820            0.0
+</pre>
+</div>
+</li>
+
+<li><a id="org6226f8e"></a>baseline-redirect: iptables-raw drop: 6,166,709 pps<br />
+<div class="outline-text-5" id="text-org6226f8e">
+<pre class="example">
+sudo ./xdp_redirect_cpu --dev i40e1 --qsize 128 --cpu 4 --prog xdp_cpu_map0
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          1       18,850,942     0           0          
+XDP-RX          total   18,850,942     0          
+cpumap-enqueue    1:4   18,850,947     12,684,239  8.00       bulk-average
+cpumap-enqueue  sum:4   18,850,947     12,684,239  8.00       bulk-average
+cpumap_kthread  4       6,166,709      0           0          
+cpumap_kthread  total   6,166,709      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    6167205            0.0
+IpExtInOctets                   283689544          0.0
+IpExtInNoECTPkts                6167164            0.0
+</pre>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org97a3183" class="outline-3">
+<h3 id="org97a3183">Patch: bpf: cpumap use ptr_ring_consume_batched</h3>
+<div class="outline-text-3" id="text-org97a3183">
+<p>
+Move ptr_ring dequeue outside loop, that allocate SKBs and calls network
+stack, as these operations that can take some time. The ptr_ring is a
+communication channel between CPUs, where we want to reduce/limit any
+cacheline bouncing.
+</p>
+
+<p>
+Do a concentrated bulk dequeue via ptr_ring_consume_batched, to shorten the
+period and times the remote cacheline in ptr_ring is read
+</p>
+
+<p>
+Batch size 8 is both to (1) limit BH-disable period, and (2) consume one
+cacheline on 64-bit archs. After reducing the BH-disable section further
+then we can consider changing this, while still thinking about L1 cacheline
+size being active.
+</p>
+</div>
+
+<div id="outline-container-org6e2e5ec" class="outline-4">
+<h4 id="org6e2e5ec">benchmarks on this patch</h4>
+<div class="outline-text-4" id="text-org6e2e5ec">
+</div>
+<ul class="org-ul">
+<li><a id="orgf12bcb9"></a>redirect: UdpNoPorts: 2,817,054<br />
+<div class="outline-text-5" id="text-orgf12bcb9">
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          5       13,967,785     0           0          
+XDP-RX          total   13,967,785     0          
+cpumap-enqueue    5:4   13,967,766     11,150,711  8.00       bulk-average
+cpumap-enqueue  sum:4   13,967,766     11,150,711  8.00       bulk-average
+cpumap_kthread  4       2,817,054      0           0          
+cpumap_kthread  total   2,817,054      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    2829056            0.0
+IpInDelivers                    2829057            0.0
+IpOutRequests                   1                  0.0
+IcmpOutMsgs                     1                  0.0
+IcmpOutDestUnreachs             1                  0.0
+IcmpMsgOutType3                 1                  0.0
+UdpNoPorts                      2829061            0.0
+IpExtInOctets                   130137312          0.0
+IpExtOutOctets                  74                 0.0
+IpExtInNoECTPkts                2829076            0.0
+</pre>
+</div>
+</li>
+
+<li><a id="org1779f27"></a>redirect: iptables-raw drop: 6,328,978<br />
+<div class="outline-text-5" id="text-org1779f27">
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          5       18,458,183     0           0          
+XDP-RX          total   18,458,183     0          
+cpumap-enqueue    5:4   18,458,184     12,129,207  8.00       bulk-average
+cpumap-enqueue  sum:4   18,458,184     12,129,207  8.00       bulk-average
+cpumap_kthread  4       6,328,978      0           0          
+cpumap_kthread  total   6,328,978      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    6358270            0.0
+IpInDelivers                    1                  0.0
+IpOutRequests                   1                  0.0
+TcpInSegs                       1                  0.0
+TcpOutSegs                      1                  0.0
+TcpExtTCPHPAcks                 1                  0.0
+TcpExtTCPOrigDataSent           1                  0.0
+TcpExtTCPDelivered              1                  0.0
+IpExtInOctets                   292478632          0.0
+IpExtOutOctets                  680                0.0
+IpExtInNoECTPkts                6358232            0.0
+</pre>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+
+<div id="outline-container-org7e561ff" class="outline-3">
+<h3 id="org7e561ff">Patch: bpf: cpumap send a SKB-list towards network stack.</h3>
+<div class="outline-text-3" id="text-org7e561ff">
+<p>
+Reduce BH-disable period further by moving cpu_map_build_skb()
+outside/before invoking the network stack. And build up a skb_list that is
+used for netif_receive_skb_list. This is also an I-cache optimization.
+</p>
+
+<p>
+When injecting packets into the network stack, cpumap used a special
+function named netif_receive_skb_core(), in-order to skip generic-XDP.
+For this reason create an equivalent list version named
+netif_receive_skb_list_core().
+</p>
+</div>
+
+<div id="outline-container-org81a9dee" class="outline-4">
+<h4 id="org81a9dee">benchmark01 on this patch</h4>
+<div class="outline-text-4" id="text-org81a9dee">
+</div>
+<ul class="org-ul">
+<li><a id="org55ec0f0"></a>redirect: UdpNoPorts: 2,846,583<br />
+<div class="outline-text-5" id="text-org55ec0f0">
+<pre class="example">
+sudo ./xdp_redirect_cpu --dev i40e1 --qsize 128 --cpu 4 --prog xdp_cpu_map0 --sec 3
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          0       14,810,855     0           0          
+XDP-RX          total   14,810,855     0          
+cpumap-enqueue    0:4   14,810,875     11,964,289  8.00       bulk-average
+cpumap-enqueue  sum:4   14,810,875     11,964,289  8.00       bulk-average
+cpumap_kthread  4       2,846,583      0           0          
+cpumap_kthread  total   2,846,583      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</li>
+
+<li><a id="org86242c5"></a>redirect: iptables-raw drop: 5,535,958<br />
+<div class="outline-text-5" id="text-org86242c5">
+<p>
+Strange performance drop.
+</p>
+
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          0       18,252,989     0           0          
+XDP-RX          total   18,252,989     0          
+cpumap-enqueue    0:4   18,252,986     12,717,028  8.00       bulk-average
+cpumap-enqueue  sum:4   18,252,986     12,717,028  8.00       bulk-average
+cpumap_kthread  4       5,535,958      0           0          
+cpumap_kthread  total   5,535,958      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</li>
+
+<li><a id="orgc0a47e3"></a>iptables-raw drop: 5,378,828 pps (GRO-enabled)<br />
+<div class="outline-text-5" id="text-orgc0a47e3">
+<p>
+Command used to drop packets:
+</p>
+<ul class="org-ul">
+<li>iptables -t raw -I PREROUTING -p udp &#x2013;dport 9 -j DROP</li>
+</ul>
+
+<p>
+Using standard Linux kernel and NAPI-RX iptables-raw drop. It doesn't make
+sense that performance is reduced. As the patch only change/add
+netif_receive_skb_list_core to net/core/dev.c.
+</p>
+
+<p>
+With (default) GRO enabled:
+</p>
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    5378828            0.0
+IpExtInOctets                   247426732          0.0
+IpExtInNoECTPkts                5378842            0.0
+</pre>
+
+<p>
+GRO-disable:
+</p>
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    6269627            0.0
+IpExtInOctets                   288405556          0.0
+IpExtInNoECTPkts                6269686            0.0
+</pre>
+</div>
+</li>
+</ul>
+</div>
+
+<div id="outline-container-org0680948" class="outline-4">
+<h4 id="org0680948">benchmark02 on this patch</h4>
+<div class="outline-text-4" id="text-org0680948">
+<p>
+Re-organize code in net/core/dev.c.
+</p>
+</div>
+
+<ul class="org-ul">
+<li><a id="org3b9726e"></a>redirect: UdpNoPorts: 2,829,666<br />
+<div class="outline-text-5" id="text-org3b9726e">
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          4       14,996,383     0           0          
+XDP-RX          total   14,996,383     0          
+cpumap-enqueue    4:5   14,996,387     12,166,725  8.00       bulk-average
+cpumap-enqueue  sum:5   14,996,387     12,166,725  8.00       bulk-average
+cpumap_kthread  5       2,829,666      0           0          
+cpumap_kthread  total   2,829,666      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</li>
+
+<li><a id="orgfdbe4cc"></a>redirect: iptables-raw drop: 5,529,818<br />
+<div class="outline-text-5" id="text-orgfdbe4cc">
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          4       18,256,809     0           0          
+XDP-RX          total   18,256,809     0          
+cpumap-enqueue    4:5   18,256,806     12,726,988  8.00       bulk-average
+cpumap-enqueue  sum:5   18,256,806     12,726,988  8.00       bulk-average
+cpumap_kthread  5       5,529,818      0           0          
+cpumap_kthread  total   5,529,818      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</li>
+
+<li><a id="org76ebe37"></a>iptables-raw drop: 5,420,909<br />
+<div class="outline-text-5" id="text-org76ebe37">
+<p>
+Using standard Linux kernel and NAPI-RX iptables-raw drop.
+</p>
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    5420909            0.0
+IpExtInOctets                   249361032          0.0
+IpExtInNoECTPkts                5420892            0.0
+</pre>
+</div>
+</li>
+</ul>
+</div>
+
+<div id="outline-container-org50e3141" class="outline-4">
+<h4 id="org50e3141">benchmark03 more reorg</h4>
+<div class="outline-text-4" id="text-org50e3141">
+<p>
+Re-organize code in net/core/dev.c.
+</p>
+
+<p>
+redirect: UdpNoPorts: 2,866,070
+redirect: iptables-raw drop: 5,516,606
+</p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orgdc7e5a2" class="outline-3">
+<h3 id="orgdc7e5a2">Patch: net: core: introduce build_skb_around</h3>
+<div class="outline-text-3" id="text-orgdc7e5a2">
+<p>
+The function build_skb() also have the responsibility to allocate and clear
+the SKB structure. Introduce a new function build_skb_around(), that moves
+the responsibility of allocation and clearing to the caller. This allows
+caller to use kmem_cache (slab/slub) bulk allocation API.
+</p>
+
+<p>
+Next patch use this function combined with kmem_cache_alloc_bulk.
+</p>
+</div>
+
+<div id="outline-container-orga0fbe38" class="outline-4">
+<h4 id="orga0fbe38">benchmarks on this patch</h4>
+<div class="outline-text-4" id="text-orga0fbe38">
+</div>
+<ul class="org-ul">
+<li><a id="org2122154"></a>redirect: UdpNoPorts: 2,832,411<br />
+<div class="outline-text-5" id="text-org2122154">
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          5       14,951,827     0           0          
+XDP-RX          total   14,951,827     0          
+cpumap-enqueue    5:4   14,951,808     12,119,396  8.00       bulk-average
+cpumap-enqueue  sum:4   14,951,808     12,119,396  8.00       bulk-average
+cpumap_kthread  4       2,832,411      0           0          
+cpumap_kthread  total   2,832,411      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</li>
+
+<li><a id="org868b6b1"></a>redirect: iptables-raw drop: 5,522,555<br />
+<div class="outline-text-5" id="text-org868b6b1">
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          5       18,495,707     0           0          
+XDP-RX          total   18,495,707     0          
+cpumap-enqueue    5:4   18,495,706     12,973,151  8.00       bulk-average
+cpumap-enqueue  sum:4   18,495,706     12,973,151  8.00       bulk-average
+cpumap_kthread  4       5,522,555      0           0          
+cpumap_kthread  total   5,522,555      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</li>
+
+<li><a id="orgfda045d"></a>iptables-raw drop: 5,396,717<br />
+<div class="outline-text-5" id="text-orgfda045d">
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    5396717            0.0
+IpExtInOctets                   248249120          0.0
+IpExtInNoECTPkts                5396720            0.0
+</pre>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org01422b3" class="outline-3">
+<h3 id="org01422b3">Patch: bpf: cpumap do bulk allocation of SKBs</h3>
+<div class="outline-text-3" id="text-org01422b3">
+<p>
+As cpumap now batch consume xdp_frame's from the ptr_ring, it knows how many
+SKBs it need to allocate. Thus, lets bulk allocate these SKBs via
+kmem_cache_alloc_bulk() API, and use the previously introduced function
+build_skb_around().
+</p>
+
+<p>
+Notice that the flag __GFP_ZERO asks the slab/slub allocator to clear the
+memory for us. This does clear a larger area than needed, but my micro
+benchmarks on Intel CPUs show that this is slightly faster due to being a
+cacheline aligned area is cleared for the SKBs. (For SLUB allocator, there
+is a future optimization potential, because SKBs will with high probability
+originate from same page. If we can find/identify continuous memory areas
+then the Intel CPU memset rep stos will have a real performance gain.)
+</p>
+</div>
+
+<div id="outline-container-orga7e635a" class="outline-4">
+<h4 id="orga7e635a">benchmarks on this patch</h4>
+<div class="outline-text-4" id="text-orga7e635a">
+</div>
+<ul class="org-ul">
+<li><a id="orgb9a75ea"></a>redirect: UdpNoPorts: 2,943,928<br />
+<div class="outline-text-5" id="text-orgb9a75ea">
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          4       13,650,238     0           0          
+XDP-RX          total   13,650,238     0          
+cpumap-enqueue    4:5   13,650,246     10,706,320  8.00       bulk-average
+cpumap-enqueue  sum:5   13,650,246     10,706,320  8.00       bulk-average
+cpumap_kthread  5       2,943,928      0           0          
+cpumap_kthread  total   2,943,928      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</li>
+
+<li><a id="org9eb8117"></a>redirect: iptables-raw drop: 5,908,032<br />
+<div class="outline-text-5" id="text-org9eb8117">
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          4       18,256,284     0           0          
+XDP-RX          total   18,256,284     0          
+cpumap-enqueue    4:5   18,256,282     12,348,249  8.00       bulk-average
+cpumap-enqueue  sum:5   18,256,282     12,348,249  8.00       bulk-average
+cpumap_kthread  5       5,908,032      0           0          
+cpumap_kthread  total   5,908,032      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<pre class="example">
+$ perf stat -C5 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -e L1-icache-load-misses -r 4 sleep 1
+
+ Performance counter stats for 'CPU(s) 5' (4 runs):
+
+     3.803.541.867      cycles                                                        ( +-  0,00% )
+     7.181.656.680      instructions              #    1,89  insn per cycle           ( +-  0,03% )
+        38.215.645      cache-references                                              ( +-  0,13% )
+               956      cache-misses              #    0,003 % of all cache refs      ( +- 68,12% )
+     1.359.526.208      branches:k                                                    ( +-  0,03% )
+         2.127.934      branch-misses:k           #    0,16% of all branches          ( +-  0,83% )
+            94.326      l2_rqsts.all_code_rd                                          ( +-  1,60% )
+            74.614      l2_rqsts.code_rd_hit                                          ( +-  1,67% )
+            19.709      l2_rqsts.code_rd_miss                                         ( +-  2,45% )
+            36.783      L1-icache-load-misses                                         ( +-  1,31% )
+</pre>
+
+<pre class="example">
+$ perf stat -C5 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending -e l1d_pend_miss.pending_cycles  -r3 sleep 1
+
+ Performance counter stats for 'CPU(s) 5' (3 runs):
+
+     3.795.165.763      cycles                                                        ( +-  0,00% )  (33,27%)
+     7.164.568.267      instructions              #    1,89  insn per cycle           ( +-  0,04% )  (49,95%)
+        53.336.896      l1d.replacement                                               ( +-  0,68% )  (66,63%)
+               549      l1d_pend_miss.fb_full                                         ( +- 96,09% )  (83,32%)
+     1.345.207.553      l1d_pend_miss.pending                                         ( +-  0,25% )  (83,38%)
+       806.293.783      l1d_pend_miss.pending_cycles                                     ( +-  0,29% )  (16,62%)
+</pre>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org3a97ff9" class="outline-3">
+<h3 id="org3a97ff9">Patch: bpf: cpumap memory prefetchw optimizations for struct page</h3>
+<div class="outline-text-3" id="text-org3a97ff9">
+<p>
+A lot of the performance gain comes from this patch.
+</p>
+
+<p>
+While analysing performance overhead it was found that the largest CPU
+stalls were caused when touching the struct page area. It is first read with
+a READ_ONCE from build_skb_around via page_is_pfmemalloc(), and when freed
+written by page_frag_free() call.
+</p>
+
+<p>
+Measurements show that the prefetchw (W) variant operation is needed to
+achieve the performance gain. We believe this optimization it two fold,
+first the W-variant saves one step in the cache-coherency protocol, and
+second it helps us to avoid the non-temporal prefetch HW optimizations and
+bring this into all cache-levels. It might be worth investigating if
+prefetch into L2 will have the same benefit.
+</p>
+</div>
+
+<div id="outline-container-org9cb3c50" class="outline-4">
+<h4 id="org9cb3c50">benchmarks on this patch</h4>
+<div class="outline-text-4" id="text-org9cb3c50">
+</div>
+<ul class="org-ul">
+<li><a id="orgad53dbe"></a>redirect: UdpNoPorts: 3,270,640<br />
+<div class="outline-text-5" id="text-orgad53dbe">
+<pre class="example">
+unning XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          1       14,773,250     0           0          
+XDP-RX          total   14,773,250     0          
+cpumap-enqueue    1:5   14,773,260     11,502,619  8.00       bulk-average
+cpumap-enqueue  sum:5   14,773,260     11,502,619  8.00       bulk-average
+cpumap_kthread  5       3,270,640      0           0          
+cpumap_kthread  total   3,270,640      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</li>
+
+<li><a id="orgb90bd70"></a>redirect: iptables-raw drop: 6,882,973<br />
+<div class="outline-text-5" id="text-orgb90bd70">
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          1       19,235,746     0           0          
+XDP-RX          total   19,235,746     0          
+cpumap-enqueue    1:5   19,235,747     12,352,773  8.00       bulk-average
+cpumap-enqueue  sum:5   19,235,747     12,352,773  8.00       bulk-average
+cpumap_kthread  5       6,882,973      0           0          
+cpumap_kthread  total   6,882,973      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orga1169a3" class="outline-3">
+<h3 id="orga1169a3">test reorg</h3>
+<div class="outline-text-3" id="text-orga1169a3">
+</div>
+<div id="outline-container-org4c36383" class="outline-4">
+<h4 id="org4c36383">benchmarks on experimental patch</h4>
+<div class="outline-text-4" id="text-org4c36383">
+<p>
+Re-organize code in net/core/dev.c. Results look like the performance
+problem was solved.  UPDATE: This could be cause by F27 reloading iptables
+filter chains and kernel modules.  For the iptrables-raw it shouldn't be as
+effected by iptables-filter being loaded or not.
+</p>
+</div>
+
+<ul class="org-ul">
+<li><a id="orgff0f065"></a>redirect: UdpNoPorts: 3,060,774<br />
+<div class="outline-text-5" id="text-orgff0f065">
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          0       14,265,023     0           0          
+XDP-RX          total   14,265,023     0          
+cpumap-enqueue    0:5   14,265,033     11,204,255  8.00       bulk-average
+cpumap-enqueue  sum:5   14,265,033     11,204,255  8.00       bulk-average
+cpumap_kthread  5       3,060,774      0           0          
+cpumap_kthread  total   3,060,774      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</li>
+
+<li><a id="org7ba5571"></a>redirect: iptables-raw drop: 7,035,517<br />
+<div class="outline-text-5" id="text-org7ba5571">
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          0       18,710,012     0           0          
+XDP-RX          total   18,710,012     0          
+cpumap-enqueue    0:5   18,710,010     11,674,495  8.00       bulk-average
+cpumap-enqueue  sum:5   18,710,010     11,674,495  8.00       bulk-average
+cpumap_kthread  5       7,035,517      0           0          
+cpumap_kthread  total   7,035,517      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<p>
+Perf stats results:
+</p>
+<pre class="example">
+$ perf stat -C5 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -e L1-icache-load-misses -r 4 sleep 1
+
+ Performance counter stats for 'CPU(s) 5' (4 runs):
+
+     3.803.441.397      cycles                                                        ( +-  0,00% )
+     8.631.964.172      instructions              #    2,27  insn per cycle           ( +-  0,09% )
+        38.712.388      cache-references                                              ( +-  0,24% )
+               828      cache-misses              #    0,002 % of all cache refs      ( +- 27,03% )
+     1.628.030.913      branches:k                                                    ( +-  0,09% )
+         2.471.318      branch-misses:k           #    0,15% of all branches          ( +-  0,40% )
+            64.688      l2_rqsts.all_code_rd                                          ( +-  1,19% )
+            56.469      l2_rqsts.code_rd_hit                                          ( +-  1,23% )
+             8.179      l2_rqsts.code_rd_miss                                         ( +-  1,49% )
+            17.866      L1-icache-load-misses                                         ( +-  0,90% )
+</pre>
+
+<pre class="example">
+$ perf stat -C5 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending -e l1d_pend_miss.pending_cycles  -r3 sleep 1
+
+ Performance counter stats for 'CPU(s) 5' (3 runs):
+
+     3.795.335.615      cycles                                                        ( +-  0,00% )  (33,27%)
+     8.599.169.329      instructions              #    2,27  insn per cycle           ( +-  0,16% )  (49,95%)
+        58.903.910      l1d.replacement                                               ( +-  0,71% )  (66,63%)
+            93.303      l1d_pend_miss.fb_full                                         ( +-  4,39% )  (83,32%)
+       804.495.333      l1d_pend_miss.pending                                         ( +-  0,32% )  (83,35%)
+       639.584.616      l1d_pend_miss.pending_cycles                                     ( +-  0,57% )  (16,65%)
+
+        1,00107125 +- 0,00000745 seconds time elapsed  ( +-  0,00% )
+</pre>
+</div>
+</li>
+
+<li><a id="org01663a2"></a>iptables-raw drop: 5,412,097 (GRO-enabled)<br />
+<div class="outline-text-5" id="text-org01663a2">
+<p>
+Command used to drop packets:
+</p>
+<ul class="org-ul">
+<li>iptables -t raw -I PREROUTING -p udp &#x2013;dport 9 -j DROP</li>
+</ul>
+
+<p>
+Using standard Linux kernel and NAPI-RX iptables-raw drop.
+</p>
+<pre class="example">
+nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    5412097            0.0
+IpExtInOctets                   248955956          0.0
+IpExtInNoECTPkts                5412085            0.0
+</pre>
+
+<p>
+*
+</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-org1dd092f" class="outline-2">
+<h2 id="org1dd092f">notes</h2>
+<div class="outline-text-2" id="text-org1dd092f">
+<p>
+-e l2_lines_in.all -e l2_lines_in.e -e l2_lines_in.i -e l2_lines_in.s
+</p>
+
+<p>
+-e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending -e l1d_pend_miss.pending_cycles -e l1d_pend_miss.pending_cycles_any
+</p>
+</div>
+</div>
+
+<div id="outline-container-org9428ef2" class="outline-2">
+<h2 id="org9428ef2">Evaluating effect of page-prefetchw</h2>
+<div class="outline-text-2" id="text-org9428ef2">
+<p>
+(Below tests done on top of base commit dd399ac9e343c)
+</p>
+
+<p>
+Conclusion: based on below, the prefetchw on struct-page is important.
+</p>
+</div>
+
+<div id="outline-container-orge132edc" class="outline-3">
+<h3 id="orge132edc">page-prefetchw + i40e + batch-16 + iptables-raw-drop</h3>
+<div class="outline-text-3" id="text-orge132edc">
+<pre class="example">
+$ sudo ./xdp_redirect_cpu --prog 0 --dev i40e1 --qsize 128 --cpu 5
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          0       18,028,028     0           0          
+XDP-RX          total   18,028,028     0          
+cpumap-enqueue    0:5   18,028,030     10,724,216  8.00       bulk-average
+cpumap-enqueue  sum:5   18,028,030     10,724,216  8.00       bulk-average
+cpumap_kthread  5       7,303,802      0           0          
+cpumap_kthread  total   7,303,802      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org50f1413" class="outline-3">
+<h3 id="org50f1413">page-prefetch (non-W) + i40e + batch-16 + iptables-raw-drop</h3>
+<div class="outline-text-3" id="text-org50f1413">
+<pre class="example">
+$ sudo ./xdp_redirect_cpu --prog 0 --dev i40e1 --qsize 128 --cpu 5
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          3       19,137,856     0           0          
+XDP-RX          total   19,137,856     0          
+cpumap-enqueue    3:5   19,137,856     12,784,500  8.00       bulk-average
+cpumap-enqueue  sum:5   19,137,856     12,784,500  8.00       bulk-average
+cpumap_kthread  5       6,353,356      0           0          
+cpumap_kthread  total   6,353,356      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<p>
+Code change:
+</p>
+<div class="org-src-container">
+<pre class="src src-diff">diff --git a/kernel/bpf/cpumap.c b/kernel/bpf/cpumap.c
+index bdbb3c1131b5..74d4bc16dd67 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/kernel/bpf/cpumap.c</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/kernel/bpf/cpumap.c</span>
+<span style="font-weight: bold;">@@ -288,7 +288,7 @@</span><span style="font-weight: bold;"> static int cpu_map_kthread_run(void *data)</span>
+                for (i = 0; i &lt; n; i++) {
+                        void *f = frames[i];
+                        struct page *page = virt_to_page(f);
+-                       prefetchw(page);
++                       prefetch(page);
+                }
+
+                m = kmem_cache_alloc_bulk(skbuff_head_cache, gfp, n, skbs);
+</pre>
+</div>
+
+<p>
+Not using CPUMAP redirect iptable-raw-drop performance is: 5,264,940 pps
+</p>
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    5264940            0.0
+IpExtInOctets                   242187562          0.0
+IpExtInNoECTPkts                5264948            0.0
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgc14af9b" class="outline-2">
+<h2 id="orgc14af9b">Eval prefetch of xdp_frame area</h2>
+<div class="outline-text-2" id="text-orgc14af9b">
+<p>
+Normal prefetch of xdp_frame area didn't improve performance (batch 16).
+One theory is eviction from L1-cache.
+</p>
+
+<p>
+Using prefetchw helped a little, but it can be caused by prefetchw is a
+non-temporal prefetch, meaning it will stay in L2, if we have L1-eviction.
+</p>
+
+<p>
+The problem with xdp_frame area is that it is placed at the same offset in
+the page, which can leads to cache-eviction (N-way caches). We would rather
+do a L2-cache prefetch.
+</p>
+</div>
+
+<div id="outline-container-org44cebb0" class="outline-3">
+<h3 id="org44cebb0">prefetchw xdp_frame</h3>
+<div class="outline-text-3" id="text-org44cebb0">
+<p>
+Using prefetchw helped:
+</p>
+<pre class="example">
+$ sudo ./xdp_redirect_cpu --prog 0 --dev i40e1 --qsize 64 --cpu 4
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          1       19,307,072     0           0          
+XDP-RX          total   19,307,072     0          
+cpumap-enqueue    1:4   19,307,073     11,794,092  8.00       bulk-average
+cpumap-enqueue  sum:4   19,307,073     11,794,092  8.00       bulk-average
+cpumap_kthread  4       7,512,970      0           0          
+cpumap_kthread  total   7,512,970      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<pre class="example">
+$ perf stat -C4 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending -e l1d_pend_miss.pending_cycles -e l1d_pend_miss.pending_cycles_any  -r 4 sleep 1
+
+ Performance counter stats for 'CPU(s) 4' (4 runs):
+
+     3.794.861.380  cycles                                               ( +-  0,00% )  (28,57%)
+     8.950.874.892  instructions              #    2,36  insn per cycle  ( +-  0,07% )  (42,86%)
+        92.133.094  l1d.replacement                                      ( +-  0,46% )  (57,14%)
+        89.670.480  l1d_pend_miss.fb_full                                ( +-  0,99% )  (71,43%)
+       695.281.894  l1d_pend_miss.pending                                ( +-  0,47% )  (71,43%)
+       616.443.707  l1d_pend_miss.pending_cycles                         ( +-  0,40% )  (14,29%)
+       615.381.726  l1d_pend_miss.pending_cycles_any                     ( +-  0,36% )  (14,29%)
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org3ebd124" class="outline-3">
+<h3 id="org3ebd124">remove any prefetch of xdp_frame</h3>
+<div class="outline-text-3" id="text-org3ebd124">
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          0       18,349,802     0           0          
+XDP-RX          total   18,349,802     0          
+cpumap-enqueue    0:4   18,349,802     10,799,899  8.00       bulk-average
+cpumap-enqueue  sum:4   18,349,802     10,799,899  8.00       bulk-average
+cpumap_kthread  4       7,549,897      0           1          sched
+cpumap_kthread  total   7,549,897      0           1          sched-sum
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<pre class="example">
+$ perf stat -C4 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending -e l1d_pend_miss.pending_cycles -e l1d_pend_miss.pending_cycles_any  -r 4 sleep 1
+ Performance counter stats for 'CPU(s) 4' (4 runs):
+
+     3.794.603.721  cycles                                               ( +-  0,00% )  (28,57%)
+     9.001.741.962  instructions              #    2,37  insn per cycle  ( +-  0,05% )  (42,86%)
+        82.657.850  l1d.replacement                                      ( +-  0,34% )  (57,14%)
+        20.614.863  l1d_pend_miss.fb_full                                ( +-  1,13% )  (71,43%)
+       682.789.984  l1d_pend_miss.pending                                ( +-  0,30% )  (71,43%)
+       646.913.349  l1d_pend_miss.pending_cycles                         ( +-  0,29% )  (14,29%)
+       646.047.378  l1d_pend_miss.pending_cycles_any                     ( +-  0,29% )  (14,29%)
+</pre>
+
+<p>
+Info on perf events:
+</p>
+<pre class="example">
+l1d.replacement                                   
+     [L1D data line replacements]
+l1d_pend_miss.fb_full                             
+     [Cycles a demand request was blocked due to Fill Buffers inavailability]
+l1d_pend_miss.pending                             
+     [L1D miss oustandings duration in cycles]
+l1d_pend_miss.pending_cycles                      
+     [Cycles with L1D load Misses outstanding]
+l1d_pend_miss.pending_cycles_any                  
+     [Cycles with L1D load Misses outstanding from any thread on physical core]
+</pre>
+
+<p>
+Notice how: l1d_pend_miss.fb_full was reduced from 89.670.480 to 20.614.863.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org6fe5e60" class="outline-3">
+<h3 id="org6fe5e60">test reduce CPUMAP_BATCH to 8</h3>
+<div class="outline-text-3" id="text-org6fe5e60">
+<p>
+This hurt performance:
+</p>
+<pre class="example">
+sudo ./xdp_redirect_cpu --prog 0 --dev i40e1 --qsize 64 --cpu 5
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          4       18,396,301     0           0          
+XDP-RX          total   18,396,301     0          
+cpumap-enqueue    4:5   18,396,296     11,656,127  8.00       bulk-average
+cpumap-enqueue  sum:5   18,396,296     11,656,127  8.00       bulk-average
+cpumap_kthread  5       6,740,176      0           0          
+cpumap_kthread  total   6,740,176      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<p>
+Using &#x2013;qsize 128 is slightly better:
+</p>
+<pre class="example">
+sudo ./xdp_redirect_cpu --prog 0 --dev i40e1 --qsize 128 --cpu 5
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          4       17,713,328     0           0          
+XDP-RX          total   17,713,328     0          
+cpumap-enqueue    4:5   17,713,334     10,725,345  8.00       bulk-average
+cpumap-enqueue  sum:5   17,713,334     10,725,345  8.00       bulk-average
+cpumap_kthread  5       6,987,990      0           0          
+cpumap_kthread  total   6,987,990      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<pre class="example">
+$ perf stat -C5 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending -e l1d_pend_miss.pending_cycles -e l1d_pend_miss.pending_cycles_any  -r 10 sleep 1
+
+ Performance counter stats for 'CPU(s) 5' (10 runs):
+
+   3.794.963.218  cycles                                             ( +-  0,00% )  (28,57%)
+   8.589.996.063  instructions              #  2,26  insn per cycle  ( +-  0,08% )  (42,86%)
+      56.201.273  l1d.replacement                                    ( +-  0,56% )  (57,14%)
+          68.600  l1d_pend_miss.fb_full                              ( +-  3,05% )  (71,43%)
+     775.802.766  l1d_pend_miss.pending                              ( +-  0,37% )  (71,43%)
+     624.584.133  l1d_pend_miss.pending_cycles                       ( +-  0,43% )  (14,29%)
+     623.719.946  l1d_pend_miss.pending_cycles_any                   ( +-  0,41% )  (14,29%)
+</pre>
+
+<p>
+The perf stat show that our Fill Buffers inavailability (is significantly
+reduced).
+</p>
+</div>
+</div>
+
+<div id="outline-container-org1d292de" class="outline-3">
+<h3 id="org1d292de">Test: prefetchw single + i+1</h3>
+<div class="outline-text-3" id="text-org1d292de">
+<p>
+Test if prefetch xdp_frame i+1 before cpu_map_build_skb() works.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">for</span> (i = 0; i &lt; n; i++) {
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">xdp_frame</span> *<span style="font-weight: bold; font-style: italic;">xdpf</span> = frames[i];
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">sk_buff</span> *<span style="font-weight: bold; font-style: italic;">skb</span> = skbs[i];
+
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">Bring in xdp_frame area </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        prefetchw(frames[i+1]);
+
+        skb = cpu_map_build_skb(rcpu, xdpf, skb);
+        <span style="font-weight: bold;">if</span> (!skb) {
+                xdp_return_frame(xdpf);
+                <span style="font-weight: bold;">continue</span>;
+        }
+        list_add_tail(&amp;skb-&gt;list, &amp;skb_list);
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-diff"><span style="font-weight: bold;">@@ -311,6 +311,9 @@</span><span style="font-weight: bold;"> static int cpu_map_kthread_run(void *data)</span>
+                        struct xdp_frame *xdpf = frames[i];
+                        struct sk_buff *skb = skbs[i];
+
++                       /* Bring in xdp_frame area */
++                       prefetchw(frames[i+1]);
++
+                        skb = cpu_map_build_skb(rcpu, xdpf, skb);
+                        if (!skb) {
+                                xdp_return_frame(xdpf);
+</pre>
+</div>
+
+<p>
+This helped a bit:
+</p>
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          0       18,615,647     0           0          
+XDP-RX          total   18,615,647     0          
+cpumap-enqueue    0:5   18,615,645     11,492,025  8.00       bulk-average
+cpumap-enqueue  sum:5   18,615,645     11,492,025  8.00       bulk-average
+cpumap_kthread  5       7,123,614      0           0          
+cpumap_kthread  total   7,123,614      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<p>
+And Fill Buffer is not stalled:
+</p>
+<pre class="example">
+$ perf stat -C5 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending_cycles  -r 10 sleep 1
+ Performance counter stats for 'CPU(s) 5' (10 runs):
+     3.803.323.203   cycles                                               ( +-  0,00% )
+     8.789.579.607   instructions              #    2,31  insn per cycle  ( +-  0,02% )
+        55.889.908   l1d.replacement                                      ( +-  0,65% )
+           160.042   l1d_pend_miss.fb_full                                ( +-  3,40% )
+       524.989.740   l1d_pend_miss.pending_cycles                         ( +-  0,25% )
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org50159c7" class="outline-3">
+<h3 id="org50159c7">Test: Remove all prefetches</h3>
+<div class="outline-text-3" id="text-org50159c7">
+<p>
+Very significant performance drop:
+</p>
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          0       17,295,937     0           0          
+XDP-RX          total   17,295,937     0          
+cpumap-enqueue    0:5   17,295,935     11,471,150  8.00       bulk-average
+cpumap-enqueue  sum:5   17,295,935     11,471,150  8.00       bulk-average
+cpumap_kthread  5       5,824,778      0           0          
+cpumap_kthread  total   5,824,778      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<p>
+Want to see if 'l1d.replacement' number change, which is doesn't.  That is
+good, as it shows that our prefetch are not causing this.
+</p>
+
+<pre class="example">
+$ perf stat -C5 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending_cycles  -r 10 sleep 1
+ Performance counter stats for 'CPU(s) 5' (10 runs):
+
+  3.803.344.664   cycles                                                ( +-  0,00% )
+  6.949.904.074   instructions              #    1,83  insn per cycle   ( +-  0,01% )
+     53.345.100   l1d.replacement                                       ( +-  0,13% )
+              8   l1d_pend_miss.fb_full                                 ( +- 12,85% )
+    840.232.862   l1d_pend_miss.pending_cycles                          ( +-  0,07% )
+</pre>
+</div>
+</div>
+</div>
+
+
+
+<div id="outline-container-org0d6645a" class="outline-2">
+<h2 id="org0d6645a">Hack use Felix kfree_skb_list bulk</h2>
+<div class="outline-text-2" id="text-org0d6645a">
+<p>
+Replace netif_receive_skb_list_core() with bulk free variant of Felix'es
+kfree_skb_list.
+</p>
+
+<p>
+One baseline is iptables-raw drop in RX-CPU: 5,469,705 pps (GRO-enabled).
+</p>
+<pre class="example">
+iptables -t raw -I PREROUTING -p udp --dport 9 -j DROP
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    5469705            0.0
+IpExtInOctets                   251604498          0.0
+IpExtInNoECTPkts                5469662            0.0
+</pre>
+
+<p>
+Disable GRO baseline is iptables-raw drop in RX-CPU: 6378415 pps
+(GRO-disabled).
+</p>
+<pre class="example">
+ethtool -K i40e1 gro off tso off
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    6378415            0.0
+IpExtInOctets                   293407596          0.0
+IpExtInNoECTPkts                6378426            0.0
+</pre>
+
+<p>
+Overhead of GRO:
+</p>
+<ul class="org-ul">
+<li>(1/5469705-1/6378415)*10^9 = 26 ns</li>
+</ul>
+
+<p>
+Another baseline is from above: 6,987,990 pps before this patch, with cpumap
+and iptables-raw drop.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-diff">diff --git a/kernel/bpf/cpumap.c b/kernel/bpf/cpumap.c
+index 37269728a526..7f2e1eecd95a 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/kernel/bpf/cpumap.c</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/kernel/bpf/cpumap.c</span>
+<span style="font-weight: bold;">@@ -259,6 +259,7 @@</span><span style="font-weight: bold;"> static int cpu_map_kthread_run(void *data)</span>
+                void *frames[CPUMAP_BATCH];
+                void *skbs[CPUMAP_BATCH];
+                struct list_head skb_list;
++               struct sk_buff *first_skb;
+                gfp_t gfp = __GFP_ZERO | GFP_ATOMIC;
+                int i, n, m;
+
+<span style="font-weight: bold;">@@ -321,7 +322,11 @@</span><span style="font-weight: bold;"> static int cpu_map_kthread_run(void *data)</span>
+                local_bh_disable();
+
+                /* Inject into network stack */
+-               netif_receive_skb_list_core(&amp;skb_list);
++//             netif_receive_skb_list_core(&amp;skb_list);
++               // hack: what is *MAX* achivable perf with bulk drop now
++               (skb_list.prev)-&gt;next = NULL;
++               first_skb = list_first_entry(&amp;skb_list, struct sk_buff, list);
++               kfree_skb_list(first_skb);
+
+</pre>
+</div>
+
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          4       18,561,003     0           0          
+XDP-RX          total   18,561,003     0          
+cpumap-enqueue    4:5   18,561,003     4,492,703   8.00       bulk-average
+cpumap-enqueue  sum:5   18,561,003     4,492,703   8.00       bulk-average
+cpumap_kthread  5       14,068,307     0           0          
+cpumap_kthread  total   14,068,307     0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<p>
+The speedup is ashonishing:
+</p>
+<ul class="org-ul">
+<li>iptables -t raw -j DROP:  6,987,990 pps</li>
+<li>This patch             : 14,068,307 pps</li>
+<li>(1/6987990-1/14068307)*10^9 = 72 ns</li>
+</ul>
+
+<p>
+And the batch size is rather small = 8:  #define CPUMAP_BATCH 8
+</p>
+
+<pre class="example">
+$ perf stat -C5 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending -e l1d_pend_miss.pending_cycles  -r3 sleep 1
+
+ Performance counter stats for 'CPU(s) 5' (3 runs):
+
+     3.794.909.591      cycles                                              ( +-  0,00% )  (33,27%)
+     5.647.624.119      instructions              #  1,49  insn per cycle   ( +-  0,45% )  (49,95%)
+        92.070.295      l1d.replacement                                     ( +-  0,52% )  (66,63%)
+         2.030.914      l1d_pend_miss.fb_full                               ( +-  0,78% )  (83,32%)
+     1.581.098.313      l1d_pend_miss.pending                               ( +-  0,29% )  (83,35%)
+     1.300.932.415      l1d_pend_miss.pending_cycles                        ( +-  0,38% )  (16,65%)
+</pre>
+
+<p>
+The insn per cycle is actually note very good.
+</p>
+
+<p>
+Detailed perf analysis shows these "l1d_pend_miss.pending" is caused when
+reading xdp_frame first time, and when reading packet payload
+(xdp_frame-&gt;data).
+</p>
+
+<pre class="example">
+$ perf stat -C5 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -r 4 sleep 1
+
+ Performance counter stats for 'CPU(s) 5' (4 runs):
+
+     3.803.907.079      cycles                                                  ( +-  0,00% )
+     5.680.449.445      instructions              # 1,49  insn per cycle        ( +-  0,26% )
+        77.631.914      cache-references                                        ( +-  0,29% )
+             1.148      cache-misses              # 0,001 % of all cache refs   ( +- 44,44% )
+     1.114.192.930      branches:k                                              ( +-  0,26% )
+         4.041.461      branch-misses:k           # 0,36% of all branches       ( +-  0,24% )
+            54.077      l2_rqsts.all_code_rd                                    ( +-  2,57% )
+            45.202      l2_rqsts.code_rd_hit                                    ( +-  1,91% )
+             8.838      l2_rqsts.code_rd_miss                                   ( +-  6,30% )
+</pre>
+
+<p>
+Perf report on CPU 5:
+</p>
+<pre class="example">
+Samples: 120K of event 'cycles:ppp', Event count (approx.): 113416388646
+  Overhead  CPU  Command          Shared Object     Symbol
++   28,68%  005  cpumap/5/map:46  [kernel.vmlinux]  [k] cpu_map_kthread_run
++   17,95%  005  cpumap/5/map:46  [kernel.vmlinux]  [k] build_skb_around
++    9,86%  005  cpumap/5/map:46  [kernel.vmlinux]  [k] memset_erms
++    6,29%  005  cpumap/5/map:46  [kernel.vmlinux]  [k] skb_release_data
++    5,54%  005  cpumap/5/map:46  [kernel.vmlinux]  [k] eth_type_trans
++    5,43%  005  cpumap/5/map:46  [kernel.vmlinux]  [k] kmem_cache_alloc_bulk
++    4,57%  005  cpumap/5/map:46  [kernel.vmlinux]  [k] page_frag_free
++    4,14%  005  cpumap/5/map:46  [kernel.vmlinux]  [k] kmem_cache_free_bulk
++    2,99%  005  cpumap/5/map:46  [kernel.vmlinux]  [k] kfree_skb_list
++    2,08%  005  cpumap/5/map:46  [kernel.vmlinux]  [k] skb_release_head_state
++    1,70%  005  cpumap/5/map:46  [kernel.vmlinux]  [k] skb_release_all
++    1,47%  005  cpumap/5/map:46  [kernel.vmlinux]  [k] bpf_prog_e7b6a25b0d20485e
++    1,42%  005  cpumap/5/map:46  [kernel.vmlinux]  [k] skb_free_head
++    1,30%  005  cpumap/5/map:46  [kernel.vmlinux]  [k] perf_trace_xdp_cpumap_kthread
++    1,28%  005  cpumap/5/map:46  [kernel.vmlinux]  [k] memset
++    1,28%  005  cpumap/5/map:46  [kernel.vmlinux]  [k] trace_call_bpf
++    0,97%  005  cpumap/5/map:46  [kernel.vmlinux]  [k] __list_add_valid
+</pre>
+
+<p>
+Deducting per packet nanosec cost from: 14,068,307 pps = 71 ns
+</p>
+<ul class="org-ul">
+<li>(1/14068307)*10^9 = 71 ns</li>
+</ul>
+
+<p>
+Cost of skb alloc+free reduced to: 6.8 ns
+</p>
+<ul class="org-ul">
+<li>5,43%  kmem_cache_alloc_bulk (71/100*5.43 = 3.8553 ns)</li>
+<li>4,14%  kmem_cache_free_bulk  (71/100*4.14 = 2.9394 ns)</li>
+<li>9.57%  = 6.7947 ns</li>
+</ul>
+
+<p>
+There is a L1-miss (from L3) in two top functions:
+</p>
+<ul class="org-ul">
+<li>28,68%  cpu_map_kthread_run 71/100*28.68 = 20.3628 ns</li>
+<li>17,95%  build_skb_around    71/100*17.95 = 12.7445 ns</li>
+<li>46.63% = 33.1 ns</li>
+</ul>
+
+<p>
+The memset is in two functions
+</p>
+<ul class="org-ul">
+<li>9,86%   memset_erms (71/100*9.86 = 7.0006 ns)</li>
+<li>1,28%   memset      (71/100*1.28 = 0.9088 ns)</li>
+<li>11.14% = 7.9094 ns</li>
+</ul>
+</div>
+
+<div id="outline-container-org55ace9f" class="outline-3">
+<h3 id="org55ace9f">test: remove kmem_cache_free_bulk</h3>
+<div class="outline-text-3" id="text-org55ace9f">
+<p>
+Isolate the effect of using <code>kmem_cache_free_bulk()</code>. The change the bulk
+variant of <code>kfree_skb_list</code>, to revert back to use <code>kfree_skb()</code>, which
+makes it not use bulking. Notice, that <code>kfree_skb_list</code> still get the
+effect/improvement for the I-cache optimization.
+</p>
+
+<p>
+Code change:
+</p>
+<div class="org-src-container">
+<pre class="src src-diff">diff --git a/net/core/skbuff.c b/net/core/skbuff.c
+index f1391379177f..1851c9c622af 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/net/core/skbuff.c</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/net/core/skbuff.c</span>
+<span style="font-weight: bold;">@@ -707,6 +707,10 @@</span><span style="font-weight: bold;"> void kfree_skb_list(struct sk_buff *segs)</span>
+                        continue;
+                }
+
++               kfree_skb(segs);
++               continue;
++
++#if 0
+                if (!skb_unref(segs))
+                        continue;
+
+<span style="font-weight: bold;">@@ -722,6 +726,7 @@</span><span style="font-weight: bold;"> void kfree_skb_list(struct sk_buff *segs)</span>
+
+                kmem_cache_free_bulk(skbuff_head_cache, n_skbs, skbs);
+                n_skbs = 0;
++#endif
+        }
+</pre>
+</div>
+
+<p>
+Performance change:
+</p>
+<ul class="org-ul">
+<li>before: 14,068,307 pps</li>
+<li>after:  13,362,498 pps</li>
+<li>diff-pps: -705,809 pps</li>
+<li>diff-ns:  (1/13362498-1/14068307)*10^9 = 3.754548 ns</li>
+</ul>
+
+<pre class="example">
+sudo ./xdp_redirect_cpu --dev i40e1 --qsize 128 --cpu 4 --prog xdp_cpu_map0
+[...]
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          3       19,370,256     0           0          
+XDP-RX          total   19,370,256     0          
+cpumap-enqueue    3:4   19,370,259     6,007,762   8.00       bulk-average
+cpumap-enqueue  sum:4   19,370,259     6,007,762   8.00       bulk-average
+cpumap_kthread  4       13,362,498     0           0          
+cpumap_kthread  total   13,362,498     0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<p>
+Below is it clear that the cost of <code>kmem_cache_free</code> increased. (We know the
+call <code>kmem_cache_free</code> is hitting the fast-path of the SLUB allocator, due
+to this limited micro-benchmark, which makes the improvement impressive. The
+<code>kmem_cache_free_bulk</code> for SLUB will have a larger performance advantage
+over <code>kmem_cache_free</code> once we move out-of this fast-path area).
+</p>
+
+<pre class="example">
+Samples: 120K of event 'cycles:ppp', Event count (approx.): 113422085196
+  Overhead  CPU  Command         Shared Object     Symbol
++   27,50%  004  cpumap/4/map:1  [kernel.vmlinux]  [k] cpu_map_kthread_run
++   17,03%  004  cpumap/4/map:1  [kernel.vmlinux]  [k] build_skb_around
++    9,95%  004  cpumap/4/map:1  [kernel.vmlinux]  [k] memset_erms
++    7,08%  004  cpumap/4/map:1  [kernel.vmlinux]  [k] kmem_cache_free
++    5,26%  004  cpumap/4/map:1  [kernel.vmlinux]  [k] kmem_cache_alloc_bulk
++    5,24%  004  cpumap/4/map:1  [kernel.vmlinux]  [k] eth_type_trans
++    3,45%  004  cpumap/4/map:1  [kernel.vmlinux]  [k] skb_release_data
++    3,15%  004  cpumap/4/map:1  [kernel.vmlinux]  [k] kfree_skb
++    3,09%  004  cpumap/4/map:1  [kernel.vmlinux]  [k] skb_release_head_state
++    2,57%  004  cpumap/4/map:1  [kernel.vmlinux]  [k] page_frag_free
++    2,23%  004  cpumap/4/map:1  [kernel.vmlinux]  [k] kfree_skb_list
++    1,66%  004  cpumap/4/map:1  [kernel.vmlinux]  [k] skb_release_all
++    1,45%  004  cpumap/4/map:1  [kernel.vmlinux]  [k] bpf_prog_e7b6a25b0d20485e
++    1,27%  004  cpumap/4/map:1  [kernel.vmlinux]  [k] trace_call_bpf
++    1,25%  004  cpumap/4/map:1  [kernel.vmlinux]  [k] perf_trace_xdp_cpumap_kthread
++    1,24%  004  cpumap/4/map:1  [kernel.vmlinux]  [k] memset
++    1,00%  004  cpumap/4/map:1  [kernel.vmlinux]  [k] kfree_skbmem
++    0,95%  004  cpumap/4/map:1  [kernel.vmlinux]  [k] __list_add_valid
+</pre>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orgd358d97" class="outline-2">
+<h2 id="orgd358d97">notes</h2>
+<div class="outline-text-2" id="text-orgd358d97">
+</div>
+<div id="outline-container-org2e32b3f" class="outline-3">
+<h3 id="org2e32b3f">Experiments</h3>
+<div class="outline-text-3" id="text-org2e32b3f">
+<pre class="example">
+955.571564128                MUX:                                                14.29 +-     0.00 %       
+956.520987559 BE             Backend_Bound:                                      36.61 +-     0.00 % Slots 
+956.520987559 BE/Mem         Backend_Bound.Memory_Bound:                         15.48 +-     0.00 % Slots 
+956.520987559 BE/Core        Backend_Bound.Core_Bound:                           21.13 +-     0.00 % Slots 
+956.520987559 BE/Mem         Backend_Bound.Memory_Bound.L1_Bound:                13.63 +-     0.00 % Stalls
+956.520987559 BE/Mem         Backend_Bound.Memory_Bound.L3_Bound:                 8.42 +-     0.00 % Stalls
+956.520987559 BE/Core        Backend_Bound.Core_Bound.Ports_Utilization:         33.17 +-     0.00 % Clocks &lt;==
+956.520987559                MUX:                                                14.29 +-     0.00 %       
+Sampling:
+perf record -g -e cycles:pp,cpu/event=0xd1,umask=0x4,name=L3_Bound_MEM_LOAD_UOPS_RETIRED_L3_HIT,period=50021/pp,cpu/event=0xd1,umask=0x1,name=L1_Bound_MEM_LOAD_UOPS_RETIRED_L1_HIT,period=2000003/pp,cpu/event=0xd1,umask=0x40,name=L1_Bound_MEM_LOAD_UOPS_RETIRED_HIT_LFB,period=100003/pp -o perf.data --cpu 4 -a
+[jbrouer@broadwell pmu-tools]$ perf record -g -e cycles:pp,cpu/event=0xd1,umask=0x4,name=L3_Bound_MEM_LOAD_UOPS_RETIRED_L3_HIT,period=50021/pp,cpu/event=0xd1,umask=0x1,name=L1_Bound_MEM_LOAD_UOPS_RETIRED_L1_HIT,period=2000003/pp,cpu/event=0xd1,umask=0x40,name=L1_Bound_MEM_LOAD_UOPS_RETIRED_HIT_LFB,period=100003/pp -o perf.data --cpu 4 -a
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgddc2cc4" class="outline-3">
+<h3 id="orgddc2cc4">Experiment: cut-out netfilter-code-path</h3>
+<div class="outline-text-3" id="text-orgddc2cc4">
+<p>
+Ugly hack cut-out nf_nook invocation, and drop all SKBs directly in NF_HOOK_LIST.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-diff">diff --git a/include/linux/netfilter.h b/include/linux/netfilter.h
+index 72cb19c3db6a..edcd49c11ba3 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/include/linux/netfilter.h</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/include/linux/netfilter.h</span>
+<span style="font-weight: bold;">@@ -301,8 +301,9 @@</span><span style="font-weight: bold;"> NF_HOOK_LIST(uint8_t pf, unsigned int hook, struct net *net, struct sock *sk,</span>
+        INIT_LIST_HEAD(&amp;sublist);
+        list_for_each_entry_safe(skb, next, head, list) {
+                list_del(&amp;skb-&gt;list);
+-               if (nf_hook(pf, hook, net, sk, skb, in, out, okfn) == 1)
+-                       list_add_tail(&amp;skb-&gt;list, &amp;sublist);
++               kfree_skb(skb); // XXX hack partition code-path test
++               //if (nf_hook(pf, hook, net, sk, skb, in, out, okfn) == 1)
++               //      list_add_tail(&amp;skb-&gt;list, &amp;sublist);
+        }
+        /* Put passed packets back on main list */
+        list_splice(&amp;sublist, head);
+</pre>
+</div>
+
+<p>
+On-top of: "Patch: bpf: cpumap use netif_receive_skb_list" and batch=16
+</p>
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          1       19,193,940     0           0          
+XDP-RX          total   19,193,940     0          
+cpumap-enqueue    1:4   19,193,949     12,275,618  8.00       bulk-average
+cpumap-enqueue  sum:4   19,193,949     12,275,618  8.00       bulk-average
+cpumap_kthread  4       6,918,329      0           0          
+cpumap_kthread  total   6,918,329      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<p>
+Batch=64 (On-top of: "Patch: bpf: cpumap use netif_receive_skb_list")
+</p>
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          4       18,643,859     0           0          
+XDP-RX          total   18,643,859     0          
+cpumap-enqueue    4:5   18,643,866     11,638,701  8.00       bulk-average
+cpumap-enqueue  sum:5   18,643,866     11,638,701  8.00       bulk-average
+cpumap_kthread  5       7,005,145      0           0          
+cpumap_kthread  total   7,005,145      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<p>
+Batch=8 (On-top of: "bpf: cpumap memory prefetchw optimizations for struct page")
+</p>
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          1       19,182,669     0           0          
+XDP-RX          total   19,182,669     0          
+cpumap-enqueue    1:5   19,182,679     10,166,330  8.00       bulk-average
+cpumap-enqueue  sum:5   19,182,679     10,166,330  8.00       bulk-average
+cpumap_kthread  5       9,016,347      0           0          
+cpumap_kthread  total   9,016,347      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

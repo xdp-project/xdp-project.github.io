@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Setup ARM cross compiler on build server</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Setup ARM cross compiler on build server</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org1ee5192">Getting pre-compiled cross compiler</a></li>
+<li><a href="#orgc88707e">Compile</a>
+<ul>
+<li><a href="#org2b3887e">Kernel Makefile environment variables</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+Notes on howto get cross compiler working for ARM64.
+</p>
+
+<p>
+Goal: Need/want to get an upstream kernel running on my ARM64-bit hardware.
+</p>
+
+<div id="outline-container-org1ee5192" class="outline-2">
+<h2 id="org1ee5192">Getting pre-compiled cross compiler</h2>
+<div class="outline-text-2" id="text-org1ee5192">
+<p>
+Linaro provides this:
+<a href="https://releases.linaro.org/components/toolchain/binaries/latest-7/aarch64-linux-gnu/">https://releases.linaro.org/components/toolchain/binaries/latest-7/aarch64-linux-gnu/</a>
+</p>
+
+<p>
+Download this one:
+ <a href="https://releases.linaro.org/components/toolchain/binaries/latest-7/aarch64-linux-gnu/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu.tar.xz">https://releases.linaro.org/components/toolchain/binaries/latest-7/aarch64-linux-gnu/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu.tar.xz</a>
+</p>
+
+<p>
+Untar it on some directory e.g. <code>/home/${USER}/cross-compilers/</code>
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgc88707e" class="outline-2">
+<h2 id="orgc88707e">Compile</h2>
+<div class="outline-text-2" id="text-orgc88707e">
+<p>
+Got compile script from @apalos : <a href="https://pastebin.com/AK9Wbav5">https://pastebin.com/AK9Wbav5</a>
+</p>
+
+<p>
+Default config amd basic compile cmd:
+ <code>make ARCH=arm64 defconfig</code>
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash"><span style="font-weight: bold;">export</span> <span style="font-weight: bold; font-style: italic;">VERSION</span>=gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu
+<span style="font-weight: bold;">export</span> <span style="font-weight: bold; font-style: italic;">CROSS_COMPILE</span>=<span style="font-style: italic;">"/home/${USER}/cross-compilers/${VERSION}/bin/aarch64-linux-gnu-"</span>
+
+make <span style="font-weight: bold; font-style: italic;">ARCH</span>=arm64 <span style="font-weight: bold; font-style: italic;">CROSS_COMPILE</span>=$<span style="font-weight: bold; font-style: italic;">CROSS_COMPILE</span>
+</pre>
+</div>
+
+<p>
+Created compile script: compile_kernel_arm64.sh
+</p>
+<ul class="org-ul">
+<li><a href="https://github.com/netoptimizer/prototype-kernel/blob/master/scripts/compile_kernel_arm64.sh">https://github.com/netoptimizer/prototype-kernel/blob/master/scripts/compile_kernel_arm64.sh</a></li>
+</ul>
+
+<p>
+Also created script to push kernel to remote host:
+</p>
+<ul class="org-ul">
+<li><a href="https://github.com/netoptimizer/prototype-kernel/blob/master/scripts/kernel_arm64_push.sh">https://github.com/netoptimizer/prototype-kernel/blob/master/scripts/kernel_arm64_push.sh</a></li>
+</ul>
+</div>
+
+<div id="outline-container-org2b3887e" class="outline-3">
+<h3 id="org2b3887e">Kernel Makefile environment variables</h3>
+<div class="outline-text-3" id="text-org2b3887e">
+<p>
+It can be convenient to setup environment variables for cross-compile in the
+current shell. Added file named <a href="https://github.com/netoptimizer/prototype-kernel/blob/master/scripts/arm64_compile_env.source">arm64_compile_env.source</a> that can be used by
+running <code>source arm64_compile_env.source</code>.  The file contains:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh"><span style="font-weight: bold; font-style: italic;"># </span><span style="font-weight: bold; font-style: italic;">'source' this script in your shell</span>
+<span style="font-weight: bold;">export</span> <span style="font-weight: bold; font-style: italic;">VERSION</span>=gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu
+<span style="font-weight: bold;">export</span> <span style="font-weight: bold; font-style: italic;">CROSS_COMPILE_DIR</span>=/home/${<span style="font-weight: bold; font-style: italic;">USER</span>}/cross-compilers/${<span style="font-weight: bold; font-style: italic;">VERSION</span>}
+<span style="font-weight: bold;">export</span> <span style="font-weight: bold; font-style: italic;">CROSS_COMPILE</span>=<span style="font-style: italic;">"aarch64-linux-gnu-"</span>
+<span style="font-weight: bold;">export</span> <span style="font-weight: bold; font-style: italic;">ARCH</span>=arm64
+
+<span style="font-weight: bold;">export</span> <span style="font-weight: bold; font-style: italic;">PATH</span>=${<span style="font-weight: bold; font-style: italic;">CROSS_COMPILE_DIR</span>}/bin:${<span style="font-weight: bold; font-style: italic;">PATH</span>}
+<span style="font-weight: bold;">echo</span> <span style="font-style: italic;">"Cross-compiler in PATH: $PATH"</span>
+</pre>
+</div>
+
+<p>
+The kernel <code>Makefile</code> system will pickup these when (particularly <code>$ARCH</code>
+and <code>$CROSS_COMPILE</code>) when running the regular <code>make</code> command.
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

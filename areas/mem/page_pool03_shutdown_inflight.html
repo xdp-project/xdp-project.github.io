@@ -1,0 +1,1696 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>page_pool handling in-flight frames during shutdown</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">page_pool handling in-flight frames during shutdown</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgb4b386f">Issue: lifetime of device + page_pool</a>
+<ul>
+<li><a href="#org492f8ec">Solution#1 - kill performance</a></li>
+<li><a href="#orgef6e0bf">Solution#2</a></li>
+<li><a href="#org58a4523">Solution#3</a>
+<ul>
+<li><a href="#org9971969">Complications with solution#3</a></li>
+<li><a href="#org184acc6">TODO: cleanup/error code-path in drivers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#orgfe06711">Notes while cleanup patchset</a>
+<ul>
+<li><a href="#orgf98cf63">Prepare mlx5</a></li>
+<li><a href="#org340d56c">mlx5: more correct usage of page_pool API</a></li>
+<li><a href="#orgac5a70a">Strange use in i40e</a></li>
+<li><a href="#org007930e">page_pool: handle in-flight pages and remove page_pool_destroy</a></li>
+<li><a href="#org3ba4ae1">Notes for patchset RFCv1-pre-upstream</a></li>
+<li><a href="#org6e30a3a">Notes for patchset RFCv2-pre-upstream</a></li>
+</ul>
+</li>
+<li><a href="#org9d0951b">Patchset submission</a>
+<ul>
+<li><a href="#org5a67aa3">Cover letter V1 + V2</a></li>
+<li><a href="#orga610e1f">cpumap issue and fix</a></li>
+<li><a href="#org6bea27e">Patch-desc: mlx5: more strict use of page_pool API</a></li>
+<li><a href="#orge8f221a">Patch-desc: xdp: tracking page_pool resources and safe removal</a></li>
+<li><a href="#orgcae806b">Patch-desc: xdp: force mem allocator removal and periodic warning</a></li>
+</ul>
+</li>
+<li><a href="#org5f87e1c">Tests</a>
+<ul>
+<li><a href="#orgc13fd8d">(Established): Test if __xdp_return() can hit no page_pool id issue</a></li>
+<li><a href="#orgd4a375f">Test work-in-progress patch</a></li>
+<li><a href="#org6ea3100">Confused mlx5 doesn't fully use ring-size</a></li>
+<li><a href="#org13a26cd">TCP performance difference with XDP_PASS</a></li>
+<li><a href="#org023366e">CPUMAP redirect not releasing page_pool pages</a></li>
+</ul>
+</li>
+<li><a href="#orgb833287">Tracepoints</a>
+<ul>
+<li><a href="#org9f37c58">Playing with bpftrace</a></li>
+<li><a href="#org466f025">bpftrace for XDP/page_pool disconnect/shutdown</a></li>
+<li><a href="#org9f22fc0">Adding tracepoints for xdp mem_disconnect</a>
+<ul>
+<li><a href="#org95eb2ea">Adding tracepoint for xdp mem_connect</a></li>
+<li><a href="#org75c12ac">Patch desc for adding xdp tracepoints</a></li>
+</ul>
+</li>
+<li><a href="#orga56b66a">Adding tracepoints for page_pool</a>
+<ul>
+<li><a href="#org6e08772">Patch desc: page_pool: add tracepoints for page_pool details need by XDP</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#org447eab5">bpftrace notes</a>
+<ul>
+<li><a href="#org031a979">Compile notes</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+This issue is (unfortunately) blocking drivers from using the DMA-mapping
+feature of page_pool.
+</p>
+
+<div id="outline-container-orgb4b386f" class="outline-2">
+<h2 id="orgb4b386f">Issue: lifetime of device + page_pool</h2>
+<div class="outline-text-2" id="text-orgb4b386f">
+<p>
+There is an issue/challenge when a page_pool object itself is freed, while
+there are still packets in-flight (that need to be returned to the
+page_pool). (The issue is more prone to happen, when SKBs can carry
+page_pool pages).
+</p>
+
+<p>
+Today, this is handled by __xdp_return() via RCU lookups (in rhashtable),
+which will simply call put_page() if the page_pool ID isn't in the
+rhashtable. This is only valid/correct if page_pool is NOT used for
+DMA-mapping.
+</p>
+</div>
+
+<div id="outline-container-org492f8ec" class="outline-3">
+<h3 id="org492f8ec">Solution#1 - kill performance</h3>
+<div class="outline-text-3" id="text-org492f8ec">
+<p>
+(<b>Wrong solution</b>)
+</p>
+
+<p>
+The naive solution, that would kill performance, is to have a refcnt on
+page_pool for each outstanding packet-page. And use this refcnt to know when
+all pages have been returned, and thus when it is safe to free the
+page_pool.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgef6e0bf" class="outline-3">
+<h3 id="orgef6e0bf">Solution#2</h3>
+<div class="outline-text-3" id="text-orgef6e0bf">
+<p>
+Create a smaller object that can be put into rhashtable, that only store the
+<code>struct device</code> pointer, that is the one used for the DMA-unmap call.
+</p>
+
+<p>
+This is not optimal, as we still don't know when this smaller object can be
+freed from the rhashtable. (This both pin-down rhashtable IDs and memory,
+for the lifetime of the kernel)
+</p>
+</div>
+</div>
+
+<div id="outline-container-org58a4523" class="outline-3">
+<h3 id="org58a4523">Solution#3</h3>
+<div class="outline-text-3" id="text-org58a4523">
+<p>
+Keep counters for packets in-flight, or rather outstanding-pages. This will
+allow us to know when it is safe to free (and remove the page_pool object
+from rhashtable).
+</p>
+
+<p>
+This solution can like solution#1, easily kill performance, depending on
+implementation details. E.g. it is bad to have a single in-flight counter
+that is updated on both alloc and free time, because it will cause
+cache-line bouncing (stressing CPU cache coherency protocol).
+</p>
+
+<p>
+Properties of page_pool to realise:
+</p>
+<ul class="org-ul">
+<li>Alloc happens RX time and is protected by NAPI/softirq, which guarantees
+no-concurrent access e.g. to page_pool pp_alloc_cache.</li>
+<li>Free can run concurrently on remote CPUs, and ptr_ring is used for
+synchronise return of pages (via producer lock).</li>
+<li>The ptr_ring doesn't account number of objects in the ring.</li>
+</ul>
+
+<p>
+The proposed solution is having two (unsigned) counters, that can be on
+different cache-lines, and can be used to deduct in-flight packets. This is
+done by mapping the unsigned "sequence" counters onto signed Two's
+complement arithmetic operations. This is e.g. used by kernel's <code>time_after</code>
+macros, described in kernel commit <a href="https://git.kernel.org/torvalds/c/1ba3aab3033b">1ba3aab3033b</a> and <a href="https://git.kernel.org/torvalds/c/5a581b367b5">5a581b367b5</a>, and also
+explained in this <a href="https://en.wikipedia.org/wiki/Serial_number_arithmetic#General_Solution">Wikipedia article</a> and <a href="https://tools.ietf.org/html/rfc1982">RFC1982</a>.
+</p>
+
+<p>
+Thus, these two increment counters only need to be read and compared, when
+checking if it's safe to free the page_pool structure. Which will only
+happen when driver have disconnected RX/alloc side. Thus, on a
+non-fast-path.
+</p>
+
+<p>
+The counters should track number of "real" page allocation/free operations.
+The pages getting recycled, and is storing in internal ptr_ring, is
+basically counted as part of in-flight pages. This, also reduce the effect
+on the fast-path recycling code.
+</p>
+
+<p>
+On the alloc side the counter can be incremented lockless, as it is updated
+under NAPI/softirq protection.
+</p>
+
+<p>
+On the free-side, the operation can happen on remote CPUs. The operation
+that can happen (on remote CPUs) is in-case ptr_ring is full at return/free
+time, which result in the page being returned to page-allocator. Thus, this
+counter need to be updated atomically. The atomic cost could be mitigated
+via using lib/percpu_counter.c.
+</p>
+
+<p>
+Number of pages held 'in-flight' by the page_pool, is also relevant for
+drivers not using the DMA mapping, as indicate/include the pages stored in
+the ptr_ring. Later, when/if system comes under memory pressure, we want to
+allow page-allocator to request page_pool to release resources, where this
+count could be used to select among page_pools.  It is also useful for stats
+and debugging.
+</p>
+</div>
+
+<div id="outline-container-org9971969" class="outline-4">
+<h4 id="org9971969">Complications with solution#3</h4>
+<div class="outline-text-4" id="text-org9971969">
+<p>
+Driver take down procedure need to change. Fortunately only one driver
+(mlx5) uses page_pool.
+</p>
+
+<p>
+Current procedure is:
+</p>
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">static</span> <span style="font-weight: bold; text-decoration: underline;">void</span> <span style="font-weight: bold;">mlx5e_free_rq</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">mlx5e_rq</span> *<span style="font-weight: bold; font-style: italic;">rq</span>)
+{
+        <span style="font-weight: bold; font-style: italic;">// </span><span style="font-weight: bold; font-style: italic;">[...]</span>
+        xdp_rxq_info_unreg(&amp;rq-&gt;xdp_rxq);
+        <span style="font-weight: bold;">if</span> (rq-&gt;page_pool)
+                page_pool_destroy(rq-&gt;page_pool);
+
+</pre>
+</div>
+
+<p>
+With handling of in-flight packet-pages, we might have to postpone calling
+<code>page_pool_destroy()</code>. We could move this into <code>xdp_rxq_info_unreg()</code>, but
+XDP mem model code need to stay allocator agnostic. Thus, we likely need to
+extend <code>struct xdp_mem_allocator</code> with destructor call back.
+</p>
+
+<p>
+Further more, we likely need to have both a "request-cleanup" and
+"destructor" callback. As we want to release as many memory resources as
+possible as early as possible, and only wait for the packet-pages in-flight.
+</p>
+
+<p>
+Extra: We can add a REG_STATE_DYING to XDP (struct xdp_rxq_info), which
+can/might help us catch invalid driver use-cases.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org184acc6" class="outline-4">
+<h4 id="org184acc6">TODO: cleanup/error code-path in drivers</h4>
+<div class="outline-text-4" id="text-org184acc6">
+<p>
+We cannot completely remove <code>page_pool_destroy()</code> from the API, as drivers
+setup paths can fail, and they might need to free the page_pool resource
+explicitly.  We could export a <code>__page_pool_free()</code> function.
+</p>
+</div>
+
+<ul class="org-ul">
+<li><a id="orgaa35381"></a>Found bug/issue.<br />
+<div class="outline-text-5" id="text-orgaa35381">
+<p>
+xdp: fix leak of IDA cyclic ID if rhashtable_insert_slow fails
+</p>
+
+<p>
+Fix error handling case, where inserting ID with rhashtable_insert_slow
+fails in xdp_rxq_info_reg_mem_model, which leads to never releasing the IDA
+ID, as the lookup in xdp_rxq_info_unreg_mem_model fails and thus
+ida_simple_remove() is never called.
+</p>
+
+<p>
+Fix by releasing ID via ida_simple_remove(), and mark xdp_rxq-&gt;mem.id with
+zero, which is already checked in xdp_rxq_info_unreg_mem_model().
+</p>
+
+<div class="org-src-container">
+<pre class="src src-diff">diff --git a/net/core/xdp.c b/net/core/xdp.c
+index 4b2b194f4f1f..762abeb89847 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/net/core/xdp.c</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/net/core/xdp.c</span>
+<span style="font-weight: bold;">@@ -301,6 +301,8 @@</span><span style="font-weight: bold;"> int xdp_rxq_info_reg_mem_model(struct xdp_rxq_info *xdp_rxq,</span>
+        /* Insert allocator into ID lookup table */
+        ptr = rhashtable_insert_slow(mem_id_ht, &amp;id, &amp;xdp_alloc-&gt;node);
+        if (IS_ERR(ptr)) {
++               ida_simple_remove(&amp;mem_id_pool, xdp_rxq-&gt;mem.id);
++               xdp_rxq-&gt;mem.id = 0;
+                errno = PTR_ERR(ptr);
+                goto err;
+        }
+</pre>
+</div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+
+<div id="outline-container-orgfe06711" class="outline-2">
+<h2 id="orgfe06711">Notes while cleanup patchset</h2>
+<div class="outline-text-2" id="text-orgfe06711">
+<p>
+Keeping some notes while cleaning up patchset. This section might not make
+sense, consider removing this section later.
+</p>
+</div>
+
+<div id="outline-container-orgf98cf63" class="outline-3">
+<h3 id="orgf98cf63">Prepare mlx5</h3>
+<div class="outline-text-3" id="text-orgf98cf63">
+<p>
+Removed comment.
+</p>
+<pre class="example">
++void __page_pool_free(struct page_pool *pool)
++{
++       /* API user must call page_pool_request_shutdown first, and
++        * assure that it was successful
++        */
+</pre>
+
+<p>
+page_pool: introduce page_pool_free
+</p>
+
+<p>
+In case driver fails to register the page_pool with XDP return API (via
+xdp_rxq_info_reg_mem_model()), then the driver can free the page_pool
+resources more directly than calling page_pool_destroy(), which does a
+unnecessarily RCU free procedure.
+</p>
+
+<p>
+This patch is preparing for removing page_pool_destroy(), from driver
+invocation.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org340d56c" class="outline-3">
+<h3 id="org340d56c">mlx5: more correct usage of page_pool API</h3>
+<div class="outline-text-3" id="text-org340d56c">
+<p>
+The page_pool API states user is responsible for invoking page_pool_put_page
+once. This were not done in mlx5e_page_release() when recycle is false. This
+e.g. happens from mlx5e_free_rq() when tearing down resources.
+</p>
+
+<p>
+This API omission is not critical, as mlx5 doesn't use page_pool for
+DMA-mapping yet. This becomes important later when tracking in-flight
+frames. This change makes the pages on the driver local page_cache, to go
+through the page_pool system.
+</p>
+
+<p>
+In mlx5e_free_rq() moved the page_pool_destroy() call to after the
+mlx5e_page_release() calls, as it is more correct.
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-orgac5a70a" class="outline-3">
+<h3 id="orgac5a70a">Strange use in i40e</h3>
+<div class="outline-text-3" id="text-orgac5a70a">
+<div class="org-src-container">
+<pre class="src src-diff">diff --git a/drivers/net/ethernet/intel/i40e/i40e_main.c b/drivers/net/ethernet/intel/i40e/i40e_main.c
+index 320562b39686..441323ca1464 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/drivers/net/ethernet/intel/i40e/i40e_main.c</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/drivers/net/ethernet/intel/i40e/i40e_main.c</span>
+<span style="font-weight: bold;">@@ -3248,7 +3248,7 @@</span><span style="font-weight: bold;"> static int i40e_configure_rx_ring(struct i40e_ring *ring)</span>
+
+        if (ring-&gt;vsi-&gt;type == I40E_VSI_MAIN)
+                xdp_rxq_info_unreg_mem_model(&amp;ring-&gt;xdp_rxq);
+-
++// FIXME: Why not using xdp_rxq_info_unreg() ???
+        ring-&gt;xsk_umem = i40e_xsk_umem(ring);
+        if (ring-&gt;xsk_umem) {
+                ring-&gt;rx_buf_len = ring-&gt;xsk_umem-&gt;chunk_size_nohr -
+
+</pre>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org007930e" class="outline-3">
+<h3 id="org007930e">page_pool: handle in-flight pages and remove page_pool_destroy</h3>
+<div class="outline-text-3" id="text-org007930e">
+<p>
+This patch adds tracking of in-flight pages for page_pool.
+</p>
+
+<p>
+The existing scheme where the XDP memory model unregister waits one RCU
+grace-period is insufficient for page_pool, as xdp_frame's can potentially
+be stuck on a remote drivers TX ring queue for longer.
+</p>
+
+<p>
+This patch adds accounting for pages allocated and freed, tracking in-flight
+pages. This adds more strict requirements for page_pool, as it can no-longer
+be used as shim-layer for the page allocator. There is now a more strict
+requirement of calling page_pool_put_page() or page_pool_unmap_page(), when
+a page leaves the page_pool.
+</p>
+
+<p>
+For page accounting
+</p>
+
+<p>
+This patch removes page_pool_destroy().  
+</p>
+
+<p>
+Adds page_pool_request_shutdown(), which is used by XDP memory model
+unregister.
+</p>
+
+
+
+
+<p>
+If a driver implements a local page caching scheme on top of this (like
+mlx5) which also cache DMA-mappings, then the in-flight accounting, can be
+used for detecting if it leaks DMA mappings.
+</p>
+</div>
+</div>
+
+
+
+<div id="outline-container-org3ba4ae1" class="outline-3">
+<h3 id="org3ba4ae1">Notes for patchset RFCv1-pre-upstream</h3>
+<div class="outline-text-3" id="text-org3ba4ae1">
+<p>
+stg mail &#x2013;edit-cover &#x2013;version="RFCv1-pre-upstream" &#x2013;to meup \
+ &#x2013;to ilias &#x2013;to toke &#x2013;to tariq \
+ &#x2013;cc ivan.khoronzhuk@linaro.org &#x2013;cc grygorii.strashko@ti.com \
+ 01-net-page_pool-add-helper1..split-page-DMA-issue
+</p>
+
+<p>
+Subj: Bugfixes related to page_pool
+</p>
+
+<p>
+I've not had time to write a cover-letter&#x2026;
+</p>
+
+<p>
+I wanted to show you the patches, I'm currently working on, which I guess
+are blocking the drivers/net/ethernet/ti/ update. I'm running out of time
+(as it my birthday today and I have plans), so just dumping these&#x2026;
+not-cleaned up patches.
+</p>
+
+<p>
+My notes are here:
+ <a href="https://github.com/xdp-project/xdp-project/blob/master/areas/mem/page_pool03_shutdown_inflight.org">https://github.com/xdp-project/xdp-project/blob/master/areas/mem/page_pool03_shutdown_inflight.org</a>
+</p>
+</div>
+</div>
+
+<div id="outline-container-org6e30a3a" class="outline-3">
+<h3 id="org6e30a3a">Notes for patchset RFCv2-pre-upstream</h3>
+<div class="outline-text-3" id="text-org6e30a3a">
+<p>
+stg mail &#x2013;edit-cover &#x2013;version="RFCv2-pre-upstream" &#x2013;to meup \
+ &#x2013;to ilias &#x2013;to toke &#x2013;to tariq \
+ &#x2013;cc ivan.khoronzhuk@linaro.org &#x2013;cc grygorii.strashko@ti.com \
+ 01-net-page_pool-add-helper1..split-page-DMA-issue
+</p>
+
+<p>
+Subj: Bugfixes related to page_pool
+</p>
+
+<p>
+Just wanted to send out an updated version of the patchset.
+</p>
+</div>
+</div>
+</div>
+
+
+
+<div id="outline-container-org9d0951b" class="outline-2">
+<h2 id="org9d0951b">Patchset submission</h2>
+<div class="outline-text-2" id="text-org9d0951b">
+<p>
+Reorg order of patches, such that mlx5 and cpumap fixes appear before
+introducing in-flight handling. API page_pool_release_page introduced
+earlier.
+</p>
+</div>
+
+<div id="outline-container-org5a67aa3" class="outline-3">
+<h3 id="org5a67aa3">Cover letter V1 + V2</h3>
+<div class="outline-text-3" id="text-org5a67aa3">
+<p>
+xdp: page_pool fixes and in-flight accounting
+</p>
+
+<p>
+This patchset fix page_pool API and users, such that drivers can use it for
+DMA-mapping. A number of places exist, where the DMA-mapping would not get
+released/unmapped, all these are fixed. This occurs e.g. when an xdp_frame
+gets converted to an SKB. As network stack doesn't have any callback for XDP
+memory models.
+</p>
+
+<p>
+The patchset also address a shutdown race-condition. Today removing a XDP
+memory model, based on page_pool, is only delayed one RCU grace period. This
+isn't enough as redirected xdp_frames can still be in-flight on different
+queues (remote driver TX, cpumap or veth).
+</p>
+
+<p>
+We stress that when drivers use page_pool for DMA-mapping, then they MUST
+use one packet per page. This might change in the future, but more work lies
+ahead, before we can lift this restriction.
+</p>
+
+<p>
+This patchset change the page_pool API to be more strict, as in-flight page
+accounting is added.
+</p>
+
+<p>
+Stg mail command V1:
+</p>
+<pre class="example">
+stg mail --edit-cover --version="net-next v1" --to meup \
+ --to netdev \
+ --to ilias --to toke --to tariq \
+ --cc ivan.khoronzhuk@linaro.org --cc grygorii.strashko@ti.com \
+ --cc mcroce@redhat.com --cc toshiaki.makita1@gmail.com \
+ 01-net-page_pool-add-helper1..tracepoint02-page-pool
+</pre>
+
+<p>
+Message-ID: &lt;156045046024.29115.11802895015973488428.stgit@firesoul&gt;
+</p>
+
+<p>
+Link: <a href="https://lore.kernel.org/netdev/156045046024.29115.11802895015973488428.stgit@firesoul/">https://lore.kernel.org/netdev/156045046024.29115.11802895015973488428.stgit@firesoul/</a>
+</p>
+
+<p>
+Stg mail command V2:
+</p>
+<pre class="example">
+stg mail --edit-cover --version="net-next v2" --to meup \
+ --to netdev \
+ --to ilias --to toke --to tariq \
+ --cc ivan.khoronzhuk@linaro.org --cc grygorii.strashko@ti.com \
+ --cc mcroce@redhat.com --cc toshiaki.makita1@gmail.com \
+ 01-net-page_pool-add-helper1..fix-device-refcnt
+</pre>
+
+<p>
+Link: <a href="https://lore.kernel.org/netdev/156086304827.27760.11339786046465638081.stgit@firesoul">https://lore.kernel.org/netdev/156086304827.27760.11339786046465638081.stgit@firesoul</a>
+</p>
+
+<p>
+<a href="https://patchwork.ozlabs.org/project/netdev/list/?series=114508&amp;state=%2a">https://patchwork.ozlabs.org/project/netdev/list/?series=114508&amp;state=%2a</a>
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-orga610e1f" class="outline-3">
+<h3 id="orga610e1f">cpumap issue and fix</h3>
+<div class="outline-text-3" id="text-orga610e1f">
+<p>
+Patch-desc: xdp: page_pool related fix to cpumap
+</p>
+
+<p>
+When converting an xdp_frame into an SKB, and sending this into the network
+stack, then the underlying XDP memory model need to release associated
+resources, because the network stack don't have callbacks for XDP memory
+models.  The only memory model that needs this is page_pool, when a driver
+use the DMA-mapping feature.
+</p>
+
+<p>
+Introduce page_pool_release_page(), which basically does the same as
+page_pool_unmap_page(). Add xdp_release_frame() as the XDP memory model
+interface for calling it, if the memory model match MEM_TYPE_PAGE_POOL, to
+save the function call overhead for others. Have cpumap call
+xdp_release_frame() before xdp_scrub_frame().
+</p>
+</div>
+</div>
+
+<div id="outline-container-org6bea27e" class="outline-3">
+<h3 id="org6bea27e">Patch-desc: mlx5: more strict use of page_pool API</h3>
+<div class="outline-text-3" id="text-org6bea27e">
+<p>
+The mlx5 driver is using page_pool, but not for DMA-mapping (currently), and
+is a little too relaxed about returning or releasing page resources, as it
+is not strictly necessary, when not using DMA-mappings.
+</p>
+
+<p>
+As this patchset is working towards tracking page_pool resources, to know
+about in-flight frames on shutdown. Then fix places where mlx5 leak
+page_pool resource.
+</p>
+
+<p>
+In case of dma_mapping_error, when recycle into page_pool.
+</p>
+
+<p>
+In mlx5e_free_rq() moved the page_pool_destroy() call to after the
+mlx5e_page_release() calls, as it is more correct.
+</p>
+
+<p>
+In mlx5e_page_release() when no recycle was requested, then release page
+from the page_pool, via page_pool_release_page().
+</p>
+</div>
+</div>
+
+<div id="outline-container-orge8f221a" class="outline-3">
+<h3 id="orge8f221a">Patch-desc: xdp: tracking page_pool resources and safe removal</h3>
+<div class="outline-text-3" id="text-orge8f221a">
+<p>
+This patch is needed before we can allow drivers to use page_pool for
+DMA-mappings. Today with page_pool and XDP return API, it is possible to
+remove the page_pool object (from rhashtable), while there are still
+in-flight packet-pages. This is safely handled via RCU and failed lookups in
+__xdp_return() fallback to call put_page(), when page_pool object is gone.
+In-case page is still DMA mapped, this will result in page note getting
+correctly DMA unmapped.
+</p>
+
+<p>
+To solve this, the page_pool is extended with tracking in-flight pages. And
+XDP disconnect system queries page_pool and waits, via workqueue, for all
+in-flight pages to be returned.
+</p>
+
+<p>
+To avoid killing performance when tracking in-flight pages, the implement
+use two (unsigned) counters, that in placed on different cache-lines, and
+can be used to deduct in-flight packets. This is done by mapping the
+unsigned "sequence" counters onto signed Two's complement arithmetic
+operations. This is e.g. used by kernel's time_after macros, described in
+kernel commit 1ba3aab3033b and 5a581b367b5, and also explained in RFC1982.
+</p>
+
+<p>
+The trick is these two incrementing counters only need to be read and
+compared, when checking if it's safe to free the page_pool structure. Which
+will only happen when driver have disconnected RX/alloc side. Thus, on a
+non-fast-path.
+</p>
+
+<p>
+It is chosen that page_pool tracking is also enabled for the non-DMA
+use-case, as this can be used for statistics later.
+</p>
+
+<p>
+After this patch, using page_pool requires more strict resource "release",
+e.g. via page_pool_release_page() that was introduced in this patchset, and
+previous patches implement/fix this more strict requirement.
+</p>
+
+<p>
+Drivers no-longer call page_pool_destroy(). Drivers already call
+xdp_rxq_info_unreg() which call xdp_rxq_info_unreg_mem_model(), which will
+attempt to disconnect the mem id, and if attempt fails schedule the
+disconnect for later via delayed workqueue.
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-orgcae806b" class="outline-3">
+<h3 id="orgcae806b">Patch-desc: xdp: force mem allocator removal and periodic warning</h3>
+<div class="outline-text-3" id="text-orgcae806b">
+<p>
+If bugs exists or are introduced later e.g. by drivers misusing the API,
+then we want to warn about the issue, such that developer notice. This patch
+will generate a bit of noise in form of periodic pr_warn every 30 seconds.
+</p>
+
+<p>
+It is not nice to have this stall warning running forever. Thus, this patch
+will (after 120 attempts) force disconnect the mem id (from the rhashtable)
+and free the page_pool object. This will cause fallback to the put_page() as
+before, which only potentially leak DMA-mappings, if objects are really
+stuck for this long. In that unlikely case, a WARN_ONCE should show us the
+call stack.
+</p>
+</div>
+</div>
+</div>
+
+
+
+<div id="outline-container-org5f87e1c" class="outline-2">
+<h2 id="org5f87e1c">Tests</h2>
+<div class="outline-text-2" id="text-org5f87e1c">
+</div>
+<div id="outline-container-orgc13fd8d" class="outline-3">
+<h3 id="orgc13fd8d">(Established): Test if __xdp_return() can hit no page_pool id issue</h3>
+<div class="outline-text-3" id="text-orgc13fd8d">
+<p>
+First establish if this code can be hit:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-diff">diff --git a/net/core/xdp.c b/net/core/xdp.c
+index 3d53f9f247e5..6114c80393db 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/net/core/xdp.c</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/net/core/xdp.c</span>
+<span style="font-weight: bold;">@@ -338,6 +338,8 @@</span><span style="font-weight: bold;"> static void __xdp_return(void *data, struct xdp_mem_info *mem, bool napi_direct,</span>
+                        napi_direct &amp;= !xdp_return_frame_no_direct();
+                        page_pool_put_page(xa-&gt;page_pool, page, napi_direct);
+                } else {
++                       pr_warn("%s() XXX issue if page_pool(id:%d) use DMA\n",
++                               __func__, mem-&gt;id);
+                        put_page(page);
+                }
+                rcu_read_unlock();
+</pre>
+</div>
+
+<p>
+The driver mlx5 (in <code>mlx5e_xdp_set</code>) reset the NIC-ring "channels", when
+changing between XDP and non-XDP mode.
+</p>
+
+<p>
+In that case, the mlx5 driver doesn't reuse the page_pool, instead when a XDP
+program is attached it "close" and free all the "channels", where
+<code>mlx5e_free_rq</code> calls <code>xdp_rxq_info_unreg</code> as shown by this perf-probe stack
+trace:
+</p>
+
+<pre class="example">
+xdp_rxq_info  1745 [001]  1529.547422: probe:xdp_rxq_info_unreg_2: (ffffffff8179caa6)
+        ffffffff8179caa7 xdp_rxq_info_unreg+0x17 (/boot/vmlinux-5.1.0-bpf-next-page-pool+)
+        ffffffffa022d32a mlx5e_free_rq+0x3a ([mlx5_core])
+        ffffffffa022f0b2 mlx5e_close_channel+0x22 ([mlx5_core])
+        ffffffffa0231486 mlx5e_close_channels+0x26 ([mlx5_core])
+        ffffffffa0232ac7 mlx5e_close_locked+0x47 ([mlx5_core])
+        ffffffffa0232d4c mlx5e_xdp+0x19c ([mlx5_core])
+        ffffffff8176a39c dev_xdp_install+0x3c (/boot/vmlinux-5.1.0-bpf-next-page-pool+)
+        ffffffff81788806 do_setlink+0xcd6 (/boot/vmlinux-5.1.0-bpf-next-page-pool+)
+        ffffffff81788a10 rtnl_setlink+0xd0 (/boot/vmlinux-5.1.0-bpf-next-page-pool+)
+        [...]
+</pre>
+
+<p>
+And <code>xdp_rxq_info_reg</code> is called by <code>mlx5e_alloc_rq</code>, but cannot be seen by
+(below) call stack as it is inlined in <code>mlx5e_open_rq</code>.
+</p>
+
+<pre class="example">
+xdp_rxq_info  1806 [000]  1883.326305:     probe:xdp_rxq_info_reg: (ffffffff8179cae0)
+        ffffffff8179cae1 xdp_rxq_info_reg+0x1 (/boot/vmlinux-5.1.0-bpf-next-page-pool+)
+        ffffffffa022e6e3 mlx5e_open_rq+0x153 ([mlx5_core])
+        ffffffffa0231395 mlx5e_open_channels+0xc25 ([mlx5_core])
+        ffffffffa023289a mlx5e_open_locked+0x2a ([mlx5_core])
+        ffffffffa0232d8a mlx5e_xdp+0x1da ([mlx5_core])
+        ffffffff8176a39c dev_xdp_install+0x3c (/boot/vmlinux-5.1.0-bpf-next-page-pool+)
+        ffffffff8177663e dev_change_xdp_fd+0xce (/boot/vmlinux-5.1.0-bpf-next-page-pool+)
+        ffffffff81788806 do_setlink+0xcd6 (/boot/vmlinux-5.1.0-bpf-next-page-pool+)
+        ffffffff81788a10 rtnl_setlink+0xd0 (/boot/vmlinux-5.1.0-bpf-next-page-pool+)
+        ffffffff81786da2 rtnetlink_rcv_msg+0x122 (/boot/vmlinux-5.1.0-bpf-next-page-pool+)
+        ffffffff817d4157 netlink_rcv_skb+0x37 (/boot/vmlinux-5.1.0-bpf-next-page-pool+)
+        ffffffff817d3a49 netlink_unicast+0x169 (/boot/vmlinux-5.1.0-bpf-next-page-pool+)
+        ffffffff817d3d71 netlink_sendmsg+0x291 (/boot/vmlinux-5.1.0-bpf-next-page-pool+)
+        ffffffff817519b0 sock_sendmsg+0x30 (/boot/vmlinux-5.1.0-bpf-next-page-pool+)
+        ffffffff81752eb8 __sys_sendto+0xe8 (/boot/vmlinux-5.1.0-bpf-next-page-pool+)
+        ffffffff81752f04 __x64_sys_sendto+0x24 (/boot/vmlinux-5.1.0-bpf-next-page-pool+)
+        ffffffff81002252 do_syscall_64+0x42 (/boot/vmlinux-5.1.0-bpf-next-page-pool+)
+        ffffffff81a0008c entry_SYSCALL_64+0x7c (/boot/vmlinux-5.1.0-bpf-next-page-pool+)
+            7f4d4090e4ed __send+0x1d (/usr/lib64/libc-2.26.so)
+                  402332 main+0x422 (/home/jbrouer/kernel-bpf-samples/xdp_rxq_info)
+</pre>
+
+<p>
+For testing, I used XDP redirect map command:
+</p>
+
+<pre class="example">
+sudo ./xdp_redirect_map  $(&lt;/sys/class/net/mlx5p1/ifindex) \
+                         $(&lt;/sys/class/net/ixgbe1/ifindex)
+</pre>
+
+<p>
+It took a couple of tries. <b>Confirmed</b>: The <code>pr_warn()</code> was triggered, when XDP
+program was stopped, while having a packet generator running. It might have
+increased the chance that the ixgbe adaptor was causing resets:
+</p>
+
+<pre class="example">
+May 21 16:36:14 broadwell kernel: ixgbe 0000:01:00.1 ixgbe2: initiating reset to clear Tx work after link loss
+May 21 16:36:14 broadwell kernel: ixgbe 0000:01:00.1 ixgbe2: Reset adapter
+May 21 16:36:15 broadwell kernel: ixgbe 0000:01:00.1 ixgbe2: detected SFP+: 4
+May 21 16:36:15 broadwell kernel: ixgbe 0000:01:00.1 ixgbe2: initiating reset to clear Tx work after link loss
+May 21 16:36:15 broadwell kernel: XXX mlx5e_free_rq()
+May 21 16:36:15 broadwell kernel: XXX mlx5e_free_rq()
+May 21 16:36:15 broadwell kernel: XXX mlx5e_free_rq()
+May 21 16:36:15 broadwell kernel: XXX mlx5e_free_rq()
+May 21 16:36:15 broadwell kernel: XXX mlx5e_free_rq()
+May 21 16:36:15 broadwell kernel: XXX mlx5e_free_rq()
+May 21 16:36:15 broadwell kernel: mlx5_core 0000:03:00.0 mlx5p1: Link up
+May 21 16:36:15 broadwell kernel: ixgbe 0000:01:00.1 ixgbe2: Reset adapter
+May 21 16:36:15 broadwell kernel: __xdp_return() XXX issue if page_pool(id:207) use DMA
+May 21 16:36:15 broadwell kernel: __xdp_return() XXX issue if page_pool(id:207) use DMA
+May 21 16:36:15 broadwell kernel: __xdp_return() XXX issue if page_pool(id:207) use DMA
+May 21 16:36:15 broadwell kernel: __xdp_return() XXX issue if page_pool(id:207) use DMA
+May 21 16:36:15 broadwell kernel: __xdp_return() XXX issue if page_pool(id:207) use DMA
+May 21 16:36:15 broadwell kernel: __xdp_return() XXX issue if page_pool(id:207) use DMA
+[...]
+May 21 16:36:19 broadwell kernel: __xdp_return() XXX issue if page_pool(id:207) use DMA
+May 21 16:36:19 broadwell kernel: __xdp_return() XXX issue if page_pool(id:207) use DMA
+May 21 16:36:19 broadwell kernel: __xdp_return() XXX issue if page_pool(id:207) use DMA
+May 21 16:36:19 broadwell kernel: ixgbe 0000:01:00.1: removed PHC on ixgbe2
+May 21 16:36:19 broadwell kernel: ixgbe 0000:01:00.1 ixgbe2: detected SFP+: 4
+May 21 16:36:19 broadwell kernel: ixgbe 0000:01:00.1: Multiqueue Enabled: Rx Queue count = 6, Tx Queue count = 6 XDP Queue count = 0
+May 21 16:36:19 broadwell kernel: ixgbe 0000:01:00.1: registered PHC device on ixgbe2
+May 21 16:36:19 broadwell kernel: ixgbe 0000:01:00.1 ixgbe2: detected SFP+: 4
+May 21 16:36:19 broadwell kernel: ixgbe 0000:01:00.1 ixgbe2: NIC Link is Up 10 Gbps, Flow Control: RX/TX
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgd4a375f" class="outline-3">
+<h3 id="orgd4a375f">Test work-in-progress patch</h3>
+<div class="outline-text-3" id="text-orgd4a375f">
+<p>
+After fixing mlx5 to call <code>xdp_rxq_info_unreg(&amp;rq-&gt;xdp_rxq)</code> later and let
+the non-recycle path call <code>page_pool_put_page()</code>.  The basics work:
+</p>
+
+<pre class="example">
+[ 1290.790220] XXX __mem_id_disconnect() id:184
+[ 1290.797905] XXX mlx5e_free_rq()
+[ 1290.802080] XXX __mem_id_disconnect() id:185
+[ 1290.807158] ixgbe 0000:01:00.1 ixgbe2: detected SFP+: 4
+[ 1290.813819] ixgbe 0000:01:00.1 ixgbe2: initiating reset to clear Tx work after link loss
+[ 1290.814690] XXX mlx5e_free_rq()
+[ 1290.827424] XXX __mem_id_disconnect() id:186
+[ 1290.832841] XXX __page_pool_safe_to_destroy() inflight:511
+[ 1290.839355] XXX xdp_rxq_info_unreg_mem_model() - start page_pool shutdown/destroy id(186)
+[ 1290.896866] mlx5_core 0000:03:00.0 mlx5p1: Link up
+[ 1291.035127] ixgbe 0000:01:00.1 ixgbe2: Reset adapter
+[ 1291.335453] ixgbe 0000:01:00.1 ixgbe2: detected SFP+: 4
+[ 1291.587066] ixgbe 0000:01:00.1 ixgbe2: NIC Link is Up 10 Gbps, Flow Control: RX/TX
+[ 1291.875054] XXX mem_id_disconnect_defer_retry() id:186 call __mem_id_disconnect again
+[ 1291.883661] XXX __mem_id_disconnect() id:186
+</pre>
+
+<p>
+<b>Update</b>: this bug was caused by CPUMAP redirect not calling page_pool_unmap_page():
+</p>
+<pre class="example">
+[ 7600.046747] XXX mem_id_disconnect_defer_retry() id:121 call __mem_id_disconnect again
+[ 7600.064706] XXX __mem_id_disconnect() id:121
+[ 7600.070009] XXX page_pool_inflight() inflight:17102512 hold:17103469 released:957
+[ 7600.078811] XXX __page_pool_request_shutdown() inflight:17102512
+[ 7600.085844] XXX page_pool_inflight() inflight:17102512 hold:17103469 released:957
+[ 7600.094627] XXX __page_pool_safe_to_destroy() inflight:17102512
+[ 7600.101574] XXX mem_id_disconnect_defer_retry() id:121 call schedule_delayed_work
+[ 7601.134756] XXX mem_id_disconnect_defer_retry() id:121 call __mem_id_disconnect again
+[ 7601.152716] XXX __mem_id_disconnect() id:121
+[ 7601.158024] XXX page_pool_inflight() inflight:17102512 hold:17103469 released:957
+[ 7601.166825] XXX __page_pool_request_shutdown() inflight:17102512
+[ 7601.173865] XXX page_pool_inflight() inflight:17102512 hold:17103469 released:957
+[ 7601.182648] XXX __page_pool_safe_to_destroy() inflight:17102512
+</pre>
+</div>
+</div>
+
+
+<div id="outline-container-org6ea3100" class="outline-3">
+<h3 id="org6ea3100">Confused mlx5 doesn't fully use ring-size</h3>
+<div class="outline-text-3" id="text-org6ea3100">
+<p>
+Summary (TLDR): There was nothing wrong with the in-flight tracking, it was
+just mlx5 driver that only fills it's ring-buffer with page_pool size
+minus 64.
+</p>
+
+<p>
+The mlx5 driver configures two different ring-sizes depending on if XDP is
+used or not. For the XDP case ring-size 1024 is used, and non-XDP 512 is
+used.
+</p>
+
+<p>
+When debugging, I was seeing (XDP case) only 960 pages "tracked" on a unused
+page_pool ring (for non-XDP case 448):
+</p>
+<pre class="example">
+[  370.223589] XXX page_pool_inflight() inflight:960 hold:960 released:0
+[  370.231079] XXX __page_pool_request_shutdown() inflight:960
+</pre>
+
+<p>
+It turned out that the mlx5 driver refill function <code>mlx5e_post_rx_mpwqes()</code>
+only refill up-to ring-size minus 64.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-diff"><span style="font-weight: bold;">@@ -624,7 +624,11 @@</span><span style="font-weight: bold;"> bool mlx5e_post_rx_mpwqes(struct mlx5e_rq *rq)</span>
+        mlx5e_poll_ico_cq(&amp;sq-&gt;cq, rq);
+
+        missing = mlx5_wq_ll_missing(wq) - rq-&gt;mpwqe.umr_in_progress;
+-
++       pr_warn("XXX DEBUG %s()  missing:%d x64:%d (%ld)\n", __func__,
++               missing, (missing*64), MLX5_MPWRQ_PAGES_PER_WQE); //DEBUG
++// Results first time called:
++// missing:7 x64:448 (64)   &lt;-- non-XDP
++// missing:15 x64:960 (64)  &lt;-- XDP-mode
+        if (unlikely(rq-&gt;mpwqe.umr_in_progress &gt; rq-&gt;mpwqe.umr_last_bulk))
+                rq-&gt;stats-&gt;congst_umr++;
+
+<span style="font-weight: bold;">@@ -635,7 +639,7 @@</span><span style="font-weight: bold;"> bool mlx5e_post_rx_mpwqes(struct mlx5e_rq *rq)</span>
+        head = rq-&gt;mpwqe.actual_wq_head;
+        i = missing;
+        do {
+-               if (unlikely(mlx5e_alloc_rx_mpwqe(rq, head)))
++               if (unlikely(mlx5e_alloc_rx_mpwqe(rq, head))) // bulks 64
+                        break;
+                head = mlx5_wq_ll_get_wqe_next_ix(wq, head);
+        } while (--i);
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org13a26cd" class="outline-3">
+<h3 id="org13a26cd">TCP performance difference with XDP_PASS</h3>
+<div class="outline-text-3" id="text-org13a26cd">
+<p>
+Tom Barbette reported that when loading an XDP_PASS program, then TCP flows
+were slower and cost more CPU, but only for driver mlx5 (not for e.g. i40e).
+(via video link: <a href="https://www.youtube.com/watch?v=o5hlJZbN4Tk&amp;feature=youtu.be">https://www.youtube.com/watch?v=o5hlJZbN4Tk&amp;feature=youtu.be</a>)
+</p>
+
+<p>
+On my system it was even worse, with an XDP_PASS program loaded, and iperf
+(6 parallel TCP flows) I would see 100% CPU usage and total 83.3 Gbits/sec.
+With non-XDP case, I saw 58% CPU (43% idle) and total 89.7 Gbits/sec
+</p>
+
+<p>
+This was kind of hard to root-cause, but I solved it by increasing the TCP
+socket size used by the iperf tool, like this:
+</p>
+
+<p>
+$ iperf -s &#x2013;window 4M
+</p>
+<hr />
+<p>
+Server listening on TCP port 5001
+TCP window size:  416 KByte (WARNING: requested 4.00 MByte)
+</p>
+<hr />
+
+<p>
+Given I could reproduce, I took at closer look at perf record/report stats,
+and it was actually quite clear that this was related to stalling on getting
+pages from the page allocator (function calls top#6 get_page_from_freelist
+and free_pcppages_bulk).
+</p>
+
+<p>
+Using my tool: ethtool_stats.pl
+ <a href="https://github.com/netoptimizer/network-testing/blob/master/bin/ethtool_stats.pl">https://github.com/netoptimizer/network-testing/blob/master/bin/ethtool_stats.pl</a>
+</p>
+
+<p>
+It was clear that the mlx5 driver page-cache was not working:
+</p>
+<pre class="example">
+Ethtool(mlx5p1  ) stat:     6653761 (   6,653,761) &lt;= rx_cache_busy /sec
+Ethtool(mlx5p1  ) stat:     6653732 (   6,653,732) &lt;= rx_cache_full /sec
+Ethtool(mlx5p1  ) stat:      669481 (     669,481) &lt;= rx_cache_reuse /sec
+Ethtool(mlx5p1  ) stat:           1 (           1) &lt;= rx_congst_umr /sec
+Ethtool(mlx5p1  ) stat:     7323230 (   7,323,230) &lt;= rx_csum_unnecessary /sec
+Ethtool(mlx5p1  ) stat:        1034 (       1,034) &lt;= rx_discards_phy /sec
+Ethtool(mlx5p1  ) stat:     7323230 (   7,323,230) &lt;= rx_packets /sec
+Ethtool(mlx5p1  ) stat:     7324244 (   7,324,244) &lt;= rx_packets_phy /sec
+</pre>
+
+<p>
+While the non-XDP case looked like this:
+</p>
+<pre class="example">
+Ethtool(mlx5p1  ) stat:      298929 (     298,929) &lt;= rx_cache_busy /sec
+Ethtool(mlx5p1  ) stat:      298971 (     298,971) &lt;= rx_cache_full /sec
+Ethtool(mlx5p1  ) stat:     3548789 (   3,548,789) &lt;= rx_cache_reuse /sec
+Ethtool(mlx5p1  ) stat:     7695476 (   7,695,476) &lt;= rx_csum_complete /sec
+Ethtool(mlx5p1  ) stat:     7695476 (   7,695,476) &lt;= rx_packets /sec
+Ethtool(mlx5p1  ) stat:     7695169 (   7,695,169) &lt;= rx_packets_phy /sec
+Manual consistence calc: 7695476-((3548789*2)+(298971*2)) = -44
+</pre>
+
+<p>
+With the increased TCP window size, the mlx5 driver cache is working better,
+but not optimally, see below. I'm getting 88.0 Gbits/sec with 68% CPU usage.
+</p>
+<pre class="example">
+Ethtool(mlx5p1  ) stat:      894438 (     894,438) &lt;= rx_cache_busy /sec
+Ethtool(mlx5p1  ) stat:      894453 (     894,453) &lt;= rx_cache_full /sec
+Ethtool(mlx5p1  ) stat:     6638518 (   6,638,518) &lt;= rx_cache_reuse /sec
+Ethtool(mlx5p1  ) stat:           6 (           6) &lt;= rx_congst_umr /sec
+Ethtool(mlx5p1  ) stat:     7532983 (   7,532,983) &lt;= rx_csum_unnecessary /sec
+Ethtool(mlx5p1  ) stat:         164 (         164) &lt;= rx_discards_phy /sec
+Ethtool(mlx5p1  ) stat:     7532983 (   7,532,983) &lt;= rx_packets /sec
+Ethtool(mlx5p1  ) stat:     7533193 (   7,533,193) &lt;= rx_packets_phy /sec
+Manual consistence calc: 7532983-(6638518+894453) = 12
+</pre>
+
+<p>
+To understand why this is happening, you first have to know that the
+difference is between the two RX-memory modes used by mlx5 for non-XDP vs
+XDP. With non-XDP two frames are stored per memory-page, while for XDP only
+a single frame per page is used.  The packets available in the RX-rings are
+actually the same, as the ring sizes are non-XDP=512 vs. XDP=1024.
+</p>
+
+<p>
+I believe, the real issue is that TCP use the SKB-&gt;truesize (based on frame
+size) for different memory pressure and window calculations, which is why it
+solved the issue to increase the window size manually.
+</p>
+
+<p>
+Case: XDP_PASS and 6 parallel iperf TCP flows:
+</p>
+<pre class="example">
+May 31 15:24:23 broadwell kernel: XXX mlx5e_free_rq()
+May 31 15:24:23 broadwell kernel: XXX __mem_id_disconnect() id:49
+May 31 15:24:23 broadwell kernel: XXX page_pool_inflight() inflight:1136 hold:10665185 released:10664049
+May 31 15:24:23 broadwell kernel: XXX __page_pool_request_shutdown() inflight:1136
+May 31 15:24:23 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:10665185 released:10665185
+May 31 15:24:23 broadwell kernel: XXX mlx5e_free_rq()
+May 31 15:24:23 broadwell kernel: XXX __mem_id_disconnect() id:50
+May 31 15:24:23 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:10665185 released:10665185
+May 31 15:24:23 broadwell kernel: XXX page_pool_inflight() inflight:1039 hold:10766397 released:10765358
+May 31 15:24:23 broadwell kernel: XXX __page_pool_request_shutdown() inflight:1039
+May 31 15:24:23 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:10766397 released:10766397
+May 31 15:24:23 broadwell kernel: XXX mlx5e_free_rq()
+May 31 15:24:23 broadwell kernel: XXX __mem_id_disconnect() id:51
+May 31 15:24:23 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:10766397 released:10766397
+May 31 15:24:23 broadwell kernel: XXX page_pool_inflight() inflight:1109 hold:10648725 released:10647616
+May 31 15:24:23 broadwell kernel: XXX __page_pool_request_shutdown() inflight:1109
+May 31 15:24:23 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:10648725 released:10648725
+May 31 15:24:23 broadwell kernel: XXX mlx5e_free_rq()
+May 31 15:24:23 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:10648725 released:10648725
+May 31 15:24:23 broadwell kernel: XXX __mem_id_disconnect() id:52
+May 31 15:24:23 broadwell kernel: XXX page_pool_inflight() inflight:1104 hold:10770818 released:10769714
+May 31 15:24:23 broadwell kernel: XXX __page_pool_request_shutdown() inflight:1104
+May 31 15:24:23 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:10770818 released:10770818
+May 31 15:24:24 broadwell kernel: XXX mlx5e_free_rq()
+May 31 15:24:24 broadwell kernel: XXX __mem_id_disconnect() id:53
+May 31 15:24:24 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:10770818 released:10770818
+May 31 15:24:24 broadwell kernel: XXX page_pool_inflight() inflight:1132 hold:10635235 released:10634103
+May 31 15:24:24 broadwell kernel: XXX __page_pool_request_shutdown() inflight:1132
+May 31 15:24:24 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:10635235 released:10635235
+
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    221138             0.0
+IpInDelivers                    221138             0.0
+IpOutRequests                   60230              0.0
+TcpInSegs                       221136             0.0
+TcpOutSegs                      60230              0.0
+TcpExtTCPHPHits                 216175             0.0
+TcpExtTCPHPAcks                 1                  0.0
+TcpExtTCPBacklogCoalesce        4595               0.0
+TcpExtTCPBacklogDrop            1                  0.0
+TcpExtTCPRcvCoalesce            4270               0.0
+TcpExtTCPOFOQueue               87                 0.0
+TcpExtTCPWantZeroWindowAdv      215                0.0
+TcpExtTCPOrigDataSent           1                  0.0
+TcpExtTCPDelivered              1                  0.0
+TcpExtTCPAckCompressed          48                 0.0
+IpExtInOctets                   10644770764        0.0
+IpExtOutOctets                  3132896            0.0
+IpExtInNoECTPkts                7357218            0.0
+</pre>
+
+<p>
+Case: non-XDP and 6 parallel iperf TCP flows:
+</p>
+<pre class="example">
+May 31 15:24:24 broadwell kernel: XXX mlx5e_alloc_rq() pool_size: 512
+May 31 15:24:24 broadwell kernel: XXX mlx5e_alloc_rq() pool_size: 512
+May 31 15:24:24 broadwell kernel: mlx5_core 0000:03:00.0 mlx5p1: Link up
+[...]
+May 31 15:28:58 broadwell kernel: XXX mlx5e_free_rq()
+May 31 15:28:58 broadwell kernel: XXX __mem_id_disconnect() id:55
+May 31 15:28:58 broadwell kernel: XXX page_pool_inflight() inflight:589 hold:13434 released:12845
+May 31 15:28:58 broadwell kernel: XXX __page_pool_request_shutdown() inflight:589
+May 31 15:28:58 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:13434 released:13434
+May 31 15:28:58 broadwell kernel: XXX mlx5e_free_rq()
+May 31 15:28:58 broadwell kernel: XXX __mem_id_disconnect() id:56
+May 31 15:28:58 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:13434 released:13434
+May 31 15:28:58 broadwell kernel: XXX page_pool_inflight() inflight:514 hold:11891 released:11377
+May 31 15:28:58 broadwell kernel: XXX __page_pool_request_shutdown() inflight:514
+May 31 15:28:58 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:11891 released:11891
+May 31 15:28:58 broadwell kernel: XXX mlx5e_free_rq()
+May 31 15:28:58 broadwell kernel: XXX __mem_id_disconnect() id:57
+May 31 15:28:58 broadwell kernel: XXX page_pool_inflight() inflight:595 hold:14093 released:13498
+May 31 15:28:58 broadwell kernel: XXX __page_pool_request_shutdown() inflight:595
+May 31 15:28:58 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:14093 released:14093
+May 31 15:28:58 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:11891 released:11891
+May 31 15:28:58 broadwell kernel: XXX mlx5e_free_rq()
+May 31 15:28:58 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:14093 released:14093
+May 31 15:28:58 broadwell kernel: XXX __mem_id_disconnect() id:58
+May 31 15:28:58 broadwell kernel: XXX page_pool_inflight() inflight:598 hold:180742 released:180144
+May 31 15:28:58 broadwell kernel: XXX __page_pool_request_shutdown() inflight:598
+May 31 15:28:58 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:180742 released:180742
+May 31 15:28:58 broadwell kernel: XXX mlx5e_free_rq()
+May 31 15:28:58 broadwell kernel: XXX __mem_id_disconnect() id:59
+May 31 15:28:58 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:180742 released:180742
+May 31 15:28:58 broadwell kernel: XXX page_pool_inflight() inflight:608 hold:173294 released:172686
+May 31 15:28:58 broadwell kernel: XXX __page_pool_request_shutdown() inflight:608
+May 31 15:28:58 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:173294 released:173294
+
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    286604             0.0
+IpInDelivers                    286604             0.0
+IpOutRequests                   205151             0.0
+TcpInSegs                       286604             0.0
+TcpOutSegs                      205147             0.0
+TcpExtDelayedACKLost            1                  0.0
+TcpExtTCPHPHits                 280054             0.0
+TcpExtTCPBacklogCoalesce        5925               0.0
+TcpExtTCPDSACKOldSent           1                  0.0
+TcpExtTCPRcvCoalesce            5959               0.0
+TcpExtTCPWantZeroWindowAdv      2                  0.0
+IpExtInOctets                   11276032476        0.0
+IpExtOutOctets                  10668956           0.0
+IpExtInNoECTPkts                7778473            0.0
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org023366e" class="outline-3">
+<h3 id="org023366e">CPUMAP redirect not releasing page_pool pages</h3>
+<div class="outline-text-3" id="text-org023366e">
+<p>
+<b>Update</b>: this bug was caused by CPUMAP redirect not calling page_pool_unmap_page(),
+should likely have a page_pool_release_page.
+</p>
+
+<p>
+When fixing this, we need to extend XDP return API to handle this "release".
+</p>
+
+<p>
+Produced shutdown issue via:
+ sudo ./xdp_redirect_cpu &#x2013;dev mlx5p1 &#x2013;qsize 64 &#x2013;cpu 4 &#x2013;prog xdp_cpu_map0 &#x2013;sec 3
+</p>
+
+<p>
+Netperf TCP_STREAM and meanwhile stop XDP program.
+</p>
+<pre class="example">
+Jun 04 17:52:10 broadwell kernel: XXX __mem_id_disconnect() id:61
+Jun 04 17:52:10 broadwell kernel: XXX page_pool_inflight() inflight:8092173 hold:8093040 released:867
+Jun 04 17:52:10 broadwell kernel: XXX __page_pool_request_shutdown() inflight:8092173
+Jun 04 17:52:10 broadwell kernel: XXX page_pool_inflight() inflight:8092113 hold:8093040 released:927
+Jun 04 17:52:10 broadwell kernel: XXX __page_pool_safe_to_destroy() inflight:8092113
+Jun 04 17:52:10 broadwell kernel: XXX __mem_id_disconnect() id:62
+Jun 04 17:52:10 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:960 released:960
+Jun 04 17:52:10 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:960 released:960
+Jun 04 17:52:10 broadwell kernel: XXX __mem_id_disconnect() id:63
+Jun 04 17:52:10 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:960 released:960
+Jun 04 17:52:10 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:960 released:960
+Jun 04 17:52:10 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:960 released:960
+Jun 04 17:52:10 broadwell kernel: XXX __mem_id_disconnect() id:64
+Jun 04 17:52:10 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:960 released:960
+Jun 04 17:52:10 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:960 released:960
+Jun 04 17:52:10 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:960 released:960
+Jun 04 17:52:10 broadwell kernel: XXX __mem_id_disconnect() id:65
+Jun 04 17:52:10 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:960 released:960
+Jun 04 17:52:10 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:960 released:960
+Jun 04 17:52:10 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:960 released:960
+Jun 04 17:52:10 broadwell kernel: XXX __mem_id_disconnect() id:66
+Jun 04 17:52:10 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:960 released:960
+Jun 04 17:52:10 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:960 released:960
+Jun 04 17:52:10 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:960 released:960
+Jun 04 17:52:10 broadwell kernel: XXX page_pool_inflight() inflight:0 hold:960 released:960
+Jun 04 17:52:10 broadwell kernel: mlx5_core 0000:03:00.0 mlx5p1: Link up
+Jun 04 17:52:11 broadwell kernel: XXX mem_id_disconnect_defer_retry() id:61 call __mem_id_disconnect again
+Jun 04 17:52:11 broadwell kernel: XXX __mem_id_disconnect() id:61
+Jun 04 17:52:11 broadwell kernel: XXX page_pool_inflight() inflight:8092113 hold:8093040 released:927
+Jun 04 17:52:11 broadwell kernel: XXX __page_pool_request_shutdown() inflight:8092113
+Jun 04 17:52:11 broadwell kernel: XXX page_pool_inflight() inflight:8092113 hold:8093040 released:927
+Jun 04 17:52:11 broadwell kernel: XXX __page_pool_safe_to_destroy() inflight:8092113
+Jun 04 17:52:12 broadwell kernel: XXX mem_id_disconnect_defer_retry() id:61 call schedule_delayed_work
+Jun 04 17:52:12 broadwell kernel: XXX mem_id_disconnect_defer_retry() id:61 call __mem_id_disconnect again
+Jun 04 17:52:12 broadwell kernel: XXX __mem_id_disconnect() id:61
+Jun 04 17:52:12 broadwell kernel: XXX page_pool_inflight() inflight:8092113 hold:8093040 released:927
+Jun 04 17:52:12 broadwell kernel: XXX __page_pool_request_shutdown() inflight:8092113
+Jun 04 17:52:12 broadwell kernel: XXX page_pool_inflight() inflight:8092113 hold:8093040 released:927
+Jun 04 17:52:12 broadwell kernel: XXX __page_pool_safe_to_destroy() inflight:8092113
+Jun 04 17:52:13 broadwell kernel: XXX mem_id_disconnect_defer_retry() id:61 call schedule_delayed_work
+Jun 04 17:52:13 broadwell kernel: XXX mem_id_disconnect_defer_retry() id:61 call __mem_id_disconnect again
+Jun 04 17:52:13 broadwell kernel: XXX __mem_id_disconnect() id:61
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgb833287" class="outline-2">
+<h2 id="orgb833287">Tracepoints</h2>
+<div class="outline-text-2" id="text-orgb833287">
+<p>
+I got inspired by proof-reading Brendan Gregg's book on BPF, specifically
+the bpftrace tools examples. By adding some tracepoints, we can allow for
+debugging and getting stats from page_pool, without adding more kernel code.
+</p>
+</div>
+
+<div id="outline-container-org9f37c58" class="outline-3">
+<h3 id="org9f37c58">Playing with bpftrace</h3>
+<div class="outline-text-3" id="text-org9f37c58">
+<p>
+Can I attach to several XDP tracepoints, and then extract only the first two
+struct members, which will be:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C">TP_STRUCT__entry(
+        __field(<span style="font-weight: bold; text-decoration: underline;">int</span>, map_id)  <span style="font-weight: bold; text-decoration: underline;">or</span> <span style="font-weight: bold;">__field</span>(<span style="font-weight: bold; text-decoration: underline;">int</span>, prog_id)
+        <span style="font-weight: bold;">__field</span>(u32, act)
+</pre>
+</div>
+
+<p>
+bpftrace -e 'tracepoint:raw_syscalls:sys_enter { @[comm] = count(); }'
+</p>
+
+<p>
+bpftrace -e 'tracepoint:xdp:xdp_redirect_map { @[comm] = count(); }'
+</p>
+
+<p>
+List avail: bpftrace -lv tracepoint:xdp:xdp_redirect_map
+</p>
+<pre class="example">
+$ sudo bpftrace -lv tracepoint:xdp:xdp_redirect_map
+tracepoint:xdp:xdp_redirect_map
+    int prog_id;
+    u32 act;
+    int ifindex;
+    int err;
+    int to_ifindex;
+    u32 map_id;
+    int map_index;
+</pre>
+
+<div class="org-src-container">
+<pre class="src src-sh">bpftrace -e <span style="font-style: italic;">'tracepoint:xdp:xdp_redirect_map { @[comm, args-&gt;prog_id] = count(); }'</span>
+</pre>
+</div>
+
+<p>
+Currently all XDP tracepoints have "act" for XDP action:
+</p>
+<pre class="example">
+$ sudo bpftrace -e 'tracepoint:xdp:xdp_* { @action[args-&gt;act] = count(); }'
+Attaching 8 probes...
+^C
+
+@action[4]: 9965660
+</pre>
+
+<p>
+Examples: attach to all map XDP tracepoints:
+</p>
+<pre class="example">
+sudo bpftrace -e 'tracepoint:xdp:xdp_*map* { @map_id[comm, args-&gt;map_id] = count(); }'
+Attaching 5 probes...
+^C
+
+@map_id[swapper/2, 113]: 1428
+@map_id[swapper/0, 113]: 2085
+@map_id[ksoftirqd/4, 113]: 2253491
+@map_id[ksoftirqd/2, 113]: 25677560
+@map_id[ksoftirqd/0, 113]: 29004338
+@map_id[ksoftirqd/3, 113]: 31034885
+</pre>
+
+<p>
+Could not find a native bpftrace way to exit after N seconds, so I used this
+shell trick instead:
+</p>
+
+<pre class="example">
+sudo bpftrace -e \
+ 'tracepoint:xdp:xdp_devmap_xmit { @[args-&gt;map_id] = @[args-&gt;map_id] + args-&gt;sent; }' &amp;\
+PID=$! ; sleep 10 &amp;&amp; sudo kill -SIGINT $PID
+</pre>
+
+<p>
+Output:
+</p>
+<pre class="example">
+$ sudo bpftrace -e \
+&gt;  'tracepoint:xdp:xdp_devmap_xmit { @[args-&gt;map_id] = @[args-&gt;map_id] + args-&gt;sent; }' &amp;\
+&gt; PID=$! ; sleep 10 &amp;&amp; sudo kill -SIGINT $PID
+[1] 6029
+Attaching 1 probe...
+[jbrouer@broadwell ~]$ 
+
+@[173]: 144475692
+
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org466f025" class="outline-3">
+<h3 id="org466f025">bpftrace for XDP/page_pool disconnect/shutdown</h3>
+<div class="outline-text-3" id="text-org466f025">
+<p>
+sudo bpftrace -e  'kprobe:__mem_id_disconnect { @[kstack] = count(); }'
+</p>
+
+<p>
+Re-introduce bug in CPUMAP to provoke shutdown/disconnect issue.
+</p>
+
+<pre class="example">
+$  sudo bpftrace -e  'kprobe:__mem_id_disconnect { @[kstack] = count(); }'
+Attaching 1 probe...
+^C
+
+@[
+    __mem_id_disconnect+1
+    xdp_rxq_info_unreg_mem_model+100
+    xdp_rxq_info_unreg+30
+    mlx5e_free_rq+132
+    mlx5e_close_channel+34
+    mlx5e_close_channels+38
+    mlx5e_close_locked+71
+    mlx5e_xdp+412
+    dev_xdp_install+60
+    dev_change_xdp_fd+206
+    do_setlink+3286
+    rtnl_setlink+208
+    rtnetlink_rcv_msg+290
+    netlink_rcv_skb+55
+    netlink_unicast+361
+    netlink_sendmsg+657
+    sock_sendmsg+48
+    __sys_sendto+232
+    __x64_sys_sendto+36
+    do_syscall_64+66
+    entry_SYSCALL_64_after_hwframe+68
+]: 6
+@[
+    __mem_id_disconnect+1
+    xdp_rxq_info_unreg_mem_model+100
+    xdp_rxq_info_unreg+30
+    mlx5e_free_rq+132
+    mlx5e_close_channel+34
+    mlx5e_close_channels+38
+    mlx5e_close_locked+71
+    mlx5e_xdp+412
+    dev_xdp_install+60
+    do_setlink+3286
+    rtnl_setlink+208
+    rtnetlink_rcv_msg+290
+    netlink_rcv_skb+55
+    netlink_unicast+361
+    netlink_sendmsg+657
+    sock_sendmsg+48
+    __sys_sendto+232
+    __x64_sys_sendto+36
+    do_syscall_64+66
+    entry_SYSCALL_64_after_hwframe+68
+]: 6
+@[
+    __mem_id_disconnect+1
+    mem_id_disconnect_defer_retry+27
+    process_one_work+390
+    worker_thread+48
+    kthread+273
+    ret_from_fork+31
+]: 121
+</pre>
+
+<p>
+Coded up a force-shutdown mechanism after 120 attempts:
+</p>
+
+<pre class="example">
+Jun 09 13:03:57 broadwell kernel: mlx5_core 0000:03:00.0 mlx5p1: Link up
+Jun 09 13:04:28 broadwell kernel: mem_id_disconnect_defer_retry() stalled mem.id=28 shutdown 31 attempts 30 sec
+Jun 09 13:04:58 broadwell kernel: mem_id_disconnect_defer_retry() stalled mem.id=28 shutdown 61 attempts 61 sec
+Jun 09 13:05:29 broadwell kernel: mem_id_disconnect_defer_retry() stalled mem.id=28 shutdown 91 attempts 92 sec
+Jun 09 13:06:00 broadwell kernel: mem_id_disconnect_defer_retry() stalled mem.id=28 shutdown 121 attempts 122 sec
+Jun 09 13:06:01 broadwell kernel: ------------[ cut here ]------------
+Jun 09 13:06:01 broadwell kernel: Still in-flight pages:10053168 hold:10054146 released:978
+Jun 09 13:06:01 broadwell kernel: WARNING: CPU: 1 PID: 0 at net/core/page_pool.c:349 __page_pool_free+0x78/0xc0
+Jun 09 13:06:01 broadwell kernel: Modules linked in: xt_CHECKSUM xt_MASQUERADE xt_conntrack ipt_REJECT nf_reject_ipv4 xt_tcpudp tun bridge ip6table_mangle ip6table_nat iptable_mangle iptable_nat nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 ebtable_filter ebtables ip6table_filter ip6_tables iptable_filter bpfilter rpcrdma sunrpc ib_umad rdma_ucm ib_ipoib rdma_cm iw_cm ib_cm mlx5_ib i40iw ib_uverbs ib_core coretemp intel_cstate intel_uncore ftdi_sio intel_rapl_perf pcspkr usbserial i2c_i801 wmi ipmi_si ipmi_devintf ipmi_msghandler acpi_pad pcc_cpufreq sch_fq_codel ip_tables x_tables igb ixgbe i40e mdio mlx5_core ptp nfp i2c_algo_bit i2c_core pps_core hid_generic
+Jun 09 13:06:01 broadwell kernel: CPU: 1 PID: 0 Comm: swapper/1 Tainted: G        W         5.2.0-rc1-bpf-next-page-pool+ #171
+Jun 09 13:06:01 broadwell kernel: Hardware name: Supermicro Super Server/X10SRi-F, BIOS 2.0a 08/01/2016
+Jun 09 13:06:01 broadwell kernel: RIP: 0010:__page_pool_free+0x78/0xc0
+Jun 09 13:06:01 broadwell kernel: Code: 4d 85 e4 75 3f 48 89 df e8 65 ff ff ff 84 c0 75 1b 8b 8b 40 05 00 00 48 c7 c7 38 83 16 82 8b 53 20 89 d6 29 ce e8 68 d7 92 ff &lt;0f&gt; 0b 48 8b bb 08 05 00 00 e8 0a db a7 ff 48 89 df 5b 5d 41 5c e9
+Jun 09 13:06:01 broadwell kernel: RSP: 0018:ffffc9000003eee8 EFLAGS: 00010296
+Jun 09 13:06:01 broadwell kernel: RAX: 0000000000000039 RBX: ffff88882a376000 RCX: 0000000000000000
+Jun 09 13:06:01 broadwell kernel: RDX: 0000000000000039 RSI: ffffffff82a64fd9 RDI: ffffffff82a62b6c
+Jun 09 13:06:01 broadwell kernel: RBP: ffff88882a3764c8 R08: ffffffff82a64fa0 R09: 0000000000028cc0
+Jun 09 13:06:01 broadwell kernel: R10: ffffc9000003ef40 R11: 0000000080000001 R12: 0000000000000000
+Jun 09 13:06:01 broadwell kernel: R13: 0000000000000202 R14: 0000000000000009 R15: 0000000000000000
+Jun 09 13:06:01 broadwell kernel: FS:  0000000000000000(0000) GS:ffff88885c640000(0000) knlGS:0000000000000000
+Jun 09 13:06:01 broadwell kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+Jun 09 13:06:01 broadwell kernel: CR2: 00007f54c1822000 CR3: 000000087f20a006 CR4: 00000000003606e0
+Jun 09 13:06:01 broadwell kernel: DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+Jun 09 13:06:01 broadwell kernel: DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Jun 09 13:06:01 broadwell kernel: Call Trace:
+Jun 09 13:06:01 broadwell kernel:  &lt;IRQ&gt;
+Jun 09 13:06:01 broadwell kernel:  __xdp_mem_allocator_rcu_free+0x4d/0x50
+Jun 09 13:06:01 broadwell kernel:  rcu_core+0x2c4/0x4d0
+Jun 09 13:06:01 broadwell kernel:  __do_softirq+0xdd/0x323
+Jun 09 13:06:01 broadwell kernel:  irq_exit+0xb6/0xc0
+Jun 09 13:06:01 broadwell kernel:  smp_apic_timer_interrupt+0x68/0x150
+Jun 09 13:06:01 broadwell kernel:  apic_timer_interrupt+0xf/0x20
+Jun 09 13:06:01 broadwell kernel:  &lt;/IRQ&gt;
+Jun 09 13:06:01 broadwell kernel: RIP: 0010:cpuidle_enter_state+0xad/0x420
+Jun 09 13:06:01 broadwell kernel: Code: c4 0f 1f 44 00 00 31 ff e8 30 37 9d ff 80 7c 24 0b 00 74 12 9c 58 f6 c4 02 0f 85 40 03 00 00 31 ff e8 07 4e a2 ff fb 45 85 ed &lt;0f&gt; 88 0e 03 00 00 4c 2b 24 24 49 63 f5 48 ba cf f7 53 e3 a5 9b c4
+Jun 09 13:06:01 broadwell kernel: RSP: 0018:ffffc900031ebe98 EFLAGS: 00000202 ORIG_RAX: ffffffffffffff13
+Jun 09 13:06:01 broadwell kernel: RAX: ffff88885c669440 RBX: ffffffff82316920 RCX: 000000000000001f
+Jun 09 13:06:01 broadwell kernel: RDX: 0000005e14cbccaf RSI: 00000000238e3c20 RDI: 0000000000000000
+Jun 09 13:06:01 broadwell kernel: RBP: ffff88885c672500 R08: 0000000000000002 R09: 0000000000028cc0
+Jun 09 13:06:01 broadwell kernel: R10: ffffc900031ebe78 R11: 0000000000000356 R12: 0000005e14cbccaf
+Jun 09 13:06:01 broadwell kernel: R13: 0000000000000004 R14: 0000000000000004 R15: 0000000000000000
+Jun 09 13:06:01 broadwell kernel:  ? cpuidle_enter_state+0x90/0x420
+Jun 09 13:06:01 broadwell kernel:  cpuidle_enter+0x29/0x40
+Jun 09 13:06:01 broadwell kernel:  do_idle+0x1a1/0x1e0
+Jun 09 13:06:01 broadwell kernel:  cpu_startup_entry+0x19/0x20
+Jun 09 13:06:01 broadwell kernel:  start_secondary+0x10f/0x140
+Jun 09 13:06:01 broadwell kernel:  secondary_startup_64+0xa4/0xb0
+Jun 09 13:06:01 broadwell kernel: ---[ end trace c381db20c024d417 ]---
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org9f22fc0" class="outline-3">
+<h3 id="org9f22fc0">Adding tracepoints for xdp mem_disconnect</h3>
+<div class="outline-text-3" id="text-org9f22fc0">
+<p>
+When adding a tracepoint, consider if a kprobe could serve the same purpose.
+</p>
+
+<p>
+As shown above we can use kprobes via <code>kprobe:__mem_id_disconnect</code>, but info
+is lacking info 'safe_to_remove' and 'force' event.
+</p>
+
+<p>
+More importantly we want a stable pointer to <code>struct xdp_mem_allocator</code>,
+just before it's scheduled for RCU removal.
+</p>
+
+<p>
+Adding tracepoint xdp:mem_disconnect
+</p>
+
+<p>
+Base tests for it tracepoint exists:
+</p>
+<pre class="example">
+perf record -e xdp:mem_disconnect
+sudo bpftrace -e 'tracepoint:xdp:mem_disconnect { @[comm] = count(); }'
+</pre>
+
+<p>
+Question: can we extract <code>xa-&gt;allocator</code> info ?
+</p>
+
+<p>
+First need to mount kernel source:
+</p>
+<pre class="example">
+sshfs -o allow_other 192.168.42.3:git/kernel/bpf-next ~/git/kernel/bpf-next
+</pre>
+
+<p>
+sudo bpftrace -e 'tracepoint:xdp:mem_disconnect { @[comm] = count(); }'
+</p>
+
+<p>
+More advanced fails:
+</p>
+<pre class="example">
+sudo bpftrace -e 'tracepoint:xdp:mem_disconnect { @[comm] = args-&gt;xa-&gt;mem.id; }'
+Unknown struct/union: 'const struct xdp_mem_allocator'
+</pre>
+
+<p>
+sudo bpftrace -e 'tracepoint:xdp:mem_disconnect { $a = args-&gt;xa; }'
+</p>
+
+<p>
+If we manually define <code>struct xdp_mem_allocator</code> (and <code>struct xdp_mem_info</code>)
+inside the bpftrace script, and manually type-cast, then it works. Behind
+the scenes bpftrace will do <code>bpf_probe_read</code> to extract the info from kernel
+memory.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C">#!/usr/bin/bpftrace
+<span style="font-weight: bold;">#include</span> <span style="font-style: italic;">&lt;linux/types.h&gt;</span>
+
+<span style="font-weight: bold;">struct</span> xdp_mem_info {
+        <span style="font-weight: bold; text-decoration: underline;">u32</span> <span style="font-weight: bold; font-style: italic;">type</span>; <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">enum xdp_mem_type, but known size type </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">u32</span> <span style="font-weight: bold; font-style: italic;">id</span>;
+};
+
+<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">xdp_mem_allocator</span> {
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">xdp_mem_info</span> <span style="font-weight: bold; font-style: italic;">mem</span>;
+        <span style="font-weight: bold;">union</span> {
+                <span style="font-weight: bold; text-decoration: underline;">void</span> *<span style="font-weight: bold; font-style: italic;">allocator</span>;
+                <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">page_pool</span> *<span style="font-weight: bold; font-style: italic;">page_pool</span>;
+                <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">zero_copy_allocator</span> *<span style="font-weight: bold; font-style: italic;">zc_alloc</span>;
+        };
+        <span style="font-weight: bold; text-decoration: underline;">int</span> <span style="font-weight: bold; font-style: italic;">disconnect_cnt</span>;
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">long</span> <span style="font-weight: bold; font-style: italic;">defer_start</span>;
+        <span style="font-weight: bold; font-style: italic;">//</span><span style="font-weight: bold; font-style: italic;">struct rhash_head node;</span>
+        <span style="font-weight: bold; font-style: italic;">//</span><span style="font-weight: bold; font-style: italic;">struct rcu_head rcu;</span>
+        <span style="font-weight: bold; font-style: italic;">//</span><span style="font-weight: bold; font-style: italic;">struct delayed_work defer_wq;</span>
+        <span style="font-weight: bold; font-style: italic;">//</span><span style="font-weight: bold; font-style: italic;">unsigned long defer_warn;</span>
+};
+
+<span style="font-weight: bold; text-decoration: underline;">tracepoint</span>:<span style="font-weight: bold; text-decoration: underline;">xdp</span>:mem_disconnect {
+        $xa = (<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">xdp_mem_allocator</span> *)args-&gt;xa;
+        $cntA = args-&gt;disconnect_cnt;
+        <span style="font-weight: bold; font-style: italic;">//</span><span style="font-weight: bold; font-style: italic;">$cntB = $xa-&gt;disconnect_cnt;</span>
+
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">Extract mem.id in two different ways </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        $idA = args-&gt;mem_id;
+        $idB = $xa-&gt;mem.id;
+
+        <span style="font-weight: bold;">if</span> ($cntA &gt; 1) {
+                printf(<span style="font-style: italic;">"%s: mem.id=%d re-scheduled"</span>, probe, $idA);
+        }
+
+        <span style="font-weight: bold;">if</span> (args-&gt;force == 1) {
+                printf(<span style="font-style: italic;">"%s: mem.id=%d FORCE shutdown"</span>, probe, $idA);
+        }
+
+        $page_pool = args-&gt;allocator;
+        <span style="font-weight: bold; font-style: italic;">// </span><span style="font-weight: bold; font-style: italic;">$page_pool = $xa-&gt;allocator;</span>
+        @memid_to_page_pool[$idA] = $page_pool;
+
+        time();
+        printf(<span style="font-style: italic;">"%s: mem.id-A:%d B:%d 0x%lX\n"</span>, probe, $idA, $idB, $page_pool);
+}
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org95eb2ea" class="outline-4">
+<h4 id="org95eb2ea">Adding tracepoint for xdp mem_connect</h4>
+<div class="outline-text-4" id="text-org95eb2ea">
+<p>
+Also add a tracepoint called <code>xdp:mem_connect</code> to pickup ifindex.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org75c12ac" class="outline-4">
+<h4 id="org75c12ac">Patch desc for adding xdp tracepoints</h4>
+<div class="outline-text-4" id="text-org75c12ac">
+<p>
+xdp: add tracepoints for XDP mem
+</p>
+
+<p>
+These tracepoints make it easier to troubleshoot XDP mem id disconnect
+and deferred shutdown procedure.
+</p>
+
+<p>
+The xdp:mem_disconnect tracepoint cannot be replaced via kprobe. It is
+placed at the last stable place for the pointer to struct xdp_mem_allocator,
+just before it's scheduled for RCU removal. It also extract info on
+'safe_to_remove' and 'force'.
+</p>
+
+<p>
+Detailed info about in-flight pages is not available at this layer. The next
+patch will added tracepoints needed at the page_pool layer for this.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orga56b66a" class="outline-3">
+<h3 id="orga56b66a">Adding tracepoints for page_pool</h3>
+<div class="outline-text-3" id="text-orga56b66a">
+</div>
+<div id="outline-container-org6e08772" class="outline-4">
+<h4 id="org6e08772">Patch desc: page_pool: add tracepoints for page_pool details need by XDP</h4>
+<div class="outline-text-4" id="text-org6e08772">
+<p>
+The xdp tracepoints for mem id disconnect don't carry information about, why
+it was not safe_to_remove.  The tracepoint page_pool:page_pool_inflight in
+this patch can be used for extract this info for further debugging.
+</p>
+
+<p>
+This patchset also adds tracepoint for the pages_state_* release/hold
+transitions, including a pointer to the page.  This can be used for stats
+about in-flight pages, or used to debug page leakage via keeping track of
+page pointer and combining this with kprobe for __put_page().
+</p>
+</div>
+</div>
+</div>
+</div>
+
+
+
+<div id="outline-container-org447eab5" class="outline-2">
+<h2 id="org447eab5">bpftrace notes</h2>
+<div class="outline-text-2" id="text-org447eab5">
+</div>
+<div id="outline-container-org031a979" class="outline-3">
+<h3 id="org031a979">Compile notes</h3>
+<div class="outline-text-3" id="text-org031a979">
+<p>
+I want build, but install in <i>usr/local/stow</i>
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">mkdir build
+<span style="font-weight: bold;">cd</span> build
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local/stow/bpftrace-git01 ..
+make -j 4
+make install
+-- Installing: /usr/local/stow/bpftrace-git01/bin/bpftrace
+</pre>
+</div>
+
+<p>
+Use stow to enable/disable using this version:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh"><span style="font-weight: bold;">cd</span> /usr/local/stow/
+sudo stow    bpftrace-git01/
+sudo stow -D bpftrace-git01/
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Using libbpf to share maps between programs</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Using libbpf to share maps between programs</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org82c19a7">Current issue with libbpf map pinning</a>
+<ul>
+<li><a href="#org1911602">Difficult to extend bpf_object__pin_maps</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+This document is about improving and extending libbpf with an API that
+makes it easier to share BPF maps between BPF-programs.
+</p>
+
+<div id="outline-container-org82c19a7" class="outline-2">
+<h2 id="org82c19a7">Current issue with libbpf map pinning</h2>
+<div class="outline-text-2" id="text-org82c19a7">
+<p>
+Currently there are two libbpf API calls for pinning maps (path must be a
+bpffs mount point), which will pin (on unpin) <b>ALL</b> maps in the BPF-ELF
+file, based on the map name.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold; text-decoration: underline;">int</span> <span style="font-weight: bold;">bpf_object__pin_maps</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">bpf_object</span> *<span style="font-weight: bold; font-style: italic;">obj</span>, <span style="font-weight: bold;">const</span> <span style="font-weight: bold; text-decoration: underline;">char</span> *<span style="font-weight: bold; font-style: italic;">path</span>);
+<span style="font-weight: bold; text-decoration: underline;">int</span> <span style="font-weight: bold;">bpf_object__unpin_maps</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">bpf_object</span> *<span style="font-weight: bold; font-style: italic;">obj</span>, <span style="font-weight: bold;">const</span> <span style="font-weight: bold; text-decoration: underline;">char</span> *<span style="font-weight: bold; font-style: italic;">path</span>);
+</pre>
+</div>
+
+<p>
+The main issue is that existing pinned map files will NOT get "reused" (like
+iproute2 is doing). Instead if a pinned map file exist with same name, the
+pin operation will simply fail.
+</p>
+</div>
+
+<div id="outline-container-org1911602" class="outline-3">
+<h3 id="org1911602">Difficult to extend bpf_object__pin_maps</h3>
+<div class="outline-text-3" id="text-org1911602">
+<p>
+It's not trivial (read difficult) to extend <code>bpf_object__pin_maps()</code> to
+reuse existing maps.  This connected with how the different phases of
+BPF-ELF "opening" and kernel "loading" happens.
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,955 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Testing Hellwig "dma-direct-calls" patchset</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Testing Hellwig "dma-direct-calls" patchset</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org505d09b">Patchset avail here</a></li>
+<li><a href="#org7140fce">General notes</a></li>
+<li><a href="#org3507d1d">Summary of results</a></li>
+<li><a href="#org2fff02b">Testing Hellwig branch "dma-direct-calls"</a>
+<ul>
+<li><a href="#orge81a8ce">Driver ixgbe</a>
+<ul>
+<li><a href="#org96d953c">ixgbe: XDP_DROP branch "dma-direct-calls"</a></li>
+<li><a href="#orgd2024a0">ixgbe: XDP_REDIRECT devmap</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#orgf4ccdd1">Baseline kernel with retpoline</a>
+<ul>
+<li><a href="#org897ddf6">Driver ixgbe</a>
+<ul>
+<li><a href="#org4e853e9">ixgbe: XDP_DROP (baseline-RETPOLINE)</a></li>
+<li><a href="#orgf1794b2">ixgbe: XDP_REDIRECT devmap (baseline-RETPOLINE)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#orge52544f">Baseline kernel with no-retpoline</a>
+<ul>
+<li><a href="#org2ca09fc">Driver ixgbe</a>
+<ul>
+<li><a href="#orgbfa72f8">ixgbe: XDP_REDIRECT devmap (baseline-NO-retpoline)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#org8e882ec">Kernel new git branch dma-direct-calls.2</a>
+<ul>
+<li><a href="#orga2ae69b">ixgbe: XDP_REDIRECT devmap (branch dma-direct-calls.2)</a></li>
+</ul>
+</li>
+<li><a href="#org0b40c2b">Kernel git branch dma-direct-calls.2 but NO-retpoline</a></li>
+<li><a href="#org0bc219a">Investigate overhead of BPF-indirect retpoline</a>
+<ul>
+<li><a href="#org63ea637">First-attempt: Disable retpoline in bpf_prog_run_xdp</a></li>
+<li><a href="#orgd807f7f">Second attempt: Disable a lot more retpoline function calls</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+Christoph Hellwig &lt;hch@lst.de&gt; is helping out addressing/mitigating the
+RETPOLINE overhead, which XDP suffers under.
+</p>
+
+<div id="outline-container-org505d09b" class="outline-2">
+<h2 id="org505d09b">Patchset avail here</h2>
+<div class="outline-text-2" id="text-org505d09b">
+<p>
+Gitweb: on branch "dma-direct-calls"
+</p>
+<ul class="org-ul">
+<li><a href="http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/dma-direct-calls">http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/dma-direct-calls</a></li>
+</ul>
+
+<p>
+Git checkout procedure:
+</p>
+<pre class="example">
+$ git clone git://git.infradead.org/users/hch/misc.git hellwig
+$ cd hellwig
+$ git checkout dma-direct-calls
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org7140fce" class="outline-2">
+<h2 id="org7140fce">General notes</h2>
+<div class="outline-text-2" id="text-org7140fce">
+<p>
+Even if removing/mitigating all DMA indirect calls, then there are still some
+indirect calls, that we cannot avoid:
+</p>
+<ul class="org-ul">
+<li>1. For every packet: Indirect eBPF XDP prog call</li>
+<li>2. For every 16th packet: net_device-&gt;ndo_xdp_xmit</li>
+<li>3. For every 64th packet: NAPI net_rx_action call drivers napi_poll funcptr</li>
+</ul>
+</div>
+</div>
+
+
+<div id="outline-container-org3507d1d" class="outline-2">
+<h2 id="org3507d1d">Summary of results</h2>
+<div class="outline-text-2" id="text-org3507d1d">
+<p>
+Using XDP_REDIRECT between drivers RX ixgbe(10G) redirect TX i40e(40G),
+via BPF devmap (used samples/bpf/xdp_redirect_map) . (Note choose
+higher TX link-speed to assure that we don't to have a TX bottleneck).
+The baseline-kernel is at commit <a href="https://git.kernel.org/torvalds/c/ef78e5ec9214">ef78e5ec9214</a>, which is commit just
+before Hellwigs changes in this tree.
+</p>
+
+<p>
+Performance numbers in packets/sec (XDP_REDIRECT ixgbe -&gt; i40e):
+</p>
+<ul class="org-ul">
+<li>11913154 (11,913,154) pps - baseline compiled without retpoline</li>
+<li>7438283  (7,438,283) pps - regression due to CONFIG_RETPOLINE</li>
+<li>9610088  (9,610,088) pps - mitigation via Hellwig dma-direct-calls</li>
+<li>10049223 (10,049,223) pps - Hellwig branch dma-direct-calls.2 + RETPOLINE</li>
+<li>11762603 (11,762,603) pps - Hellwig branch dma-direct-calls.2 but no-retpoline</li>
+<li>11700004 (11,700,004) pps - dma-direct-calls.2 + RETPOLINE, attribute hacks</li>
+</ul>
+
+<p>
+Do notice at these extreme speeds the pps number increase rabbit with
+small changes, e.g. difference to new branch is:
+</p>
+<ul class="org-ul">
+<li>(1/9610088-1/10049223)*10^9 = 4.54 nanosec faster</li>
+<li>Diff: (1/11913154-1/10049223)*10^9 = -15.57 nanosec</li>
+<li>Diff: (1/11913154-1/11761275)*10^9 =  -1.08 nanosec</li>
+<li>Diff: (1/11913154-1/11700004)*10^9 =  -1.53 nanosec</li>
+</ul>
+
+<p>
+From the inst per cycle, it is clear that retpolines are stalling the CPU
+pipeline:
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-right" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">pps</th>
+<th scope="col" class="org-right">insn per cycle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">11,913,154</td>
+<td class="org-right">2.39</td>
+</tr>
+
+<tr>
+<td class="org-left">7,438,283</td>
+<td class="org-right">1.54</td>
+</tr>
+
+<tr>
+<td class="org-left">9,610,088</td>
+<td class="org-right">2.04</td>
+</tr>
+
+<tr>
+<td class="org-left">10,049,223</td>
+<td class="org-right">1.99</td>
+</tr>
+
+<tr>
+<td class="org-left">11,762,603</td>
+<td class="org-right">2.30</td>
+</tr>
+
+<tr>
+<td class="org-left">&#xa0;</td>
+<td class="org-right">&#xa0;</td>
+</tr>
+</tbody>
+</table>
+
+
+<p>
+Strangely the Instruction-Cache is also under heavier pressure:
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">pps</th>
+<th scope="col" class="org-left">l2_rqsts.all_code_rd</th>
+<th scope="col" class="org-left">l2_rqsts.code_rd_hit</th>
+<th scope="col" class="org-left">l2_rqsts.code_rd_miss</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">11,913,154</td>
+<td class="org-left">874,547</td>
+<td class="org-left">742,335</td>
+<td class="org-left">132,198</td>
+</tr>
+
+<tr>
+<td class="org-left">7,438,283</td>
+<td class="org-left">649,513</td>
+<td class="org-left">547,581</td>
+<td class="org-left">101,945</td>
+</tr>
+
+<tr>
+<td class="org-left">9,610,088</td>
+<td class="org-left">2,568,064</td>
+<td class="org-left">2,001,369</td>
+<td class="org-left">566,683</td>
+</tr>
+
+<tr>
+<td class="org-left">10,049,223</td>
+<td class="org-left">1,232,818</td>
+<td class="org-left">1,152,514</td>
+<td class="org-left">80,299</td>
+</tr>
+
+<tr>
+<td class="org-left">11,762,603</td>
+<td class="org-left">1,383,597</td>
+<td class="org-left">1,148,387</td>
+<td class="org-left">235,186</td>
+</tr>
+
+<tr>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+<td class="org-left">&#xa0;</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+<div id="outline-container-org2fff02b" class="outline-2">
+<h2 id="org2fff02b">Testing Hellwig branch "dma-direct-calls"</h2>
+<div class="outline-text-2" id="text-org2fff02b">
+<p>
+Testing with Hellwig's branch "dma-direct-calls"
+</p>
+<ul class="org-ul">
+<li>4.20.0-rc4-hellwig-dma-direct+</li>
+</ul>
+</div>
+
+<div id="outline-container-orge81a8ce" class="outline-3">
+<h3 id="orge81a8ce">Driver ixgbe</h3>
+<div class="outline-text-3" id="text-orge81a8ce">
+</div>
+<div id="outline-container-org96d953c" class="outline-4">
+<h4 id="org96d953c">ixgbe: XDP_DROP branch "dma-direct-calls"</h4>
+<div class="outline-text-4" id="text-org96d953c">
+<p>
+XDP_DROP performance okay, but AFAICR it was also okay before, as it was only
+affected by DMA-sync call.
+</p>
+
+<pre class="example">
+Running XDP on dev:ixgbe2 (ifindex:9) action:XDP_DROP options:no_touch
+XDP stats       CPU     pps         issue-pps  
+XDP-RX CPU      3       14,435,891  0          
+XDP-RX CPU      total   14,435,891 
+
+RXQ stats       RXQ:CPU pps         issue-pps  
+rx_queue_index    3:3   14,435,902  0          
+rx_queue_index    3:sum 14,435,902 
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgd2024a0" class="outline-4">
+<h4 id="orgd2024a0">ixgbe: XDP_REDIRECT devmap</h4>
+<div class="outline-text-4" id="text-orgd2024a0">
+<p>
+XDP redirect (via devmap) RX:ixgbe2 -&gt; TX:i40e1, this is redirect from RX
+link-speed 10Gbit/s out TXC 40Gbit/s link-speed to make sure TX side is not
+bottleneck.
+</p>
+
+<pre class="example">
+sudo ./xdp_redirect_map  $(&lt;/sys/class/net/ixgbe2/ifindex) \
+  $(&lt;/sys/class/net/i40e1/ifindex)
+$ sudo ./xdp_redirect_map  $(&lt;/sys/class/net/ixgbe2/ifindex) \
+                           $(&lt;/sys/class/net/i40e1/ifindex)
+input: 9 output: 2
+map[0] (vports) = 4, map[1] (map) = 5, map[2] (count) = 0
+ifindex 2:    4153765 pkt/s
+ifindex 2:    9618042 pkt/s
+ifindex 2:    9614312 pkt/s
+</pre>
+
+<p>
+Notice we cannot trust the output from <code>xdp_redirect_map</code>, as it only measures
+XDP-RX packets, it doesn't know if packets gets dropped. Thus, measure this via
+ethtool stats counters and program <a href="https://github.com/netoptimizer/network-testing/blob/master/bin/ethtool_stats.pl">ethtool_stats.pl</a>, which also use highres
+timers to get correct time interval.
+</p>
+
+<p>
+First <b>ALWAYS</b> make sure generator is sending fast enough:
+</p>
+<pre class="example">
+./pktgen_sample03_burst_single_flow.sh -i ixgbe2 -d 10.10.10.2 -m 00:1b:21:bb:9a:86 -t2
+[generator ~]$ ~/git/network-testing/bin/ethtool_stats.pl --sec 2 --dev ixgbe2
+Show adapter(s) (ixgbe2) statistics (ONLY that changed!)
+Ethtool(ixgbe2  ) stat:    892843312 (    892,843,312) &lt;= tx_bytes /sec
+Ethtool(ixgbe2  ) stat:    952366643 (    952,366,643) &lt;= tx_bytes_nic /sec
+Ethtool(ixgbe2  ) stat:     14880722 (     14,880,722) &lt;= tx_packets /sec
+Ethtool(ixgbe2  ) stat:     14880725 (     14,880,725) &lt;= tx_pkts_nic /sec
+Ethtool(ixgbe2  ) stat:    446544842 (    446,544,842) &lt;= tx_queue_0_bytes /sec
+Ethtool(ixgbe2  ) stat:      7442414 (      7,442,414) &lt;= tx_queue_0_packets /sec
+Ethtool(ixgbe2  ) stat:    446298470 (    446,298,470) &lt;= tx_queue_1_bytes /sec
+Ethtool(ixgbe2  ) stat:      7438308 (      7,438,308) &lt;= tx_queue_1_packets /sec
+</pre>
+
+<p>
+Device-Under-Test (DUT):
+</p>
+<pre class="example">
+Show adapter(s) (ixgbe2 i40e1) statistics (ONLY that changed!)
+Ethtool(ixgbe2  ) stat:     12192478 (     12,192,478) &lt;= fdir_miss /sec
+Ethtool(ixgbe2  ) stat:    575904896 (    575,904,896) &lt;= rx_bytes /sec
+Ethtool(ixgbe2  ) stat:    952519117 (    952,519,117) &lt;= rx_bytes_nic /sec
+Ethtool(ixgbe2  ) stat:      2970896 (      2,970,896) &lt;= rx_missed_errors /sec
+Ethtool(ixgbe2  ) stat:      2313797 (      2,313,797) &lt;= rx_no_dma_resources /sec
+Ethtool(ixgbe2  ) stat:      9598415 (      9,598,415) &lt;= rx_packets /sec
+Ethtool(ixgbe2  ) stat:     11912216 (     11,912,216) &lt;= rx_pkts_nic /sec
+Ethtool(ixgbe2  ) stat:    575904896 (    575,904,896) &lt;= rx_queue_3_bytes /sec
+Ethtool(ixgbe2  ) stat:      9598415 (      9,598,415) &lt;= rx_queue_3_packets /sec
+Ethtool(i40e1   ) stat:    615042613 (    615,042,613) &lt;= port.tx_bytes /sec
+Ethtool(i40e1   ) stat:      9610060 (      9,610,060) &lt;= port.tx_size_64 /sec
+Ethtool(i40e1   ) stat:      9610058 (      9,610,058) &lt;= port.tx_unicast /sec
+Ethtool(i40e1   ) stat:    576603475 (    576,603,475) &lt;= rx_bytes /sec
+Ethtool(i40e1   ) stat:      9610058 (      9,610,058) &lt;= rx_packets /sec
+Ethtool(i40e1   ) stat:      9610088 (      9,610,088) &lt;= tx_unicast /sec
+</pre>
+
+<p>
+The result: 9610088 (9,610,088) packets/sec
+</p>
+
+<p>
+Some perf stats during this redirect (happend to run on CPU-3):
+</p>
+<pre class="example">
+$ sudo ~/perf stat -C3 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -r 4 sleep 1
+
+ Performance counter stats for 'CPU(s) 3' (4 runs):
+
+  3,961,360,880  cycles                                             ( +-  0.03% )
+  8,086,316,342  instructions          #  2.04  insn per cycle      ( +-  0.03% )
+     49,625,870  cache-references                                   ( +-  0.03% )
+          2,010  cache-misses          #  0.004 % of all cache refs ( +-  9.50% )
+  1,615,852,192  branches:k                                         ( +-  0.03% )
+     23,732,952  branch-misses:k       #  1.47% of all branches     ( +-  0.03% )
+      2,568,064  l2_rqsts.all_code_rd                               ( +-  0.12% )
+      2,001,369  l2_rqsts.code_rd_hit                               ( +-  0.15% )
+        566,683  l2_rqsts.code_rd_miss                              ( +-  0.10% )
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgf4ccdd1" class="outline-2">
+<h2 id="orgf4ccdd1">Baseline kernel with retpoline</h2>
+<div class="outline-text-2" id="text-orgf4ccdd1">
+<p>
+Need a baseline kernel, just before Hellwigs patches:
+</p>
+<ul class="org-ul">
+<li>Linux broadwell 4.20.0-rc4-hellwig-baseline+ #3 SMP PREEMPT</li>
+</ul>
+
+<pre class="example">
+git checkout -b hellwig-baseline ef78e5ec9214
+</pre>
+</div>
+
+<div id="outline-container-org897ddf6" class="outline-3">
+<h3 id="org897ddf6">Driver ixgbe</h3>
+<div class="outline-text-3" id="text-org897ddf6">
+</div>
+<div id="outline-container-org4e853e9" class="outline-4">
+<h4 id="org4e853e9">ixgbe: XDP_DROP (baseline-RETPOLINE)</h4>
+<div class="outline-text-4" id="text-org4e853e9">
+<pre class="example">
+sudo ./xdp_rxq_info --dev ixgbe2 --action XDP_DROP
+Running XDP on dev:ixgbe2 (ifindex:7) action:XDP_DROP options:no_touch
+XDP stats       CPU     pps         issue-pps  
+XDP-RX CPU      4       14,602,534  0          
+XDP-RX CPU      total   14,602,534 
+
+RXQ stats       RXQ:CPU pps         issue-pps  
+rx_queue_index    4:4   14,602,528  0          
+rx_queue_index    4:sum 14,602,528 
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgf1794b2" class="outline-4">
+<h4 id="orgf1794b2">ixgbe: XDP_REDIRECT devmap (baseline-RETPOLINE)</h4>
+<div class="outline-text-4" id="text-orgf1794b2">
+<p>
+XDP redirect (via devmap) RX:ixgbe2 -&gt; TX:i40e1, this is redirect from RX
+link-speed 10Gbit/s out TXC 40Gbit/s link-speed to make sure TX side is not
+bottleneck.
+</p>
+
+<pre class="example">
+[broadwell kernel-bpf-samples]$ sudo ./xdp_redirect_map  $(&lt;/sys/class/net/ixgbe2/ifindex) $(&lt;/sys/class/net/i40e1/ifindex)
+input: 7 output: 3
+map[0] (vports) = 4, map[1] (map) = 5, map[2] (count) = 0
+ifindex 3:    1926575 pkt/s
+ifindex 3:    7445550 pkt/s
+ifindex 3:    7443763 pkt/s
+ifindex 3:    7445031 pkt/s
+</pre>
+
+<p>
+Need ethtool_stats evidence:
+</p>
+<pre class="example">
+$ ethtool_stats.pl --dev i40e1 --dev ixgbe2 --dev ixgbe1  --sec 2
+Show adapter(s) (i40e1 ixgbe2 ixgbe1) statistics (ONLY that changed!)
+Ethtool(i40e1   ) stat:    476049953 (    476,049,953) &lt;= port.tx_bytes /sec
+Ethtool(i40e1   ) stat:      7438296 (      7,438,296) &lt;= port.tx_size_64 /sec
+Ethtool(i40e1   ) stat:      7438281 (      7,438,281) &lt;= port.tx_unicast /sec
+Ethtool(i40e1   ) stat:    446296831 (    446,296,831) &lt;= rx_bytes /sec
+Ethtool(i40e1   ) stat:      7438281 (      7,438,281) &lt;= rx_packets /sec
+Ethtool(i40e1   ) stat:      7438283 (      7,438,283) &lt;= tx_unicast /sec
+Ethtool(ixgbe2  ) stat:     11442358 (     11,442,358) &lt;= fdir_miss /sec
+Ethtool(ixgbe2  ) stat:    446127207 (    446,127,207) &lt;= rx_bytes /sec
+Ethtool(ixgbe2  ) stat:    951162765 (    951,162,765) &lt;= rx_bytes_nic /sec
+Ethtool(ixgbe2  ) stat:      3662929 (      3,662,929) &lt;= rx_missed_errors /sec
+Ethtool(ixgbe2  ) stat:      3763511 (      3,763,511) &lt;= rx_no_dma_resources /sec
+Ethtool(ixgbe2  ) stat:      7435453 (      7,435,453) &lt;= rx_packets /sec
+Ethtool(ixgbe2  ) stat:     11198987 (     11,198,987) &lt;= rx_pkts_nic /sec
+Ethtool(ixgbe2  ) stat:    446127207 (    446,127,207) &lt;= rx_queue_4_bytes /sec
+Ethtool(ixgbe2  ) stat:      7435453 (      7,435,453) &lt;= rx_queue_4_packets /sec
+</pre>
+
+<p>
+Result: i40e1 sending  7438283 (7,438,283) &lt;= tx_unicast /sec
+</p>
+
+<pre class="example">
+$ sudo ~/perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -r 4 sleep 1
+
+ Performance counter stats for 'CPU(s) 4' (4 runs):
+
+ 3,804,156,271  cycles                                            ( +-  0.01% )
+ 5,855,352,513  instructions         #  1.54  insn per cycle      ( +-  0.00% )
+    37,489,166  cache-references                                  ( +-  0.00% )
+           225  cache-misses         #  0.001 % of all cache refs ( +- 38.96% )
+ 1,233,166,715  branches:k                                        ( +-  0.00% )
+    55,575,551  branch-misses:k      #  4.51% of all branches     ( +-  0.00% )
+       649,513  l2_rqsts.all_code_rd                              ( +-  0.45% )
+       547,581  l2_rqsts.code_rd_hit                              ( +-  0.41% )
+       101,945  l2_rqsts.code_rd_miss                             ( +-  0.80% )
+
+     1.0011470 +- 0.0000522 seconds time elapsed  ( +-  0.01% )
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orge52544f" class="outline-2">
+<h2 id="orge52544f">Baseline kernel with no-retpoline</h2>
+<div class="outline-text-2" id="text-orge52544f">
+<p>
+What was performance before RETPOLINE? Testing without CONFIG_RETPOLINE
+</p>
+<ul class="org-ul">
+<li>Linux broadwell 4.20.0-rc4-hellwig-baseline-no-retpoline+ #4 SMP PREEMPT</li>
+</ul>
+</div>
+
+<div id="outline-container-org2ca09fc" class="outline-3">
+<h3 id="org2ca09fc">Driver ixgbe</h3>
+<div class="outline-text-3" id="text-org2ca09fc">
+</div>
+<div id="outline-container-orgbfa72f8" class="outline-4">
+<h4 id="orgbfa72f8">ixgbe: XDP_REDIRECT devmap (baseline-NO-retpoline)</h4>
+<div class="outline-text-4" id="text-orgbfa72f8">
+<pre class="example">
+[jbrouer@broadwell kernel-bpf-samples]$ sudo ./xdp_redirect_map  $(&lt;/sys/class/net/ixgbe2/ifindex) $(&lt;/sys/class/net/i40e1/ifindex)
+input: 7 output: 2
+map[0] (vports) = 4, map[1] (map) = 5, map[2] (count) = 0
+ifindex 2:    2049760 pkt/s
+ifindex 2:   11913696 pkt/s
+ifindex 2:   11930501 pkt/s
+ifindex 2:   11930700 pkt/s
+ifindex 2:   11930911 pkt/s
+</pre>
+
+<p>
+Need ethtool_stats evidence:
+</p>
+<pre class="example">
+Show adapter(s) (i40e1 ixgbe2 ixgbe1) statistics (ONLY that changed!)
+Ethtool(i40e1   ) stat:    762445780 (    762,445,780) &lt;= port.tx_bytes /sec
+Ethtool(i40e1   ) stat:     11913151 (     11,913,151) &lt;= port.tx_size_64 /sec
+Ethtool(i40e1   ) stat:     11913224 (     11,913,224) &lt;= port.tx_unicast /sec
+Ethtool(i40e1   ) stat:    714789220 (    714,789,220) &lt;= rx_bytes /sec
+Ethtool(i40e1   ) stat:     11913154 (     11,913,154) &lt;= rx_packets /sec
+Ethtool(i40e1   ) stat:     11913154 (     11,913,154) &lt;= tx_unicast /sec
+Ethtool(ixgbe2  ) stat:     13562215 (     13,562,215) &lt;= fdir_miss /sec
+Ethtool(ixgbe2  ) stat:    716557813 (    716,557,813) &lt;= rx_bytes /sec
+Ethtool(ixgbe2  ) stat:    953785825 (    953,785,825) &lt;= rx_bytes_nic /sec
+Ethtool(ixgbe2  ) stat:      1734254 (      1,734,254) &lt;= rx_missed_errors /sec
+Ethtool(ixgbe2  ) stat:      1226028 (      1,226,028) &lt;= rx_no_dma_resources /sec
+Ethtool(ixgbe2  ) stat:     11942630 (     11,942,630) &lt;= rx_packets /sec
+Ethtool(ixgbe2  ) stat:     13168654 (     13,168,654) &lt;= rx_pkts_nic /sec
+Ethtool(ixgbe2  ) stat:    716557813 (    716,557,813) &lt;= rx_queue_2_bytes /sec
+Ethtool(ixgbe2  ) stat:     11942630 (     11,942,630) &lt;= rx_queue_2_packets /sec
+</pre>
+
+<p>
+Result: i40e1 = 11913154 (11,913,154) &lt;= tx_unicast /sec
+</p>
+
+<pre class="example">
+$ sudo ~/perf stat -C2 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -r 4 sleep 1
+
+ Performance counter stats for 'CPU(s) 2' (4 runs):
+
+  3,804,824,894  cycles                                            ( +-  0.01% )
+  9,088,780,992  instructions         # 2.39  insn per cycle       ( +-  0.01% )
+     60,232,927  cache-references                                  ( +-  0.01% )
+            231  cache-misses         # 0.000 % of all cache refs  ( +- 28.11% )
+  1,802,487,890  branches:k                                        ( +-  0.01% )
+      2,434,529  branch-misses:k      # 0.14% of all branches      ( +-  0.04% )
+        874,547  l2_rqsts.all_code_rd                              ( +-  2.29% )
+        742,335  l2_rqsts.code_rd_hit                              ( +-  1.85% )
+        132,198  l2_rqsts.code_rd_miss                             ( +-  4.78% )
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org8e882ec" class="outline-2">
+<h2 id="org8e882ec">Kernel new git branch dma-direct-calls.2</h2>
+<div class="outline-text-2" id="text-org8e882ec">
+<p>
+Branch: dma-direct-calls.2
+</p>
+<ul class="org-ul">
+<li>Tree: git://git.infradead.org/users/hch/misc.git</li>
+</ul>
+</div>
+
+<div id="outline-container-orga2ae69b" class="outline-3">
+<h3 id="orga2ae69b">ixgbe: XDP_REDIRECT devmap (branch dma-direct-calls.2)</h3>
+<div class="outline-text-3" id="text-orga2ae69b">
+<p>
+Redirect via:
+</p>
+<pre class="example">
+$ sudo ./xdp_redirect_map  $(&lt;/sys/class/net/ixgbe2/ifindex) $(&lt;/syslass/net/i40e1/ifindex)
+</pre>
+
+<p>
+Evidence from ethtool_stats.pl of TX:
+</p>
+<ul class="org-ul">
+<li>Result: 10049223 (10,049,223) &lt;= tx_unicast /sec</li>
+</ul>
+
+<pre class="example">
+Show adapter(s) (i40e1 ixgbe2 ixgbe1) statistics (ONLY that changed!)
+Ethtool(i40e1   ) stat:    643150456 (    643,150,456) &lt;= port.tx_bytes /sec
+Ethtool(i40e1   ) stat:     10049223 (     10,049,223) &lt;= port.tx_size_64 /sec
+Ethtool(i40e1   ) stat:     10049223 (     10,049,223) &lt;= port.tx_unicast /sec
+Ethtool(i40e1   ) stat:    602953350 (    602,953,350) &lt;= rx_bytes /sec
+Ethtool(i40e1   ) stat:     10049223 (     10,049,223) &lt;= rx_packets /sec
+Ethtool(i40e1   ) stat:     10049223 (     10,049,223) &lt;= tx_unicast /sec
+Ethtool(ixgbe2  ) stat:     12416007 (     12,416,007) &lt;= fdir_miss /sec
+Ethtool(ixgbe2  ) stat:    603733053 (    603,733,053) &lt;= rx_bytes /sec
+Ethtool(ixgbe2  ) stat:    953235369 (    953,235,369) &lt;= rx_bytes_nic /sec
+Ethtool(ixgbe2  ) stat:      2822742 (      2,822,742) &lt;= rx_missed_errors /sec
+Ethtool(ixgbe2  ) stat:      2009357 (      2,009,357) &lt;= rx_no_dma_resources /sec
+Ethtool(ixgbe2  ) stat:     10062218 (     10,062,218) &lt;= rx_packets /sec
+Ethtool(ixgbe2  ) stat:     12071567 (     12,071,567) &lt;= rx_pkts_nic /sec
+Ethtool(ixgbe2  ) stat:    603733053 (    603,733,053) &lt;= rx_queue_5_bytes /sec
+Ethtool(ixgbe2  ) stat:     10062218 (     10,062,218) &lt;= rx_queue_5_packets /sec
+</pre>
+
+<p>
+Perf stat:
+</p>
+<pre class="example">
+$ sudo ~/perf stat -C5 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -r 4 sleep 1
+
+ Performance counter stats for 'CPU(s) 5' (4 runs):
+
+  3,804,336,574  cycles                                              ( +-  0.00% )
+  7,578,166,786  instructions           # 1.99  insn per cycle       ( +-  0.00% )
+     50,265,409  cache-references                                    ( +-  0.00% )
+            223  cache-misses           # 0.000 % of all cache refs  ( +- 34.62% )
+  1,512,375,528  branches:k                                          ( +-  0.00% )
+     24,152,484  branch-misses:k        # 1.60% of all branches      ( +-  0.00% )
+      1,232,818  l2_rqsts.all_code_rd                                ( +-  1.02% )
+      1,152,514  l2_rqsts.code_rd_hit                                ( +-  1.07% )
+         80,299  l2_rqsts.code_rd_miss                               ( +-  0.23% )
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org0b40c2b" class="outline-2">
+<h2 id="org0b40c2b">Kernel git branch dma-direct-calls.2 but NO-retpoline</h2>
+<div class="outline-text-2" id="text-org0b40c2b">
+<p>
+What is the effect of the DMA API changes (branch dma-direct-calls.2),
+when NOT compiled with RETPOLINE, that is an intersting question?  As
+we want to make sure we don't introduce any regressions while working
+on fixing/mitigating retpoline.
+</p>
+
+<p>
+Result: 11762603 (11,762,603) &lt;= tx_unicast /sec
+</p>
+
+<pre class="example">
+Show adapter(s) (i40e1 ixgbe2 ixgbe1) statistics (ONLY that changed!)
+Ethtool(i40e1   ) stat:    752806181 (    752,806,181) &lt;= port.tx_bytes /sec
+Ethtool(i40e1   ) stat:     11762598 (     11,762,598) &lt;= port.tx_size_64 /sec
+Ethtool(i40e1   ) stat:     11762587 (     11,762,587) &lt;= port.tx_unicast /sec
+Ethtool(i40e1   ) stat:    705755244 (    705,755,244) &lt;= rx_bytes /sec
+Ethtool(i40e1   ) stat:     11762587 (     11,762,587) &lt;= rx_packets /sec
+Ethtool(i40e1   ) stat:     11762603 (     11,762,603) &lt;= tx_unicast /sec
+Ethtool(ixgbe2  ) stat:     13494045 (     13,494,045) &lt;= fdir_miss /sec
+Ethtool(ixgbe2  ) stat:    706543665 (    706,543,665) &lt;= rx_bytes /sec
+Ethtool(ixgbe2  ) stat:    953585273 (    953,585,273) &lt;= rx_bytes_nic /sec
+Ethtool(ixgbe2  ) stat:      1796888 (      1,796,888) &lt;= rx_missed_errors /sec
+Ethtool(ixgbe2  ) stat:      1327168 (      1,327,168) &lt;= rx_no_dma_resources /sec
+Ethtool(ixgbe2  ) stat:     11775728 (     11,775,728) &lt;= rx_packets /sec
+Ethtool(ixgbe2  ) stat:     13102884 (     13,102,884) &lt;= rx_pkts_nic /sec
+Ethtool(ixgbe2  ) stat:    706543665 (    706,543,665) &lt;= rx_queue_0_bytes /sec
+Ethtool(ixgbe2  ) stat:     11775728 (     11,775,728) &lt;= rx_queue_0_packets /sec
+</pre>
+
+<pre class="example">
+$ sudo ~/perf stat -C0 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -r 4 sleep 1
+
+ Performance counter stats for 'CPU(s) 0' (4 runs):
+
+     3,804,288,765      cycles                                                        ( +-  0.00% )
+     8,760,707,840      instructions              #    2.30  insn per cycle           ( +-  0.01% )
+        58,578,076      cache-references                                              ( +-  0.02% )
+               688      cache-misses              #    0.001 % of all cache refs      ( +- 72.00% )
+     1,717,330,768      branches:k                                                    ( +-  0.01% )
+         2,393,738      branch-misses:k           #    0.14% of all branches          ( +-  0.10% )
+         1,383,597      l2_rqsts.all_code_rd                                          ( +-  3.21% )
+         1,148,387      l2_rqsts.code_rd_hit                                          ( +-  3.02% )
+           235,186      l2_rqsts.code_rd_miss                                         ( +-  4.21% )
+
+        1.00117914 +- 0.00000689 seconds time elapsed  ( +-  0.00% )
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org0bc219a" class="outline-2">
+<h2 id="org0bc219a">Investigate overhead of BPF-indirect retpoline</h2>
+<div class="outline-text-2" id="text-org0bc219a">
+<p>
+Find way to disable retpoline for BPF XDP indirect call to test DMA
+patches. As described earlier:
+</p>
+
+<p>
+Even if removing/mitigating all DMA indirect calls, then there are still some
+indirect calls, that we cannot avoid:
+</p>
+<ul class="org-ul">
+<li>1. For every packet: Indirect eBPF XDP prog call</li>
+<li>2. For every 16th packet: net_device-&gt;ndo_xdp_xmit</li>
+<li>3. For every 64th packet: NAPI net_rx_action call drivers napi_poll funcptr</li>
+</ul>
+
+<p>
+I would like to benchmark removing the per packet retpoline, as this
+will tell us how close the DMA-patchset can bring a RETPOLINE enabled
+kernel to the performance we see without retpoline.
+</p>
+
+<p>
+Found that it is possible via <a href="https://gcc.gnu.org/onlinedocs/gcc/x86-Function-Attributes.html#x86-Function-Attributes">GCC Function Attributes</a> to disable retpoline on a
+per function basis via <span class="underline"><span class="underline">attribute</span></span>.
+</p>
+
+<p>
+For an entire C-file RETPOLINE can be  <b>disabled</b> via <a href="https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html">GCC cmdline option</a>
+<code>-mindirect-branch=keep</code>. Seems to be enabled with:
+<code>-mindirect-branch=thunk-extern</code>.
+</p>
+</div>
+
+<div id="outline-container-org63ea637" class="outline-3">
+<h3 id="org63ea637">First-attempt: Disable retpoline in bpf_prog_run_xdp</h3>
+<div class="outline-text-3" id="text-org63ea637">
+<div class="org-src-container">
+<pre class="src src-diff">diff --git a/include/linux/filter.h b/include/linux/filter.h
+index de629b706d1d..ed0a5153e2a0 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/include/linux/filter.h</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/include/linux/filter.h</span>
+<span style="font-weight: bold;">@@ -619,7 +619,9 @@</span><span style="font-weight: bold;"> static inline u32 bpf_prog_run_clear_cb(const struct bpf_prog *prog,</span>
+        return BPF_PROG_RUN(prog, skb);
+ }
+
+-static __always_inline u32 bpf_prog_run_xdp(const struct bpf_prog *prog,
++static __always_inline
++__attribute__((indirect_branch("keep")))
++u32 bpf_prog_run_xdp(const struct bpf_prog *prog,
+                                            struct xdp_buff *xdp)
+ {
+        /* Caller needs to hold rcu_read_lock() (!), otherwise program
+</pre>
+</div>
+
+<p>
+Not much difference:
+</p>
+<pre class="example">
+Show adapter(s) (i40e1 ixgbe2 ixgbe1) statistics (ONLY that changed!)
+Ethtool(i40e1   ) stat:    658856830 (    658,856,830) &lt;= port.tx_bytes /sec
+Ethtool(i40e1   ) stat:     10294638 (     10,294,638) &lt;= port.tx_size_64 /sec
+Ethtool(i40e1   ) stat:     10294622 (     10,294,622) &lt;= port.tx_unicast /sec
+Ethtool(i40e1   ) stat:    617678278 (    617,678,278) &lt;= rx_bytes /sec
+Ethtool(i40e1   ) stat:     10294638 (     10,294,638) &lt;= rx_packets /sec
+Ethtool(i40e1   ) stat:     10294622 (     10,294,622) &lt;= tx_unicast /sec
+Ethtool(ixgbe2  ) stat:     12439699 (     12,439,699) &lt;= fdir_miss /sec
+Ethtool(ixgbe2  ) stat:    616748552 (    616,748,552) &lt;= rx_bytes /sec
+Ethtool(ixgbe2  ) stat:    951259886 (    951,259,886) &lt;= rx_bytes_nic /sec
+Ethtool(ixgbe2  ) stat:      2724778 (      2,724,778) &lt;= rx_missed_errors /sec
+Ethtool(ixgbe2  ) stat:      1859527 (      1,859,527) &lt;= rx_no_dma_resources /sec
+Ethtool(ixgbe2  ) stat:     10279143 (     10,279,143) &lt;= rx_packets /sec
+Ethtool(ixgbe2  ) stat:     12138660 (     12,138,660) &lt;= rx_pkts_nic /sec
+Ethtool(ixgbe2  ) stat:    616748552 (    616,748,552) &lt;= rx_queue_1_bytes /sec
+Ethtool(ixgbe2  ) stat:     10279143 (     10,279,143) &lt;= rx_queue_1_packets /sec
+</pre>
+
+<pre class="example">
+$ sudo ~/perf stat -C1 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -r 4 sleep 1
+
+ Performance counter stats for 'CPU(s) 1' (4 runs):
+
+  3,985,155,205  cycles                                             ( +-  0.01% )
+  7,762,244,304  instructions          # 1.95  insn per cycle       ( +-  0.02% )
+     50,783,229  cache-references                                   ( +-  0.01% )
+            304  cache-misses          # 0.001 % of all cache refs  ( +- 29.14% )
+  1,549,114,820  branches:k                                         ( +-  0.02% )
+     24,751,253  branch-misses:k       # 1.60% of all branches      ( +-  0.03% )
+      1,115,008  l2_rqsts.all_code_rd                               ( +-  0.62% )
+      1,026,484  l2_rqsts.code_rd_hit                               ( +-  0.46% )
+         88,493  l2_rqsts.code_rd_miss                              ( +-  2.59% )
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgd807f7f" class="outline-3">
+<h3 id="orgd807f7f">Second attempt: Disable a lot more retpoline function calls</h3>
+<div class="outline-text-3" id="text-orgd807f7f">
+<p>
+Wonder it is the dev-&gt;ndo_xdp_xmit call?
+Or napi-&gt;poll call?
+</p>
+
+<p>
+Disable a lot more retpoline function calls:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-diff">b/drivers/net/ethernet/intel/ixgbe/ixgbe_maidiff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+index 113b38e0defb..528bdeb73e73 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c</span>
+<span style="font-weight: bold;">@@ -2269,7 +2269,9 @@</span><span style="font-weight: bold;"> static void ixgbe_rx_buffer_flip(struct ixgbe_ring *rx_ring,</span>
+  *
+  * Returns amount of work completed
+  **/
+-static int ixgbe_clean_rx_irq(struct ixgbe_q_vector *q_vector,
++static
++__attribute__((indirect_branch("keep")))
++int ixgbe_clean_rx_irq(struct ixgbe_q_vector *q_vector,
+                               struct ixgbe_ring *rx_ring,
+                               const int budget)
+ {
+diff --git a/include/linux/filter.h b/include/linux/filter.h
+index de629b706d1d..ed0a5153e2a0 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/include/linux/filter.h</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/include/linux/filter.h</span>
+<span style="font-weight: bold;">@@ -619,7 +619,9 @@</span><span style="font-weight: bold;"> static inline u32 bpf_prog_run_clear_cb(const struct bpf_prog *prog,</span>
+        return BPF_PROG_RUN(prog, skb);
+ }
+
+-static __always_inline u32 bpf_prog_run_xdp(const struct bpf_prog *prog,
++static __always_inline
++__attribute__((indirect_branch("keep")))
++u32 bpf_prog_run_xdp(const struct bpf_prog *prog,
+                                            struct xdp_buff *xdp)
+ {
+        /* Caller needs to hold rcu_read_lock() (!), otherwise program
+diff --git a/kernel/bpf/devmap.c b/kernel/bpf/devmap.c
+index 191b79948424..05e7aa9a7dcc 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/kernel/bpf/devmap.c</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/kernel/bpf/devmap.c</span>
+<span style="font-weight: bold;">@@ -217,7 +217,10 @@</span><span style="font-weight: bold;"> void __dev_map_insert_ctx(struct bpf_map *map, u32 bit)</span>
+        __set_bit(bit, bitmap);
+ }
+
+-static int bq_xmit_all(struct bpf_dtab_netdev *obj,
++
++static
++__attribute__((indirect_branch("keep")))
++int bq_xmit_all(struct bpf_dtab_netdev *obj,
+                       struct xdp_bulk_queue *bq, u32 flags,
+                       bool in_napi_ctx)
+ {
+diff --git a/net/core/dev.c b/net/core/dev.c
+index ddc551f24ba2..0374e4ab920f 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/net/core/dev.c</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/net/core/dev.c</span>
+<span style="font-weight: bold;">@@ -6027,7 +6027,9 @@</span><span style="font-weight: bold;"> static struct napi_struct *napi_by_id(unsigned int napi_id)</span>
+
+ #define BUSY_POLL_BUDGET 8
+
+-static void busy_poll_stop(struct napi_struct *napi, void *have_poll_lock)
++static
++__attribute__((indirect_branch("keep")))
++void busy_poll_stop(struct napi_struct *napi, void *have_poll_lock)
+ {
+        int rc;
+
+<span style="font-weight: bold;">@@ -6260,7 +6262,9 @@</span><span style="font-weight: bold;"> void netif_napi_del(struct napi_struct *napi)</span>
+ }
+ EXPORT_SYMBOL(netif_napi_del);
+
+-static int napi_poll(struct napi_struct *n, struct list_head *repoll)
++static
++__attribute__((indirect_branch("keep")))
++int napi_poll(struct napi_struct *n, struct list_head *repoll)
+ {
+        void *have;
+        int work, weight;
+<span style="font-weight: bold;">@@ -6322,7 +6326,9 @@</span><span style="font-weight: bold;"> static int napi_poll(struct napi_struct *n, struct list_head *repoll)</span>
+        return work;
+ }
+
+-static __latent_entropy void net_rx_action(struct softirq_action *h)
++static __latent_entropy
++__attribute__((indirect_branch("keep")))
++void net_rx_action(struct softirq_action *h)
+ {
+        struct softnet_data *sd = this_cpu_ptr(&amp;softnet_data);
+        unsigned long time_limit = jiffies +
+</pre>
+</div>
+
+<p>
+That seems to work!
+</p>
+<ul class="org-ul">
+<li>Result: 11700004 (11,700,004) &lt;= tx_unicast /sec</li>
+</ul>
+
+<pre class="example">
+Show adapter(s) (i40e1 ixgbe2 ixgbe1) statistics (ONLY that changed!)
+Ethtool(i40e1   ) stat:    748800324 (    748,800,324) &lt;= port.tx_bytes /sec
+Ethtool(i40e1   ) stat:     11700005 (     11,700,005) &lt;= port.tx_size_64 /sec
+Ethtool(i40e1   ) stat:     11700005 (     11,700,005) &lt;= port.tx_unicast /sec
+Ethtool(i40e1   ) stat:    702000304 (    702,000,304) &lt;= rx_bytes /sec
+Ethtool(i40e1   ) stat:     11700005 (     11,700,005) &lt;= rx_packets /sec
+Ethtool(i40e1   ) stat:     11700004 (     11,700,004) &lt;= tx_unicast /sec
+Ethtool(ixgbe2  ) stat:     13418440 (     13,418,440) &lt;= fdir_miss /sec
+Ethtool(ixgbe2  ) stat:    702554251 (    702,554,251) &lt;= rx_bytes /sec
+Ethtool(ixgbe2  ) stat:    952906870 (    952,906,870) &lt;= rx_bytes_nic /sec
+Ethtool(ixgbe2  ) stat:      1836691 (      1,836,691) &lt;= rx_missed_errors /sec
+Ethtool(ixgbe2  ) stat:      1343245 (      1,343,245) &lt;= rx_no_dma_resources /sec
+Ethtool(ixgbe2  ) stat:     11709238 (     11,709,238) &lt;= rx_packets /sec
+Ethtool(ixgbe2  ) stat:     13052485 (     13,052,485) &lt;= rx_pkts_nic /sec
+Ethtool(ixgbe2  ) stat:    702554251 (    702,554,251) &lt;= rx_queue_4_bytes /sec
+Ethtool(ixgbe2  ) stat:     11709238 (     11,709,238) &lt;= rx_queue_4_packets /sec
+</pre>
+
+<p>
+Perf show very high insn per cycle:
+</p>
+<pre class="example">
+$ sudo ~/perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -r 4 sleep 1
+
+ Performance counter stats for 'CPU(s) 4' (4 runs):
+
+     3,804,219,793      cycles                                                        ( +-  0.00% )
+     8,705,888,459      instructions              #    2.29  insn per cycle           ( +-  0.01% )
+        57,981,158      cache-references                                              ( +-  0.01% )
+               760      cache-misses              #    0.001 % of all cache refs      ( +- 60.81% )
+     1,703,235,429      branches:k                                                    ( +-  0.01% )
+         3,529,431      branch-misses:k           #    0.21% of all branches          ( +-  0.04% )
+           698,408      l2_rqsts.all_code_rd                                          ( +-  0.38% )
+           601,881      l2_rqsts.code_rd_hit                                          ( +-  0.42% )
+            96,514      l2_rqsts.code_rd_miss                                         ( +-  0.18% )
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

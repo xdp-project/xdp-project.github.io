@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Brainstorm notes</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Brainstorm notes</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org9076bfb">General: Make Generic-XDP complient with Native-XDP features</a></li>
+<li><a href="#orgaded22b">XDP on ARM-boards</a></li>
+<li><a href="#org343f751">Crazy-idea: XDP-redirect re-handle about-to-be-dropped packets</a></li>
+<li><a href="#org40536bf">Tracking and troubleshooting eBPF</a></li>
+<li><a href="#orgd72f72d">Usability: XDP redirect not impl by driver gives WARN_ON</a></li>
+<li><a href="#org4f7a01f">Usability: HW offload on non-supported driver/firmware return EINVAL</a></li>
+<li><a href="#org3520ada">Extend xdp_buff with member data_hard_end</a></li>
+<li><a href="#org5775dbe">DMA mapping xdp_frame</a></li>
+<li><a href="#orgd985a83">Convert samples/bpf/ to use libbpf as elf-loader</a></li>
+<li><a href="#orgb093ee5">sample/bpf output XDP-mode (as QA forget to report)</a></li>
+<li><a href="#orgeaa47db">sample/bpf output Driver (as QA forget to report)</a></li>
+<li><a href="#org43071ac">GROUP: CPU-map redirect things</a></li>
+<li><a href="#org1d10fd2">samples/bpf upstream napi_monitor</a></li>
+<li><a href="#org6877dde">Generic-xdp how-to assure NAPI protect?</a></li>
+<li><a href="#org74e6869">Make bulk work for generic xdp with devmap</a></li>
+<li><a href="#orgd880260">Meta data implement missing for many drivers</a></li>
+<li><a href="#orgbc5b8b2">Should we standardize ethtool stats for xdp?</a></li>
+<li><a href="#org1b0245d">Adding and removing ethtool channels runtime semantics?</a></li>
+<li><a href="#org1e39657">Frame to skb, missing csum hw info</a></li>
+<li><a href="#org4f44f80">Frame to skb, use full headroom</a></li>
+<li><a href="#orgfabb94e">BUG: Generic-XDP does not work for TCP (in certain cases)</a></li>
+<li><a href="#org65e43ac">Potential-bug: Mlx5 fix dma unmap call (after xdp return frame)</a></li>
+<li><a href="#org8118d9f">Retpoline performance issue for xdp</a></li>
+<li><a href="#org4a8d888">Retpoline: mlx5 too many indirect calls</a></li>
+<li><a href="#org1eda3a4">Old list: watch out for dublicates</a></li>
+<li><a href="#org6fc8f53">XDP metadata: dynamic descriptor offloads via BTF</a></li>
+<li><a href="#org661614c">Napatech have descriptors in-front of packet payload</a></li>
+</ul>
+</div>
+</div>
+<p>
+This doc is for brainstorming.  Watch out for likely duplicates, clean
+them up progressively.
+</p>
+
+<p>
+Turn these notes into real issue or bug descriptions and move them
+into other docs like <a href="xdp_issues.html">xdp_issues.html</a>
+</p>
+
+<div id="outline-container-org9076bfb" class="outline-2">
+<h2 id="org9076bfb">General: Make Generic-XDP complient with Native-XDP features</h2>
+</div>
+
+
+<div id="outline-container-orgaded22b" class="outline-2">
+<h2 id="orgaded22b">XDP on ARM-boards</h2>
+<div class="outline-text-2" id="text-orgaded22b">
+<p>
+See <a href="areas/arm64/README.html">areas/arm64/README.html</a>
+</p>
+</div>
+</div>
+
+<div id="outline-container-org343f751" class="outline-2">
+<h2 id="org343f751">Crazy-idea: XDP-redirect re-handle about-to-be-dropped packets</h2>
+<div class="outline-text-2" id="text-org343f751">
+<p>
+Ref slides: <a href="http://people.netfilter.org/hawk/presentations/NetConf2017_Seoul/XDP_devel_update_NetConf2017_Seoul.pdf">http://people.netfilter.org/hawk/presentations/NetConf2017_Seoul/XDP_devel_update_NetConf2017_Seoul.pdf</a>
+</p>
+
+<p>
+Idea slide 31: On XDP-redirect packets can be dropped, after the XDP
+prog have run, and today we have a 'drop-tracepoint' to handle/debug
+this.  It would be more interesting to call a new XDP-type program
+that get the about-to-be-dropped packet, and allow it to take a new
+decision.  Wondering what this can be used for, click the youtube link
+in the slide, and blow-your-mind! (<a href="https://youtu.be/BO0QhaxBRr0">https://youtu.be/BO0QhaxBRr0</a>)
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-org40536bf" class="outline-2">
+<h2 id="org40536bf">Tracking and troubleshooting eBPF</h2>
+<div class="outline-text-2" id="text-org40536bf">
+<p>
+Want to track when BPF progs gets loaded/unloaded
+</p>
+<ul class="org-ul">
+<li>Both for system audit and troubleshooting purposes</li>
+</ul>
+
+<p>
+BPF code do have LSM/SElinux hooks
+</p>
+<ul class="org-ul">
+<li>LSM maintainers request, use Audit subsystem instead</li>
+<li>Jiri Olsa currently working on this</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgd72f72d" class="outline-2">
+<h2 id="orgd72f72d">Usability: XDP redirect not impl by driver gives WARN_ON</h2>
+<div class="outline-text-2" id="text-orgd72f72d">
+<p>
+E.g. AF_XDP via xdpsock uses redirect, and there is not feedback when
+running prog on driver without redirect-support.  Need to look in
+dmesg to see big splast.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org4f7a01f" class="outline-2">
+<h2 id="org4f7a01f">Usability: HW offload on non-supported driver/firmware return EINVAL</h2>
+<div class="outline-text-2" id="text-org4f7a01f">
+<p>
+E.g. Loading XDP/ebpf prog with HW offload on Netronome NIC, but wrong
+firmware, just says EINVAL.  No help or hints that firmware needs to
+be upgraded.
+</p>
+
+<p>
+How can we improve the usability / user-experience here?
+</p>
+
+<p>
+Same EINVAL when loading on a NIC driver other than Netronome.  Can we
+instead return ENOTSUP ("Operation not supported"), to differentiate
+the cases?
+</p>
+</div>
+</div>
+
+<div id="outline-container-org3520ada" class="outline-2">
+<h2 id="org3520ada">Extend xdp_buff with member data_hard_end</h2>
+<div class="outline-text-2" id="text-org3520ada">
+<p>
+Issue arose when driver ixgbe and i40e choose to violate
+one-page-per-packet.  After this point, the frame-tail size became
+variable.  This cause issues when creating an SKB from an xdp_frame,
+see the workarounds in cpumap and veth, where the truesize is wrong
+and skb_shared_info placement is variable.
+</p>
+
+<p>
+This can be solved by introducing a new xdp_buff member named
+data_hard_end, which specify the maximum address data_end can be
+extended to.
+</p>
+
+<p>
+This will allow:
+</p>
+
+<ol class="org-ol">
+<li>BPF helper (bpf_xdp_adjust_tail) to extend "tail" (not just shrink
+as today).  This allows for use-cases (1) do fast DNS replies via
+XDP_TX, (2) NDIV (haproxy) also have some use-case that use
+tail-extend.</li>
+
+<li>Create better SKBs based on an xdp_frame. (1) Allow placing
+skb_shared_info section consistently.  (2) Use correct truesize.
+(3) Allow for TCP coalescing these kind of SKBs.</li>
+</ol>
+</div>
+</div>
+
+
+<div id="outline-container-org5775dbe" class="outline-2">
+<h2 id="org5775dbe">DMA mapping xdp_frame</h2>
+<div class="outline-text-2" id="text-org5775dbe">
+<p>
+Keeping DMA mapping in XDP return API.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgd985a83" class="outline-2">
+<h2 id="orgd985a83">Convert samples/bpf/ to use libbpf as elf-loader</h2>
+</div>
+
+<div id="outline-container-orgb093ee5" class="outline-2">
+<h2 id="orgb093ee5">sample/bpf output XDP-mode (as QA forget to report)</h2>
+</div>
+
+<div id="outline-container-orgeaa47db" class="outline-2">
+<h2 id="orgeaa47db">sample/bpf output Driver (as QA forget to report)</h2>
+</div>
+
+
+<div id="outline-container-org43071ac" class="outline-2">
+<h2 id="org43071ac">GROUP: CPU-map redirect things</h2>
+</div>
+
+<div id="outline-container-org1d10fd2" class="outline-2">
+<h2 id="org1d10fd2">samples/bpf upstream napi_monitor</h2>
+<div class="outline-text-2" id="text-org1d10fd2">
+<p>
+Missing an ifindex to match on in tracepoint
+</p>
+</div>
+</div>
+
+
+
+
+<div id="outline-container-org6877dde" class="outline-2">
+<h2 id="org6877dde">Generic-xdp how-to assure NAPI protect?</h2>
+</div>
+
+<div id="outline-container-org74e6869" class="outline-2">
+<h2 id="org74e6869">Make bulk work for generic xdp with devmap</h2>
+</div>
+
+<div id="outline-container-orgd880260" class="outline-2">
+<h2 id="orgd880260">Meta data implement missing for many drivers</h2>
+</div>
+
+<div id="outline-container-orgbc5b8b2" class="outline-2">
+<h2 id="orgbc5b8b2">Should we standardize ethtool stats for xdp?</h2>
+</div>
+
+<div id="outline-container-org1b0245d" class="outline-2">
+<h2 id="org1b0245d">Adding and removing ethtool channels runtime semantics?</h2>
+<div class="outline-text-2" id="text-org1b0245d">
+<p>
+(Jakub question this)
+</p>
+</div>
+</div>
+
+<div id="outline-container-org1e39657" class="outline-2">
+<h2 id="org1e39657">Frame to skb, missing csum hw info</h2>
+<div class="outline-text-2" id="text-org1e39657">
+<p>
+(Plus other info)
+</p>
+</div>
+</div>
+
+<div id="outline-container-org4f44f80" class="outline-2">
+<h2 id="org4f44f80">Frame to skb, use full headroom</h2>
+</div>
+
+<div id="outline-container-orgfabb94e" class="outline-2">
+<h2 id="orgfabb94e">BUG: Generic-XDP does not work for TCP (in certain cases)</h2>
+</div>
+
+
+<div id="outline-container-org65e43ac" class="outline-2">
+<h2 id="org65e43ac">Potential-bug: Mlx5 fix dma unmap call (after xdp return frame)</h2>
+</div>
+
+<div id="outline-container-org8118d9f" class="outline-2">
+<h2 id="org8118d9f">Retpoline performance issue for xdp</h2>
+</div>
+
+<div id="outline-container-org4a8d888" class="outline-2">
+<h2 id="org4a8d888">Retpoline: mlx5 too many indirect calls</h2>
+</div>
+
+
+
+<div id="outline-container-org1eda3a4" class="outline-2">
+<h2 id="org1eda3a4">Old list: watch out for dublicates</h2>
+<div class="outline-text-2" id="text-org1eda3a4">
+<p>
+Old list of stuff I need to work-on/fix for XDP/bpf project:
+</p>
+<ul class="org-ul">
+<li>XDP return frame API (needed by AF_XDP ZC)</li>
+<li>Bulking API for return frame API</li>
+<li>Bulking API for ndo_xdp_xmit</li>
+<li>Address massive XDP regression due to CONFIG_RETPOLINE</li>
+<li>Introduce bulking for generic-XDP (PoC test show +30% perf!!!)</li>
+<li>Implement ndo_xdp_xmit for macvlan (fast guest delivery)</li>
+<li>Improve BPF doc</li>
+<li>Improve XDP doc</li>
+<li>Work on XDP article with Toke+Alexei+Daniel</li>
+<li>Better integration of XDP in Suricata (multiple small thing)</li>
+<li>Find XDP feature/capability API (use in Suricata)</li>
+<li>Help integrate AF_XDP in Suricata</li>
+<li>Ship bpftool in distros (start with static linked libbpf)</li>
+<li>Make libbpf a shared lib in distros (fix lib versioning)</li>
+<li>Help (Ahern) get XDP route/FIB lookup helper integrated</li>
+<li>Work on bridge FIB table lookup helper</li>
+<li>XDP get more info transferred to CPUMAP skb creation time</li>
+<li>cpumap: RX hash support</li>
+<li>cpumap: HW csum offload/info</li>
+<li>Improve XDP cpumap redirect example: flow hashing (fix NIC HW hash)</li>
+<li>Help get AF_XDP API and performance aligned</li>
+<li>Help get AF_XDP zero-copy integrated via XDP return API</li>
+<li>convert tracepoint to use ifindex instead of names (strcpy overhead)</li>
+<li>XDP_REDIRECT: Detect buggy-drivers forgetting to clear per-CPU map</li>
+<li>Streamline eBPF map-create return codes on errors</li>
+<li>Upstream xdp_bench01 sample to be standard way to measure XDP perf</li>
+<li>Fix that TCP traffic with XDP generic on virtual net_devices are broken</li>
+<li>xdp: avoid leaking info stored in xdp_frame data on page reuse</li>
+<li>XDP_REDIRECT implemement in every driver</li>
+<li>XDP data-meta implemement in every driver</li>
+<li>Improve samples/bpf: XDP progs should take ifconfig/net_device names</li>
+<li>Improve samples/bpf: Avoid including ./arch/x86/include/asm/cpufeature.h</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org6fc8f53" class="outline-2">
+<h2 id="org6fc8f53">XDP metadata: dynamic descriptor offloads via BTF</h2>
+</div>
+
+<div id="outline-container-org661614c" class="outline-2">
+<h2 id="org661614c">Napatech have descriptors in-front of packet payload</h2>
+<div class="outline-text-2" id="text-org661614c">
+<p>
+Proprietary commercial companies like NapaTech, which also maps packets
+into userspace, deliver dynamic descriptor info in-front of the packet,
+like our data_meta area.
+</p>
+
+<p>
+As far as I can see, via their public docs[4], they have 4 different
+dynamic descriptor formats.  With BTF and metadata we should have more
+flexibility than them :-)
+</p>
+
+<p>
+It is a bit interesting to look at what they expose. I recommend
+looking/clicking at the header-file[5][6][7][8] as it shows they use a
+lot of C-bit-fields to compress the size.  Do BTF support C-bit fields?
+</p>
+
+<p>
+[4] <a href="https://docs.napatech.com/search/all?query=Dynamic+Packet+Descriptor">https://docs.napatech.com/search/all?query=Dynamic+Packet+Descriptor</a>
+[5] pktdescr_dyn1.h <a href="https://docs.napatech.com/reader/Gtwjm73bddn7nrHz1NxHZw/leAUnFb_t2il~h4y1tNPpw">https://docs.napatech.com/reader/Gtwjm73bddn7nrHz1NxHZw/leAUnFb_t2il~h4y1tNPpw</a>
+[6] pktdescr_dyn2.h <a href="https://docs.napatech.com/reader/GHSQQPQbWLPdJUmxIkO91Q/7cYsE5yb3DLpomSTEeL_bQ">https://docs.napatech.com/reader/GHSQQPQbWLPdJUmxIkO91Q/7cYsE5yb3DLpomSTEeL_bQ</a>
+[7] pktdescr_dyn3.h <a href="https://docs.napatech.com/reader/GHSQQPQbWLPdJUmxIkO91Q/hcQobdatqtY2j2nmrZ577A">https://docs.napatech.com/reader/GHSQQPQbWLPdJUmxIkO91Q/hcQobdatqtY2j2nmrZ577A</a>
+[8] pktdescr_dyn4.h <a href="https://docs.napatech.com/reader/GHSQQPQbWLPdJUmxIkO91Q/2LaoD2p2mvxpkNOVvBPBqg">https://docs.napatech.com/reader/GHSQQPQbWLPdJUmxIkO91Q/2LaoD2p2mvxpkNOVvBPBqg</a>
+</p>
+
+<p>
+I find it interesting to see that in (dyn1+2), default decode offsets
+into the packet of L3 and L4 (and L4 payload), but allows them to be
+programmable.
+ Also notice the "color" members, which are programmable, and sometimes
+are use as a 64-bit unique correlation key[8] (e.g. identifying flows).
+</p>
+
+
+<p>
+Maybe I should have looked at their standard format before the dynamic(?)
+Their pktdescr_std0.h [9] is placed in front of all packets being
+received by the adapter when the adapter is operating in STANDARD or
+EXTENDED mode.
+The Extended descriptors are placed after pktdescr_std0.h [9], which
+contains a lot of info on the types in different layers, see[10][11][12].
+</p>
+
+<p>
+[9] pktdescr_std0.h <a href="https://docs.napatech.com/reader/GHSQQPQbWLPdJUmxIkO91Q/mRPP74KNQXIJtSyWBBHMKA">https://docs.napatech.com/reader/GHSQQPQbWLPdJUmxIkO91Q/mRPP74KNQXIJtSyWBBHMKA</a>
+[10] pktdescr_ext7.h <a href="https://docs.napatech.com/reader/GHSQQPQbWLPdJUmxIkO91Q/GXhjyPfAPJ6Rr7k8KR4KsQ">https://docs.napatech.com/reader/GHSQQPQbWLPdJUmxIkO91Q/GXhjyPfAPJ6Rr7k8KR4KsQ</a>
+[11] pktdescr_ext8.h <a href="https://docs.napatech.com/reader/GHSQQPQbWLPdJUmxIkO91Q/NWaAIAROOdyXvy~OV4pl6A">https://docs.napatech.com/reader/GHSQQPQbWLPdJUmxIkO91Q/NWaAIAROOdyXvy~OV4pl6A</a>
+[12] pktdescr_ext9.h <a href="https://docs.napatech.com/reader/GHSQQPQbWLPdJUmxIkO91Q/LVIq8m_b0_44QIIAqcdLew">https://docs.napatech.com/reader/GHSQQPQbWLPdJUmxIkO91Q/LVIq8m_b0_44QIIAqcdLew</a>
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

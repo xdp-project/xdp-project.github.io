@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Brainstorming around XDP-accelerated flowcache</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Brainstorming around XDP-accelerated flowcache</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org6998c94">This section contains background and describes current state of affairs</a>
+<ul>
+<li><a href="#org3746b5f">Background</a></li>
+<li><a href="#org9ac06ba">Recent events</a></li>
+</ul>
+</li>
+<li><a href="#org516ff85">High level proposal</a>
+<ul>
+<li><a href="#orgd0aa3ff">XDP/BPF accelerated forwarding</a></li>
+<li><a href="#orgb681651">API for use by HW packet forwarding accelerators</a></li>
+</ul>
+</li>
+<li><a href="#orga4bd17d"><span class="todo TODO">TODO</span> XDP flowcache project</a>
+<ul>
+<li><a href="#orgc603355"><span class="todo TODO">TODO</span> Investigate feasibility of approach</a></li>
+<li><a href="#org405008c"><span class="todo TODO">TODO</span> Implement POC (Proof of Concept)</a></li>
+<li><a href="#org009fc8d"><span class="todo TODO">TODO</span> Test performance on POC</a></li>
+<li><a href="#orgcdda504"><span class="todo TODO">TODO</span> Interact with current vendors regarding if proposed solution is enough to solve their problems</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+This document contains background and rationale for a proposal to create XDP
+accelerated kernel based forwarding, but also by doing this standardised
+hooks can be created that hardware packet forwarding accelerating can be
+controlled via (the XDP/BPF forwarding path does the same as the hardware
+incarnation.
+</p>
+
+<div id="outline-container-org6998c94" class="outline-2">
+<h2 id="org6998c94">This section contains background and describes current state of affairs</h2>
+<div class="outline-text-2" id="text-org6998c94">
+</div>
+<div id="outline-container-org3746b5f" class="outline-3">
+<h3 id="org3746b5f">Background</h3>
+<div class="outline-text-3" id="text-org3746b5f">
+<p>
+Today Linux kernel is often used in the residential router space. This
+device typically has several wired ports plus wireless interfaces. It's used
+to connect a home to the ISP (Internet Service Provider). Lots of SoCs are
+manufactured by companies such as Qualcomm, Broadcom, Marvell, Intel and
+others, boxes are made by ODMs (Original Device Manufacturers) who typically
+takes SDKs from the SoC vendors, create software images for the ISPs who buy
+these devices and place them at residential customers as part of their
+service offering.
+</p>
+
+<p>
+In order to get good packet forwarding speeds on these kinds of devices,
+often they have hardware packet forwarding accelerators. These accelerators
+are controlled by code that is inserted into the Linux kernel by these SoC
+vendors. This typically means performing lots of changes to the kernel that
+are never upstreamed. This results in infrequent kernel updates, often a
+kernel is modified and shipped to customers 1-2 years after its initial
+release and then this process is performed once every 2-3 years due to the
+invasive nature of these modifications (lots of work).
+</p>
+
+<p>
+There are some SoCs that provide high-performance CPUs that do not need HW
+packet accelerators, but instead use the regular Linux kernel forwarding
+path. Examples of these are Marvell Armada 385 and 8040. These however are
+not used to their full potential because the Linux kernel forwarding path is
+a lot slower compared to userspace networking, for instance FD.IO/VPP,
+Snabbswitch and other implementations based on similar approach (DPDK).
+</p>
+
+<p>
+There has been work in the Linux kernel to speed up Linux forwarding speed
+by indroducing a flowoffload packet path:
+</p>
+
+<p>
+<a href="https://www.kernel.org/doc/Documentation/networking/nf_flowtable.txt">https://www.kernel.org/doc/Documentation/networking/nf_flowtable.txt</a>
+</p>
+</div>
+</div>
+
+<div id="outline-container-org9ac06ba" class="outline-3">
+<h3 id="org9ac06ba">Recent events</h3>
+<div class="outline-text-3" id="text-org9ac06ba">
+<p>
+There has been work in Linux Foundation subsidiary PRPL Foundation to
+standardise APIs into hardware, so that less work has to be done be the
+individual SoC vendors to integrate their hardware into the kernel, ie less
+invasive changes and thus less work per Linux kernel version supported. This
+has been focused on WIFI and hasn't yet reached the area of HW packet
+accelerators.
+</p>
+
+<p>
+Testing on different hardware has indicated that userspace networking (DPDK)
+has a ~5 times higher performance compared to Kernel based forwarding. This
+means companies are focusing on their hardware performing well for this
+use-case (often in the VNF (Virtual Network Function) space) and not
+focusing on using the Linux kernel itself to do the forwarding. Currently a
+Linux device being a host (itself terminating TCP sessions for instance) has
+much higher performance than if it is a router (forwarding packets between
+NICs).
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org516ff85" class="outline-2">
+<h2 id="org516ff85">High level proposal</h2>
+<div class="outline-text-2" id="text-org516ff85">
+<p>
+This document proposes two high level work items that will improve both
+Linux kernel forwarding performance and also create hooks for the hardware
+packet accelerators.
+</p>
+</div>
+
+<div id="outline-container-orgd0aa3ff" class="outline-3">
+<h3 id="orgd0aa3ff">XDP/BPF accelerated forwarding</h3>
+<div class="outline-text-3" id="text-orgd0aa3ff">
+<p>
+If the above mentioned nf_flowtable fastpath bypass could be BPF/XDP
+accelerated, then performance would most likely be improved significantly on
+platforms without hardware packet forwarding accelerators. By exposing the
+necessary data (flow table, ARP/ND entries etc) to BPF, then lookups could
+be performed by BPF and forwarding could be done using XDP/BPF and would
+never have to touch regular Linux kernel for already established flows.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgb681651" class="outline-3">
+<h3 id="orgb681651">API for use by HW packet forwarding accelerators</h3>
+<div class="outline-text-3" id="text-orgb681651">
+<p>
+The XDP/BPF based of forwarding would have to expose the same information to
+BPF that a HW packet forwarding accelerator would need to do its job. By
+doing this work and creating standardised way of exposing needed information
+the HW vendors could all use these APIs, negating all the work currently
+being done to hook their accelerators into the Linux kernel forwarding path.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orga4bd17d" class="outline-2">
+<h2 id="orga4bd17d"><span class="todo TODO">TODO</span> XDP flowcache project</h2>
+<div class="outline-text-2" id="text-orga4bd17d">
+</div>
+<div id="outline-container-orgc603355" class="outline-3">
+<h3 id="orgc603355"><span class="todo TODO">TODO</span> Investigate feasibility of approach</h3>
+<div class="outline-text-3" id="text-orgc603355">
+<p>
+Basic investigation on feasibility and make first draft on what needs to
+be done to enable creation of PoC.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org405008c" class="outline-3">
+<h3 id="org405008c"><span class="todo TODO">TODO</span> Implement POC (Proof of Concept)</h3>
+<div class="outline-text-3" id="text-org405008c">
+<p>
+For instance implement forwarding of TCP or UDP flows using XDP
+forwarding based on the flowcache to check if the approach makes sense.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org009fc8d" class="outline-3">
+<h3 id="org009fc8d"><span class="todo TODO">TODO</span> Test performance on POC</h3>
+<div class="outline-text-3" id="text-org009fc8d">
+<p>
+Test forwarding performance using XDP approach compared to classic style
+forwarding and flowoffload approach.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgcdda504" class="outline-3">
+<h3 id="orgcdda504"><span class="todo TODO">TODO</span> Interact with current vendors regarding if proposed solution is enough to solve their problems</h3>
+<div class="outline-text-3" id="text-orgcdda504">
+<p>
+Bring work to PRPL Foundation working groups to get feedback and interest
+from vendors on the approach and if the proposed design/APIs is enough.
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

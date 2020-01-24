@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Improvements to xdp_fwd sample</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Improvements to xdp_fwd sample</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgc485220">Initial patchset</a>
+<ul>
+<li><a href="#org704189d">COVER-LETTER: bpf: improvements to xdp_fwd sample</a></li>
+<li><a href="#orgd29d58a">Patch: samples/bpf: make xdp_fwd more practically usable</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+This document contains notes and patch desc for improvements to
+xdp_fwd sample from the kernel tree.
+</p>
+
+<div id="outline-container-orgc485220" class="outline-2">
+<h2 id="orgc485220">Initial patchset</h2>
+<div class="outline-text-2" id="text-orgc485220">
+</div>
+<div id="outline-container-org704189d" class="outline-3">
+<h3 id="org704189d">COVER-LETTER: bpf: improvements to xdp_fwd sample</h3>
+<div class="outline-text-3" id="text-org704189d">
+<p>
+V3: Hopefully fixed all issues point out by Yonghong Song
+</p>
+
+<p>
+V2: Addressed issues point out by Yonghong Song
+</p>
+<ul class="org-ul">
+<li>Please ACK patch 2/3 again</li>
+<li>Added ACKs and reviewed-by to other patches</li>
+</ul>
+
+<p>
+This patchset is focused on improvements for XDP forwarding sample
+named xdp_fwd, which leverage the existing FIB routing tables as
+described in LPC2018[1] talk by David Ahern.
+</p>
+
+<p>
+The primary motivation is to illustrate how Toke's recent work
+improves usability of XDP_REDIRECT via lookups in devmap. The other
+patches are to help users understand the sample.
+</p>
+
+<p>
+I have more improvements to xdp_fwd, but those might requires changes
+to libbpf.  Thus, sending these patches first as they are isolated.
+</p>
+
+<p>
+[1] <a href="http://vger.kernel.org/lpc-networking2018.html#session-1">http://vger.kernel.org/lpc-networking2018.html#session-1</a>
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">stg mail --prefix=<span style="font-style: italic;">"bpf-next"</span> -e --cc meup <span style="font-style: italic;">\</span>
+ --to netdev --to daniel --to alexei <span style="font-style: italic;">\</span>
+ --cc dsahern@gmail.com --cc a.s.protopopov@gmail.com <span style="font-style: italic;">\</span>
+ --cc xdp-newbies <span style="font-style: italic;">\</span>
+xdp_fwd_map_name..return_codes
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-shell">stg mail --prefix=<span style="font-style: italic;">"bpf-next v2"</span> -e --cc meup <span style="font-style: italic;">\</span>
+ --to netdev --to daniel --to alexei <span style="font-style: italic;">\</span>
+ --cc dsahern@gmail.com --cc a.s.protopopov@gmail.com <span style="font-style: italic;">\</span>
+ --cc toke --cc ys114321@gmail.com <span style="font-style: italic;">\</span>
+xdp_fwd_map_name..return_codes
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-shell">stg mail --prefix=<span style="font-style: italic;">"bpf-next v3"</span> -e --cc meup <span style="font-style: italic;">\</span>
+ --to netdev --to daniel --to alexei <span style="font-style: italic;">\</span>
+ --cc dsahern@gmail.com --cc a.s.protopopov@gmail.com <span style="font-style: italic;">\</span>
+ --cc toke --cc ys114321@gmail.com <span style="font-style: italic;">\</span>
+xdp_fwd_map_name..return_codes
+</pre>
+</div>
+
+<p>
+V3: <a href="https://patchwork.ozlabs.org/project/netdev/list/?series=124041&amp;state=%2a">https://patchwork.ozlabs.org/project/netdev/list/?series=124041&amp;state=%2a</a>
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-orgd29d58a" class="outline-3">
+<h3 id="orgd29d58a">Patch: samples/bpf: make xdp_fwd more practically usable</h3>
+<div class="outline-text-3" id="text-orgd29d58a">
+<p>
+samples/bpf: make xdp_fwd more practically usable via devmap lookup
+</p>
+
+<p>
+This address the TODO in samples/bpf/xdp_fwd_kern.c, which points out
+that the chosen egress index should be checked for existence in the
+devmap. This can now be done via taking advantage of Toke's work in
+commit 0cdbb4b09a06 ("devmap: Allow map lookups from eBPF").
+</p>
+
+<p>
+This change makes xdp_fwd more practically usable, as this allows for
+a mixed environment, where IP-forwarding fallback to network stack, if
+the egress device isn't configured to use XDP.
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

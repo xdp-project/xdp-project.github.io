@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MacchiatoBIN initial benchmarks and troubleshooting</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">MacchiatoBIN initial benchmarks and troubleshooting</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org7470683">Init benchmarks</a></li>
+<li><a href="#org7b10964">NIC to CPU scaling</a></li>
+<li><a href="#org468d180">netperf initial test</a>
+<ul>
+<li><a href="#org63f217a">Localhost performance with netperf</a></li>
+<li><a href="#orgc34cab1">netperf from firesoul via ixgbe1</a></li>
+</ul>
+</li>
+<li><a href="#org1d15890">Issue: Macchiatobin DMA overhead too large</a>
+<ul>
+<li><a href="#orgb069afb">mvpp2 DMA code notes</a></li>
+<li><a href="#org85462c5">DMA works with 4.4.52-armada-17.10.3-g6adee55</a></li>
+<li><a href="#org6ee378a">Found DMA issue</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org7470683" class="outline-2">
+<h2 id="org7470683">Init benchmarks</h2>
+<div class="outline-text-2" id="text-org7470683">
+<p>
+The initial benchmarks show something is wrong:
+</p>
+
+<pre class="example">
+# Overhead  Command       Shared Object        Symbol                          
+# ........  ............  ...................  ................................
+#
+    18.52%  ksoftirqd/0   [kernel.kallsyms]    [k] ___bpf_prog_run
+    12.77%  ksoftirqd/0   [kernel.kallsyms]    [k] _raw_spin_unlock_irqrestore
+     9.86%  ksoftirqd/0   [kernel.kallsyms]    [k] memcpy
+     5.88%  ksoftirqd/0   [kernel.kallsyms]    [k] mvpp2_poll
+     5.22%  ksoftirqd/0   [kernel.kallsyms]    [k] netdev_alloc_frag
+     4.24%  ksoftirqd/0   [kernel.kallsyms]    [k] ipt_do_table
+     3.18%  ksoftirqd/0   [kernel.kallsyms]    [k] __ll_sc___cmpxchg_double
+</pre>
+
+<p>
+The pps performance is around 588 Kpps:
+</p>
+
+<pre class="example">
+root@localhost:~# nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    587932             0.0
+IpExtInOctets                   27044596           0.0
+IpExtInNoECTPkts                587926             0.0
+</pre>
+
+<p>
+After some digging discover this is related to dhclient, loading an BPF filter
+(that is run via non-JIT).
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash"><span style="font-weight: bold; font-style: italic;"># </span><span style="font-weight: bold; font-style: italic;">ps auxwww | grep /sbin/dhclient</span>
+root      2802  0.0  0.0   5180  2064 ?        Ss   13:09   0:00 /sbin/dhclient -1 -v -pf /run/dhclient.eth2.pid -lf /var/lib/dhcp/dhclient.eth2.leases -I -df /var/lib/dhcp/dhclient6.eth2.leases eth2
+root      2919  0.0  0.0   5180  2460 ?        Ss   13:14   0:00 /sbin/dhclient -1 -v -pf /run/dhclient.eth1.pid -lf /var/lib/dhcp/dhclient.eth1.leases -I -df /var/lib/dhcp/dhclient6.eth1.leases eth1
+root      2960  0.0  0.0   5180  1972 ?        Ss   13:14   0:00 /sbin/dhclient -1 -v -pf /run/dhclient.eth0.pid -lf /var/lib/dhcp/dhclient.eth0.leases -I -df /var/lib/dhcp/dhclient6.eth0.leases eth0
+
+root@localhost:~# kill 2960
+root@localhost:~# nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+<span style="font-weight: bold; font-style: italic;">#</span><span style="font-weight: bold; font-style: italic;">kernel</span>
+IpInReceives                    772614             0.0
+IpExtInOctets                   35540290           0.0
+IpExtInNoECTPkts                772615             0.0
+</pre>
+</div>
+
+<p>
+Killing the dhclient on the test interface, result in performance increase to
+773 Kpps.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org7b10964" class="outline-2">
+<h2 id="org7b10964">NIC to CPU scaling</h2>
+<div class="outline-text-2" id="text-org7b10964">
+<p>
+Only 1-CPU active
+</p>
+
+<p>
+Fix via:
+</p>
+
+<pre class="example">
+ethtool -K eth0 rxhash on
+ethtool -X eth0 equal 4
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org468d180" class="outline-2">
+<h2 id="org468d180">netperf initial test</h2>
+<div class="outline-text-2" id="text-org468d180">
+</div>
+<div id="outline-container-org63f217a" class="outline-3">
+<h3 id="org63f217a">Localhost performance with netperf</h3>
+<div class="outline-text-3" id="text-org63f217a">
+<p>
+netperf TCP_RR localhost:  35,591 Trans/sec
+</p>
+
+<pre class="example">
+# ./netperf -l 10 127.0.0.1 -t TCP_RR
+MIGRATED TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost () port 0 AF_INET : first burst 0
+Local /Remote
+Socket Size   Request  Resp.   Elapsed  Trans.
+Send   Recv   Size     Size    Time     Rate         
+bytes  Bytes  bytes    bytes   secs.    per sec   
+
+16384  131072 1        1       10.00    35591.53   
+16384  131072
+</pre>
+
+<p>
+netperf TCP_STREAM localhost: 18.4 Gbit/s
+</p>
+
+<pre class="example">
+# ./netperf -l 10 127.0.0.1 -t TCP_STREAM
+MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost () port 0 AF_INET
+Recv   Send    Send                          
+Socket Socket  Message  Elapsed              
+Size   Size    Size     Time     Throughput  
+bytes  bytes   bytes    secs.    10^6bits/sec  
+
+131072  16384  16384    10.00    18458.83   
+</pre>
+</div>
+</div>
+
+
+<div id="outline-container-orgc34cab1" class="outline-3">
+<h3 id="orgc34cab1">netperf from firesoul via ixgbe1</h3>
+<div class="outline-text-3" id="text-orgc34cab1">
+<p>
+netperf TCP_RR from-remote-host:  8,064 Trans/sec
+</p>
+
+<pre class="example">
+Local /Remote
+Socket Size   Request  Resp.   Elapsed  Trans.
+Send   Recv   Size     Size    Time     Rate         
+bytes  Bytes  bytes    bytes   secs.    per sec   
+
+16384  87380  1        1       10.00    8064.82   
+16384  131072
+</pre>
+
+<p>
+netperf TCP_STREAM from-remote-host: 4.7Gbit/s
+</p>
+
+<pre class="example">
+Recv   Send    Send                          
+Socket Socket  Message  Elapsed              
+Size   Size    Size     Time     Throughput  
+bytes  bytes   bytes    secs.    10^6bits/sec  
+
+131072  16384  16384    60.00    4696.04   
+</pre>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org1d15890" class="outline-2">
+<h2 id="org1d15890">Issue: Macchiatobin DMA overhead too large</h2>
+<div class="outline-text-2" id="text-org1d15890">
+<p>
+The overhead of the DMA operations are too large.  Perf investigations
+indicate that the DMA swiotlb code is using bounce buffers for this
+device, which should not be needed on this platform.
+</p>
+</div>
+
+<div id="outline-container-orgb069afb" class="outline-3">
+<h3 id="orgb069afb">mvpp2 DMA code notes</h3>
+<div class="outline-text-3" id="text-orgb069afb">
+<p>
+drivers/net/ethernet/marvell/mvpp2/
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C">err = dma_set_mask(&amp;pdev-&gt;dev, MVPP2_DESC_DMA_MASK);
+<span style="font-weight: bold;">#define</span> <span style="font-weight: bold; font-style: italic;">MVPP2_DESC_DMA_MASK</span>  DMA_BIT_MASK(40)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">#ifdef</span> CONFIG_ARCH_HAS_PHYS_TO_DMA
+<span style="font-weight: bold;">static</span> <span style="font-weight: bold;">inline</span> <span style="font-weight: bold; text-decoration: underline;">bool</span> <span style="font-weight: bold;">dma_capable</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">device</span> *<span style="font-weight: bold; font-style: italic;">dev</span>, <span style="font-weight: bold; text-decoration: underline;">dma_addr_t</span> <span style="font-weight: bold; font-style: italic;">addr</span>, <span style="font-weight: bold; text-decoration: underline;">size_t</span> <span style="font-weight: bold; font-style: italic;">size</span>)
+{
+        <span style="font-weight: bold;">if</span> (!dev-&gt;dma_mask)
+                <span style="font-weight: bold;">return</span> <span style="font-weight: bold; text-decoration: underline;">false</span>;
+
+        <span style="font-weight: bold;">return</span> addr + size - 1 &lt;= *dev-&gt;dma_mask;
+}
+<span style="font-weight: bold;">#endif</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-bash">$ grep CONFIG_ARCH_HAS_PHYS_TO_DMA .config
+NOTHING
+</pre>
+</div>
+
+<p>
+Arm64 goes through here: arch/arm64/mm/dma-mapping.c
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash">$ gg __swiotlb_unmap_page
+arch/arm64/mm/dma-mapping.c:static void __swiotlb_unmap_page(struct device *dev, dma_addr_t dev_addr,
+arch/arm64/mm/dma-mapping.c:    .unmap_page = __swiotlb_unmap_page,
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org85462c5" class="outline-3">
+<h3 id="org85462c5">DMA works with 4.4.52-armada-17.10.3-g6adee55</h3>
+<div class="outline-text-3" id="text-org85462c5">
+<p>
+It seems the DMA overhead does not exist with the SolidRun kernel
+4.4.52-armada-17.10.3-g6adee55.
+</p>
+
+<pre class="example">
+softirqd/0     3 [000]   232.996180:     399703 cycles:ppp: 
+       ffffffc00044012c swiotlb_unmap_page ([kernel.kallsyms])
+       ffffffc000093678 __swiotlb_unmap_page ([kernel.kallsyms])
+       ffffffc0004a7b90 mv_pp2x_rx ([kernel.kallsyms])
+       ffffffc0004a86bc mv_pp22_poll ([kernel.kallsyms])
+       ffffffc0007aa468 net_rx_action ([kernel.kallsyms])
+       ffffffc0000ba43c __do_softirq ([kernel.kallsyms])
+       ffffffc0000ba594 run_ksoftirqd ([kernel.kallsyms])
+       ffffffc0000d577c smpboot_thread_fn ([kernel.kallsyms])
+       ffffffc0000d245c kthread ([kernel.kallsyms])
+       ffffffc000085dd0 ret_from_fork ([kernel.kallsyms])
+</pre>
+
+<p>
+As can be seen from above, this kernel is not using the upstream <code>mvpp2</code>
+driver, but instead a driver (likely) named <code>mv_pp22</code>.  As the expected NAPI
+poll function in upstream <code>mvpp2</code> driver is named <code>mvpp2_poll</code>.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org6ee378a" class="outline-3">
+<h3 id="org6ee378a">Found DMA issue</h3>
+<div class="outline-text-3" id="text-org6ee378a">
+<p>
+The memory getting allocated for RX buffers were above 40-bit.  Thus,
+the (steaming) DMA mapping is forced to go through bounce-buffers.
+</p>
+
+<p>
+Work-around by setting GFP_DMA32 flag:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-diff">diff --git a/net/core/skbuff.c b/net/core/skbuff.c
+index b4ee5c8b928f..87daf0e270a8 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/net/core/skbuff.c</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/net/core/skbuff.c</span>
+<span style="font-weight: bold;">@@ -353,7 +353,7 @@</span><span style="font-weight: bold;"> static void *__netdev_alloc_frag(unsigned int fragsz, gfp_t gfp_mask)</span>
+  */
+ void *netdev_alloc_frag(unsigned int fragsz)
+ {
+-       return __netdev_alloc_frag(fragsz, GFP_ATOMIC);
++       return __netdev_alloc_frag(fragsz, GFP_ATOMIC | GFP_DMA32);
+ }
+ EXPORT_SYMBOL(netdev_alloc_frag);
+</pre>
+</div>
+
+<p>
+The performance increase is large:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash"><span style="font-weight: bold; font-style: italic;"># </span><span style="font-weight: bold; font-style: italic;">nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat</span>
+<span style="font-weight: bold; font-style: italic;">#</span><span style="font-weight: bold; font-style: italic;">kernel</span>
+IpInReceives                    1142041            0.0
+IpExtInOctets                   52533932           0.0
+IpExtInNoECTPkts                1142042            0.0
+</pre>
+</div>
+
+<p>
+Benchmark after work-around with GFP_DMA32:
+</p>
+<ul class="org-ul">
+<li>Before: 772,614 pps</li>
+<li>Now:  1,142,041 pps</li>
+<li>1142041/772614 = 1.478 =&gt; approx 48% improvement</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

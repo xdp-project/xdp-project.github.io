@@ -1,0 +1,981 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Benchmarks for branch mvneta_04_page_pool_xdp</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Benchmarks for branch mvneta_04_page_pool_xdp</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org842ed5c">XDP_DROP bench with xdp1</a>
+<ul>
+<li><a href="#org2adb65c">XDP_DROP remove prefetch of data</a></li>
+</ul>
+</li>
+<li><a href="#orgd33cb6e">Testing some ideas</a>
+<ul>
+<li><a href="#orgc15b95a">Recompile with out RCU/preempt (CONFIG_PREEMPT_NONE)</a></li>
+<li><a href="#org1b69797">Test: Comment out code in mvneta_rx_swbm</a></li>
+<li><a href="#orgea2f311">Playing with other perf events</a></li>
+<li><a href="#org35fd9ad">New kernel config with tracing</a></li>
+</ul>
+</li>
+<li><a href="#org5333c33">Fixing XDP_REDIRECT</a>
+<ul>
+<li><a href="#org0b78e7e">Crash with tcpdump + cpumap-redirect</a>
+<ul>
+<li><a href="#org09fc5a5">Test: compile without CONFIG_NET_DSA</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+Benchmark investigations and experiments on git branch
+mvneta_04_page_pool_recycle_xdp located here:
+</p>
+<ul class="org-ul">
+<li><a href="https://github.com/apalos/bpf-next/commits/mvneta_04_page_pool_recycle_xdp">https://github.com/apalos/bpf-next/commits/mvneta_04_page_pool_recycle_xdp</a></li>
+</ul>
+
+<div id="outline-container-org842ed5c" class="outline-2">
+<h2 id="org842ed5c">XDP_DROP bench with xdp1</h2>
+<div class="outline-text-2" id="text-org842ed5c">
+<pre class="example">
+root@espressobin:~/samples/bpf# ./xdp1 3 &amp;
+proto 0:     660053 pkt/s
+proto 0:     660147 pkt/s
+proto 0:     658249 pkt/s
+proto 0:     659691 pkt/s
+
+/root/bin/perf stat -C0 -r 3 -e L1-icache-load -e L1-icache-load-misses \
+   -e L1-dcache-loads -e L1-dcache-load-misses \
+   -e L1-dcache-stores -e L1-dcache-store-misses \
+   sleep 1
+
+ Performance counter stats for 'CPU(s) 0' (3 runs):
+
+  201678946  L1-icache-load                                       ( +-  0.01% )
+     523274  L1-icache-load-misses  # 0.26% of all L1-icache hits ( +-  0.20% )
+  120263097  L1-dcache-loads                                      ( +-  0.01% )
+    2112043  L1-dcache-load-misses  # 1.76% of all L1-dcache hits ( +-  0.20% )
+  120263364  L1-dcache-stores                                     ( +-  0.01% )
+    2112046  L1-dcache-store-misses                               ( +-  0.20% )
+
+/root/bin/perf stat -C0 -r 3 -e instructions -e cycles -e bus-cycles \
+  -e cache-misses -e cache-references -e branches -e branch-misses sleep 1
+
+ Performance counter stats for 'CPU(s) 0' (3 runs):
+
+  324082590  instructions     #    0.32  insn per cycle           ( +-  0.01% )
+ 1003857272  cycles                                               ( +-  0.00% )
+  250964427  bus-cycles                                           ( +-  0.00% )
+    2105450  cache-misses     #    1.744 % of all cache refs      ( +-  0.11% )
+  120754222  cache-references                                     ( +-  0.02% )
+   31402039  branches                                             ( +-  0.02% )
+     936484  branch-misses    #    2.98% of all branches          ( +-  0.25% )
+
+</pre>
+</div>
+
+<div id="outline-container-org2adb65c" class="outline-3">
+<h3 id="org2adb65c">XDP_DROP remove prefetch of data</h3>
+<div class="outline-text-3" id="text-org2adb65c">
+<p>
+The amount of cache-misses are too high, remove the prefetch on packet data:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-diff">diff --git a/drivers/net/ethernet/marvell/mvneta.c b/drivers/net/ethernet/marvell/mvneta.c
+index b37264750090..3b1624959b89 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/drivers/net/ethernet/marvell/mvneta.c</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/drivers/net/ethernet/marvell/mvneta.c</span>
+<span style="font-weight: bold;">@@ -2051,7 +2051,7 @@</span><span style="font-weight: bold;"> static int mvneta_rx_swbm(struct napi_struct *napi,</span>
+                                                      rx_bytes,
+                                                      DMA_FROM_DEVICE);
+                        /* Prefetch header */
+-                       prefetch(data);
++                       // prefetch(data); // perf show issue here
+
+                        rx_desc-&gt;buf_phys_addr = 0;
+                        xdp.data_hard_start = data;
+</pre>
+</div>
+
+<p>
+Perf stat data <b>after</b> removing prefetch:
+</p>
+
+<p>
+Shows cache-misses reduced
+</p>
+<ul class="org-ul">
+<li>before 2,105,450</li>
+<li>after    950,486</li>
+<li>reduction: 1,154,964</li>
+<li>1154964 / 660053 pps = 1.7498 cache-miss per packet reduction</li>
+<li>Indication that prefetch tries to prefetch more than one cache-line</li>
+</ul>
+
+<pre class="example">
+root@espressobin:~/samples/bpf# ./xdp1 3 &amp;
+proto 0:     666439 pkt/s
+proto 0:     667531 pkt/s
+proto 0:     668113 pkt/s
+proto 0:     668110 pkt/s
+
+ # export PATH=/root/bin:$PATH
+ # perf stat -C0 -r 3 -e L1-icache-load -e L1-icache-load-misses -e L1-dcache-loads -e L1-dcache-load-misses -e L1-dcache-stores -e L1-dcache-store-misses sleep 1
+
+ Performance counter stats for 'CPU(s) 0' (3 runs):
+
+  204788837  L1-icache-load                                      ( +-  0.02% )
+     482820  L1-icache-load-misses # 0.24% of all L1-icache hits ( +-  0.34% )
+  121029887  L1-dcache-loads                                     ( +-  0.01% )
+     950486  L1-dcache-load-misses # 0.79% of all L1-dcache hits ( +-  0.07% )
+  121027251  L1-dcache-stores                                    ( +-  0.01% )
+     950480  L1-dcache-store-misses                              ( +-  0.07% )
+
+  1.0039657 +- 0.0000370 seconds time elapsed  ( +-  0.00% )
+</pre>
+
+<p>
+From the L1-icache-load (204788837) we can estimate/deduce the size of
+our active code, knowing the packets-per-sec (667531 pps).  Each
+packet basically activate the same code path per 64 packets, and then
+there is some NAPI code and refill code, but it will only happen once
+every 64 packets.
+</p>
+
+<p>
+Code size estimate:
+</p>
+<ul class="org-ul">
+<li>204788837/667531 306.79 cache-lines per packet</li>
+<li>Cache-line size 64 bytes: 306.79 * 64 = 19635 bytes code in use?</li>
+<li>Unsure about espressobin I-cache size, but at-least 32 KB (?)</li>
+<li>Maybe always fetch two cache-lines: 306.79 * 64 * 2 = 39269 bytes ?</li>
+</ul>
+
+<pre class="example">
+# /root/bin/perf stat -C0 -r 3 -e instructions -e cycles -e bus-cycles -e cache-misses -e cache-references -e branches -e branch-misses sleep 1
+
+ Performance counter stats for 'CPU(s) 0' (3 runs):
+
+  326643916  instructions    #    0.33  insn per cycle           ( +-  0.02% )
+ 1003829805  cycles                                              ( +-  0.00% )
+  250957824  bus-cycles                                          ( +-  0.00% )
+     952515  cache-misses    #    0.787 % of all cache refs      ( +-  0.15% )
+  121039240  cache-references                                    ( +-  0.02% )
+   31649922  branches                                            ( +-  0.02% )
+     939670  branch-misses   #    2.97% of all branches          ( +-  0.07% )
+
+</pre>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orgd33cb6e" class="outline-2">
+<h2 id="orgd33cb6e">Testing some ideas</h2>
+<div class="outline-text-2" id="text-orgd33cb6e">
+</div>
+<div id="outline-container-orgc15b95a" class="outline-3">
+<h3 id="orgc15b95a">Recompile with out RCU/preempt (CONFIG_PREEMPT_NONE)</h3>
+<div class="outline-text-3" id="text-orgc15b95a">
+<p>
+Kernel .config files used located here:
+</p>
+<ul class="org-ul">
+<li>Before: <a href="configs/jesper_config01-with-preempt">configs/jesper_config01-with-preempt</a></li>
+<li>After:  <a href="configs/jesper_config02_PREEMPT_NONE">configs/jesper_config02_PREEMPT_NONE</a></li>
+</ul>
+
+<p>
+Did some branch-miss profiling, and it shows branch-misses in RCU
+read-side.  Plus the calls to RCU-read-side also consume I-cache.
+Thus, experiment with compiling kernel without preempt as that
+basically removed the need for RCU-read-side code.
+</p>
+
+<p>
+CONFIG_PREEMPT_NONE: No Forced Preemption (Server):
+</p>
+
+<pre class="example">
+No Forced Preemption (Server)
+CONFIG_PREEMPT_NONE:                                                │
+  │                                                                 │
+  │ This is the traditional Linux preemption model, geared towards  │
+  │ throughput. It will still provide good latencies most of the    │
+  │ time, but there are no guarantees and occasional longer delays  │
+  │ are possible.                                                   │
+  │                                                                 │
+  │ Select this option if you are building a kernel for a server or │
+  │ scientific/computation system, or if you want to maximize the   │
+  │ raw processing power of the kernel, irrespective of scheduling  │
+  │ latencies.
+
+ Prompt: No Forced Preemption (Server)          │
+  │   Location:                                 │
+  │     -&gt; General setup                        │
+  │       -&gt; Preemption Model (&lt;choice&gt; [=y])   │
+</pre>
+
+<p>
+Up and running:
+</p>
+
+<pre class="example">
+# uname -a
+Linux espressobin 4.20.0-rc1-mvneta_04+ #25 SMP Mon Dec 3 11:33:18 CET 2018 aarch64 aarch64 aarch64 GNU/Linux
+</pre>
+
+<p>
+This does improve performance:
+</p>
+<ul class="org-ul">
+<li>Before: 668113</li>
+<li>After:  693440</li>
+<li>693440-668113 = +25327 pps</li>
+<li>(1/668113-1/693440)*10^9 = 54.66 ns</li>
+</ul>
+
+<pre class="example">
+# ./xdp1 3 &amp;
+proto 0:     466516 pkt/s
+proto 0:     693440 pkt/s
+proto 0:     693822 pkt/s
+proto 0:     693735 pkt/s
+proto 0:     489783 pkt/s
+^C
+root@espressobin:~/samples/bpf#
+</pre>
+
+<p>
+Perf stats performance for CONFIG_PREEMPT_NONE measurements, L1 cache:
+</p>
+
+<pre class="example">
+Performance counter stats for 'CPU(s) 0' (3 runs):
+
+ 186193917  L1-icache-load                                      ( +-  0.02% )
+    423491  L1-icache-load-misses # 0.23% of all L1-icache hits ( +-  0.33% )
+ 114063063  L1-dcache-loads                                     ( +-  0.02% )
+   1222909  L1-dcache-load-misses # 1.07% of all L1-dcache hits ( +-  0.09% )
+ 114063101  L1-dcache-stores                                    ( +-  0.02% )
+   1222908  L1-dcache-store-misses                              ( +-  0.09% )
+</pre>
+
+<p>
+Analysis: L1-icache-load were reduced significantly:
+</p>
+<ul class="org-ul">
+<li>Before: 204788837 L1-icache-load =&gt; (204788837/667531*64) 19634 bytes code</li>
+<li>After:  186193917 L1-icache-load =&gt; (186193917/693440*64) 17185 bytes code</li>
+</ul>
+
+<p>
+The L1-icache-load-misses were also reduce a bit:
+</p>
+<ul class="org-ul">
+<li>Before: 482820  L1-icache-load-misses # 0.24% of all L1-icache hits</li>
+<li>After:  423491  L1-icache-load-misses # 0.23% of all L1-icache hits</li>
+<li>Diff:    59329</li>
+</ul>
+
+<p>
+Perf stats performance for CONFIG_PREEMPT_NONE measurements:
+</p>
+
+<pre class="example">
+Performance counter stats for 'CPU(s) 0' (3 runs):
+
+  311683229  instructions     #    0.31  insn per cycle        ( +-  0.00% )
+ 1003777048  cycles                                            ( +-  0.00% )
+  250944417  bus-cycles                                        ( +-  0.00% )
+    1225570  cache-misses     #    1.074 % of all cache refs   ( +-  0.22% )
+  114109895  cache-references                                  ( +-  0.01% )
+   27106182  branches                                          ( +-  0.02% )
+     226928  branch-misses    #    0.84% of all branches       ( +-  0.72% )
+</pre>
+
+<p>
+Analysis: The branch-misses were reduced significantly when recompiled
+with CONFIG_PREEMPT_NONE, which compiles out the RCU-read-side locks:
+</p>
+<ul class="org-ul">
+<li>Before: 31402039  branches  939670  branch-misses # 2.97% of all branches</li>
+<li>After:  27106182  branches  226928  branch-misses # 0.84% of all branches</li>
+<li>Diff:   -4295857  branches -712742  branch-misses</li>
+</ul>
+
+<p>
+Below output from mpstat to verify general system performance.
+</p>
+
+<pre class="example">
+$ mpstat -P ALL -u -I SCPU -I SUM 2
+  CPU    %usr   %nice    %sys %iowait    %irq   %soft    %idle
+  all    0.00    0.00    0.00    0.00    0.75   49.25    50.00
+    0    0.00    0.00    0.00    0.00    1.50   98.50     0.00
+    1    0.00    0.00    0.00    0.00    0.00    0.50    99.50
+
+  CPU    intr/s
+  all  11960.50
+    0  11096.00
+    1     66.00
+
+  CPU  TIMER/s   NET_TX/s   NET_RX/s  IRQ_POLL/s  TASKLET/s    SCHED/s   RCU/s
+    0   250.00       0.00   10836.00        0.00       0.00       7.50    2.50
+    1    22.00       0.00       0.00        0.00       0.00      42.50    1.50
+
+# Measured:
+proto 0:     693651 pkt/s
+</pre>
+
+<p>
+From the 10836 NET_RX/s we can calculate the NAPI poll budget getting
+used, here: 693651 / 10836 = 64.01 packets.  This is spot on for the
+expected NAPI poll budget of 64.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org1b69797" class="outline-3">
+<h3 id="org1b69797">Test: Comment out code in mvneta_rx_swbm</h3>
+<div class="outline-text-3" id="text-org1b69797">
+<p>
+The main NAPI poll RX funtion in driver mvneta mvneta_rx_swbm() have
+special handling of "Middle or Last descriptor" inside this main loop,
+which could cause I-cache issues.  Hack comment it out&#x2026; and test.
+</p>
+
+<p>
+The code-size delta is 60 bytes in mvneta_poll:
+</p>
+<pre class="example">
+$ ./scripts/bloat-o-meter vmlinux2 vmlinux
+add/remove: 0/3 grow/shrink: 0/1 up/down: 0/-84 (-84)
+Function                                     old     new   delta
+e843419@0975_0000d554_34                       8       -      -8
+e843419@0929_0000cd2d_1628                     8       -      -8
+e843419@087e_0000ba28_258                      8       -      -8
+mvneta_poll                                 3108    3048     -60
+Total: Before=15472523, After=15472439, chg -0.00%
+</pre>
+
+<p>
+Testing with xdp1/XDP_DROP on eth0.
+</p>
+
+<p>
+Before: 696194 pkt/s
+</p>
+<pre class="example">
+perf stat -C0 -r 3 -e L1-icache-load -e L1-icache-load-misses -e L1-dcache-loads -e L1-dcache-load-misses -e L1-dcache-stores -e L1-dcache-store-misses sleep 1
+
+ Performance counter stats for 'CPU(s) 0' (3 runs):
+
+         187683394      L1-icache-load                                                ( +-  0.04% )
+            506294      L1-icache-load-misses     #    0.27% of all L1-icache hits    ( +-  1.11% )
+         114865063      L1-dcache-loads                                               ( +-  0.03% )
+           1013416      L1-dcache-load-misses     #    0.88% of all L1-dcache hits    ( +-  0.13% )
+         114865277      L1-dcache-stores                                              ( +-  0.03% )
+           1013417      L1-dcache-store-misses                                        ( +-  0.13% )
+</pre>
+
+<p>
+After: 692034 pkt/s
+</p>
+<pre class="example">
+Performance counter stats for 'CPU(s) 0' (3 runs):
+
+        186047636      L1-icache-load                                                ( +-  0.06% )
+           435807      L1-icache-load-misses     #    0.23% of all L1-icache hits    ( +-  0.78% )
+        113598029      L1-dcache-loads                                               ( +-  0.04% )
+          1264343      L1-dcache-load-misses     #    1.11% of all L1-dcache hits    ( +-  0.71% )
+        113598235      L1-dcache-stores                                              ( +-  0.04% )
+          1264346      L1-dcache-store-misses                                        ( +-  0.71% )
+</pre>
+
+<p>
+Strange results, as PPS is slightly worse (692034-696194 = -4160 pps),
+but the L1-icache-load-misses, are improved (435807-506294 = -70487
+I-cache-misses).
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgea2f311" class="outline-3">
+<h3 id="orgea2f311">Playing with other perf events</h3>
+<div class="outline-text-3" id="text-orgea2f311">
+<pre class="example">
+pipeline:
+  agu_dep_stall                                     
+       [Cycles there is an interlock for a load/store instruction waiting for data to calculate the address in
+        the AGU]
+  decode_dep_stall                                  
+       [Cycles the DPU IQ is empty and there is a pre-decode error being processed]
+  ic_dep_stall                                      
+       [Cycles the DPU IQ is empty and there is an instruction cache miss being processed]
+  iutlb_dep_stall                                   
+       [Cycles the DPU IQ is empty and there is an instruction micro-TLB miss being processed]
+  ld_dep_stall                                      
+       [Cycles there is a stall in the Wr stage because of a load miss]
+  other_interlock_stall                             
+       [Cycles there is an interlock other than Advanced SIMD/Floating-point instructions or load/store
+        instruction]
+  other_iq_dep_stall                                
+       [Cycles that the DPU IQ is empty and that is not because of a recent micro-TLB miss, instruction cache
+        miss or pre-decode error]
+  simd_dep_stall                                    
+       [Cycles there is an interlock for an Advanced SIMD/Floating-point operation]
+  st_dep_stall                                      
+       [Cycles there is a stall in the Wr stage because of a store]
+  stall_sb_full                                     
+       [Data Write operation that stalls the pipeline because the store buffer is full]
+</pre>
+
+<pre class="example">
+perf stat -C0 -r 3 -e agu_dep_stall -e decode_dep_stall -e ic_dep_stall \
+-e ld_dep_stall -e st_dep_stall -e iutlb_dep_stall  sleep 1
+
+ Performance counter stats for 'CPU(s) 0' (3 runs):
+
+   57895390      agu_dep_stall              ( +-  0.00% )
+          0      decode_dep_stall         
+    3819668      ic_dep_stall               ( +-  0.74% )
+  486917106      ld_dep_stall               ( +-  0.00% )
+  107229705      st_dep_stall               ( +-  0.01% )
+     684001      iutlb_dep_stall            ( +-  0.12% )
+</pre>
+
+<pre class="example">
+perf stat -C0 -r 3 -e agu_dep_stall -e decode_dep_stall -e ic_dep_stall \
+-e ld_dep_stall -e iutlb_dep_stall -e other_interlock_stall \
+-e other_iq_dep_stall -e simd_dep_stall -e st_dep_stall -e stall_sb_full \
+sleep 1
+
+    57710381      agu_dep_stall                  ( +-  0.02% )  (59.96%)
+           0      decode_dep_stall               (60.16%)
+     4025870      ic_dep_stall                   ( +-  1.29% )  (60.16%)
+   485093041      ld_dep_stall                   ( +-  0.01% )  (60.16%)
+      685257      iutlb_dep_stall                ( +-  0.37% )  (60.16%)
+    36521529      other_interlock_stall          ( +-  0.02% )  (60.16%)
+     1445909      other_iq_dep_stall             ( +-  0.23% )  (59.97%)
+           0      simd_dep_stall                 (59.76%)
+   106689231      st_dep_stall                   ( +-  0.01% )  (59.76%)
+       33677      stall_sb_full                  ( +-  0.33% )  (59.76%)
+
+  1.00412169 +- 0.00000383 seconds time elapsed  ( +-  0.00% )
+</pre>
+
+<pre class="example">
+perf stat -C0 -r 3 -e instructions -e cycles \
+ -e ic_dep_stall -e ld_dep_stall -e st_dep_stall \
+ -e agu_dep_stall -e stall_sb_full -e other_interlock_stall \
+ sleep 1
+
+    399566325      instructions  #  0.40  insn per cycle ( +-  0.01% )  (74.51%)
+   1000680946      cycles                                ( +-  0.00% )  (87.25%)
+      3496508      ic_dep_stall                          ( +-  1.32% )  (87.38%)
+    485837259      ld_dep_stall                          ( +-  0.00% )  (87.65%)
+    106977052      st_dep_stall                          ( +-  0.01% )  (87.65%)
+     57750275      agu_dep_stall                         ( +-  0.01% )  (87.65%)
+        47449      stall_sb_full                         ( +-  0.16% )  (87.65%)
+     36577300      other_interlock_stall                 ( +-  0.01% )  (87.52%)
+</pre>
+
+<pre class="example">
+perf stat -C0 -r 3 -e instructions -e cycles \
+ -e ic_dep_stall -e ld_dep_stall -e st_dep_stall \
+ -e agu_dep_stall -e other_interlock_stall \
+ sleep 1
+
+# options:no_touch
+./xdp_rxq_info --d eth0 --action XDP_DROP
+
+Running XDP on dev:eth0 (ifindex:3) action:XDP_DROP options:no_touch
+XDP stats       CPU     pps         issue-pps  
+XDP-RX CPU      0       708595      0          
+XDP-RX CPU      total   708595     
+
+ Performance counter stats for 'CPU(s) 0' (3 runs):
+
+   400824190      instructions     #    0.40  insn per cycle  ( +-  0.00% )
+  1003962088      cycles                                      ( +-  0.00% )
+     3399851      ic_dep_stall                                ( +-  1.30% )
+   487539028      ld_dep_stall                                ( +-  0.01% )
+   107368181      st_dep_stall                                ( +-  0.01% )
+    57959951      agu_dep_stall                               ( +-  0.01% )
+    36690192      other_interlock_stall                       ( +-  0.00% )
+
+# options:read
+./xdp_rxq_info --d eth0 --a XDP_DROP --read
+
+XDP stats       CPU     pps         issue-pps  
+XDP-RX CPU      0       616934      0          
+XDP-RX CPU      total   616934     
+
+ Performance counter stats for 'CPU(s) 0' (3 runs):
+
+   367662048      instructions         # 0.37  insn per cycle  ( +-  0.01% )
+  1003952335      cycles                                       ( +-  0.00% )
+     3285485      ic_dep_stall                                 ( +-  0.42% )
+   531033126      ld_dep_stall                                 ( +-  0.01% )
+    95498417      st_dep_stall                                 ( +-  0.01% )
+    54374611      agu_dep_stall                                ( +-  0.01% )
+    34716242      other_interlock_stall                        ( +-  0.01% )
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org35fd9ad" class="outline-3">
+<h3 id="org35fd9ad">New kernel config with tracing</h3>
+<div class="outline-text-3" id="text-org35fd9ad">
+<p>
+In-order to use some of the other XDP sample/bpf program, we need to
+enable tracing, as XDP error handling use tracing.  Thus, enable this
+in a new config:
+</p>
+
+<p>
+New kernel config with tracing:
+</p>
+<ul class="org-ul">
+<li><a href="configs/jesper_config03-with-tracing">configs/jesper_config03-with-tracing</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+
+
+<div id="outline-container-org5333c33" class="outline-2">
+<h2 id="org5333c33">Fixing XDP_REDIRECT</h2>
+<div class="outline-text-2" id="text-org5333c33">
+<p>
+XDP_REDIRECT via CPUMAP didn't work.  This was due to wrong
+XDP-headroom setting.
+</p>
+
+<p>
+Quickfix:
+</p>
+<div class="org-src-container">
+<pre class="src src-diff">diff --git a/drivers/net/ethernet/marvell/mvneta.c b/drivers/net/ethernet/marvell/mvneta.c
+index 15753bb321d6..a2de8ede3650 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/drivers/net/ethernet/marvell/mvneta.c</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/drivers/net/ethernet/marvell/mvneta.c</span>
+<span style="font-weight: bold;">@@ -2053,7 +2053,8 @@</span><span style="font-weight: bold;"> static int mvneta_rx_swbm(struct napi_struct *napi,</span>
+
+                        rx_desc-&gt;buf_phys_addr = 0;
+                        xdp.data_hard_start = data;
+-                       xdp.data = data + XDP_PACKET_HEADROOM;
++                       xdp.data = data + MVNETA_MH_SIZE + NET_SKB_PAD;
+                        xdp_set_data_meta_invalid(&amp;xdp);
+                        xdp.data_end = xdp.data + rx_bytes;
+                        xdp.rxq = &amp;rxq-&gt;xdp_rxq;
+
+</pre>
+</div>
+
+<p>
+TODO: Need to adjust driver RX DMA offset to use XDP_PACKET_HEADROOM
+offset instead of MVNETA_MH_SIZE + NET_SKB_PAD.  As above quickfix
+have issues, as NET_SKB_PAD is only 32 bytes, leaving no room for
+headroom adjustment for XDP programs.
+</p>
+</div>
+
+<div id="outline-container-org0b78e7e" class="outline-3">
+<h3 id="org0b78e7e">Crash with tcpdump + cpumap-redirect</h3>
+<div class="outline-text-3" id="text-org0b78e7e">
+<p>
+Provoked crash with tcpdump + cpumap-redirect
+</p>
+
+<p>
+Was running <code>xdp_redirect_cpu</code> to CPU-1:
+</p>
+<pre class="example">
+root@espressobin:~/samples/bpf# ./xdp_redirect_cpu --dev eth0 --cpu 1 --sec 2
+</pre>
+
+<p>
+Normal traffic was working, and I could also run <code>tcpdump</code> on the
+traffic, without any crash.
+</p>
+
+<p>
+Starting pktgen towards the box:
+</p>
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          0       598701         0           0          
+XDP-RX          total   598701         0          
+cpumap-enqueue    0:1   598702         255802      7.73       bulk-average
+cpumap-enqueue  sum:1   598702         255802      7.73       bulk-average
+cpumap_kthread  1       342908         0           13         sched
+cpumap_kthread  total   342908         0           13         sched-sum
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<p>
+Starting tcpdump (<code>tcpdump -ni eth0 -c 10</code>) while pktgen was running
+caused the following crash:
+</p>
+
+<pre class="example">
+root@espressobin:~/samples/bpf# tcpdump -ni eth0 -c 10
+
+[ 1051.131522] Unable to handle kernel paging request at virtual address ffff8000286460e2
+[ 1051.136840] Mem abort info:
+[ 1051.139721]   ESR = 0x96000021
+[ 1051.142830]   Exception class = DABT (current EL), IL = 32 bits
+[ 1051.148931]   SET = 0, FnV = 0
+[ 1051.152066]   EA = 0, S1PTW = 0
+[ 1051.155291] Data abort info:
+[ 1051.158239]   ISV = 0, ISS = 0x00000021
+[ 1051.162190]   CM = 0, WnR = 0
+[ 1051.165242] swapper pgtable: 4k pages, 48-bit VAs, pgdp = 0000000061e455eb
+[ 1051.172347] [ffff8000286460e2] pgd=000000002fff9803, pud=000000002fff8803, pmd=00f8000028600f11
+[ 1051.181309] Internal error: Oops: 96000021 [#1] SMP
+[ 1051.186288] Modules linked in:
+[ 1051.189429] CPU: 1 PID: 2661 Comm: cpumap/1/map:53 Tainted: G        W         4.20.0-rc1-mvneta_04-ftrace+ #33
+[ 1051.199815] Hardware name: Globalscale Marvell ESPRESSOBin Board (DT)
+[ 1051.206447] pstate: 40000005 (nZcv daif -PAN -UAO)
+[ 1051.211385] pc : __ll_sc_atomic_add+0x4/0x18
+[ 1051.215767] lr : __skb_clone+0xe0/0x110
+[ 1051.219705] sp : ffff800029dcbc50
+[ 1051.223111] x29: ffff800029dcbc50 x28: 000000000000f800 
+[ 1051.228575] x27: ffff00000941f5a8 x26: ffff800028646050 
+[ 1051.234041] x25: 0000000000000036 x24: 0000000000000044 
+[ 1051.239506] x23: 0000000000000044 x22: ffff80002df3f000 
+[ 1051.244972] x21: ffff80002df3f000 x20: ffff80002cd20e00 
+[ 1051.250438] x19: ffff80002cd20a00 x18: 0000000000000000 
+[ 1051.255904] x17: 0000000000000000 x16: 0000000000000000 
+[ 1051.261369] x15: 0000000000000000 x14: 0000000000000000 
+[ 1051.266835] x13: 0000000000000000 x12: 0000000000000000 
+[ 1051.272301] x11: 0000000000000000 x10: 0000000000000000 
+[ 1051.277766] x9 : 0000000000000000 x8 : 0000000000000002 
+[ 1051.283231] x7 : 0000000000000010 x6 : 0000000000000000 
+[ 1051.288696] x5 : 0000000005dc3874 x4 : ffff80002ffde6e0 
+[ 1051.294163] x3 : 0000000000000001 x2 : ffff8000286460c2 
+[ 1051.299629] x1 : ffff8000286460e2 x0 : 0000000000000001 
+[ 1051.305096] Process cpumap/1/map:53 (pid: 2661, stack limit = 0x000000000a301b75)
+[ 1051.312801] Call trace:
+[ 1051.315312]  __ll_sc_atomic_add+0x4/0x18
+[ 1051.319344]  skb_clone+0x74/0xd8
+[ 1051.322662]  packet_rcv+0xf4/0x3c8
+[ 1051.326155]  __netif_receive_skb_core+0x4ec/0x8a8
+[ 1051.330991]  __netif_receive_skb_one_core+0x4c/0x90
+[ 1051.336008]  netif_receive_skb_core+0x24/0x30
+[ 1051.340491]  cpu_map_kthread_run+0x1b8/0x330
+[ 1051.344881]  kthread+0x134/0x138
+[ 1051.348195]  ret_from_fork+0x10/0x1c
+[ 1051.351869] Code: 97fffe9d 17ffffee 00000000 f9800031 (885f7c31) 
+[ 1051.358146] ---[ end trace a15310814ce864fe ]---
+[ 1051.362888] Kernel panic - not syncing: Fatal exception in interrupt
+[ 1051.369428] SMP: stopping secondary CPUs
+[ 1051.373463] Kernel Offset: disabled
+[ 1051.377045] CPU features: 0x2,2080200c
+[ 1051.380896] Memory Limit: none
+[ 1051.384035] ---[ end Kernel panic - not syncing: Fatal exception in interrupt ]---
+</pre>
+
+<p>
+Notice that function <code>packet_rcv</code> is the tcpdump/af_packet code.
+</p>
+
+<pre class="example">
+$ ./scripts/faddr2line vmlinux packet_rcv+0xf4
+packet_rcv+0xf4/0x3c8:
+packet_rcv at net/packet/af_packet.c:2078
+</pre>
+
+<p>
+Strange, it seems that tcpdump writing into /dev/null does not crash
+the kernel, while tcpdump that tries to show packet output on console
+does cause crash.
+</p>
+
+<pre class="example">
+ # tcpdump -ni eth0 -w /dev/null  # &lt;-- Does NOT crash
+vs.
+ # tcpdump -ni eth0 -c 10  # &lt;-- Does crash
+</pre>
+
+<p>
+Got a new crash dump that contains the DSA calls:
+</p>
+
+<pre class="example">
+[ 5650.971841] Unable to handle kernel paging request at virtual address ffff80002baa80e2
+[ 5650.977167] Mem abort info:
+[ 5650.980044]   ESR = 0x96000021
+[ 5650.983185]   Exception class = DABT (current EL), IL = 32 bits
+[ 5650.989299]   SET = 0, FnV = 0
+[ 5650.992406]   EA = 0, S1PTW = 0
+[ 5650.995628] Data abort info:
+[ 5650.998562]   ISV = 0, ISS = 0x00000021
+[ 5651.002528]   CM = 0, WnR = 0
+[ 5651.005589] swapper pgtable: 4k pages, 48-bit VAs, pgdp = 00000000704a343a
+[ 5651.012663] [ffff80002baa80e2] pgd=000000002fff9803, pud=000000002fff8803, pmd=00f800002ba00f11
+[ 5651.021627] Internal error: Oops: 96000021 [#1] SMP
+[ 5651.026610] Modules linked in:
+[ 5651.029750] CPU: 1 PID: 3097 Comm: cpumap/1/map:53 Tainted: G        W         4.20.0-rc1-mvneta_04-ftrace+ #33
+[ 5651.040135] Hardware name: Globalscale Marvell ESPRESSOBin Board (DT)
+[ 5651.046768] pstate: 40000005 (nZcv daif -PAN -UAO)
+[ 5651.051706] pc : __ll_sc_atomic_add+0x4/0x18
+[ 5651.056088] lr : __skb_clone+0xe0/0x110
+[ 5651.060025] sp : ffff80002902bb60
+[ 5651.063431] x29: ffff80002902bb60 x28: 0000000000000008 
+[ 5651.068895] x27: ffff00000941f528 x26: ffff80002baa8058 
+[ 5651.074361] x25: 000000000000002e x24: 000000000000003c 
+[ 5651.079827] x23: 000000000000003c x22: ffff80002b804000 
+[ 5651.085292] x21: ffff80002b804000 x20: ffff80002c8c6300 
+[ 5651.090757] x19: ffff80002c8c6900 x18: 0000000000000000 
+[ 5651.096223] x17: 0000000000000000 x16: 0000000000000000 
+[ 5651.101689] x15: 0000000000000000 x14: 0000000000000000 
+[ 5651.107155] x13: 0000000000000000 x12: 0000000000000000 
+[ 5651.112620] x11: 0000000000000000 x10: 0000000000000000 
+[ 5651.118086] x9 : 0000000000000000 x8 : 0000000000000002 
+[ 5651.123551] x7 : 0000000000000010 x6 : ffff80002c8c6e00 
+[ 5651.129017] x5 : 0000000004cb0fb4 x4 : ffff80002ffde6e0 
+[ 5651.134482] x3 : 0000000000000001 x2 : ffff80002baa80c2 
+[ 5651.139948] x1 : ffff80002baa80e2 x0 : 0000000000000001 
+[ 5651.145417] Process cpumap/1/map:53 (pid: 3097, stack limit = 0x00000000feacb5a1)
+[ 5651.153120] Call trace:
+[ 5651.155631]  __ll_sc_atomic_add+0x4/0x18
+[ 5651.159663]  skb_clone+0x74/0xd8
+[ 5651.162982]  packet_rcv+0xf4/0x3c8
+[ 5651.166474]  __netif_receive_skb_core+0x4ec/0x8a8
+[ 5651.171311]  __netif_receive_skb_one_core+0x4c/0x90
+[ 5651.176329]  __netif_receive_skb+0x28/0x78
+[ 5651.180541]  netif_receive_skb_internal+0x40/0xe0
+[ 5651.185378]  netif_receive_skb+0x24/0xb0
+[ 5651.189412]  dsa_switch_rcv+0xd4/0x168
+[ 5651.193263]  __netif_receive_skb_one_core+0x68/0x90
+[ 5651.198281]  netif_receive_skb_core+0x24/0x30
+[ 5651.202764]  cpu_map_kthread_run+0x1b8/0x330
+[ 5651.207153]  kthread+0x134/0x138
+[ 5651.210467]  ret_from_fork+0x10/0x1c
+[ 5651.214142] Code: 97fffe9d 17ffffee 00000000 f9800031 (885f7c31) 
+[ 5651.220419] ---[ end trace b5b150d41f496d6f ]---
+[ 5651.225161] Kernel panic - not syncing: Fatal exception in interrupt
+[ 5651.231700] SMP: stopping secondary CPUs
+[ 5651.235736] Kernel Offset: disabled
+[ 5651.239317] CPU features: 0x2,2080200c
+[ 5651.243167] Memory Limit: none
+[ 5651.246308] ---[ end Kernel panic - not syncing: Fatal exception in interrupt ]---
+</pre>
+</div>
+
+<div id="outline-container-org09fc5a5" class="outline-4">
+<h4 id="org09fc5a5">Test: compile without CONFIG_NET_DSA</h4>
+<div class="outline-text-4" id="text-org09fc5a5">
+<p>
+As described in <a href="configs/README_espressobin.html">configs/README_espressobin.html</a>, it is possible to
+compile the kernel without DSA support and only get a <code>eth0</code> device.
+</p>
+
+<p>
+Base performance with pktgen and UdpNoPorts listening:
+</p>
+<pre class="example">
+# nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    175528             0.0
+IpInDelivers                    175529             0.0
+IpOutRequests                   1                  0.0
+IcmpOutMsgs                     1                  0.0
+IcmpOutDestUnreachs             1                  0.0
+IcmpMsgOutType3                 1                  0.0
+UdpNoPorts                      175532             0.0
+IpExtInOctets                   8074978            0.0
+IpExtOutOctets                  74                 0.0
+IpExtInNoECTPkts                175543             0.0
+</pre>
+
+<p>
+Base iptables-raw drop performance:
+</p>
+<pre class="example">
+# iptables -t raw -I PREROUTING -p udp --dport 9 -j DROP
+# nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    271882             0.0
+IpExtInOctets                   12506894           0.0
+IpExtInNoECTPkts                271888             0.0
+</pre>
+
+<p>
+Base XDP_DROP performance:
+</p>
+<pre class="example">
+root@espressobin:~/samples/bpf# ./xdp1 3
+proto 17:     214293 pkt/s
+proto 17:     637069 pkt/s
+proto 6:          1 pkt/s
+proto 17:     637052 pkt/s
+proto 6:          0 pkt/s
+proto 17:     637063 pkt/s
+proto 0:          0 pkt/s
+proto 6:          0 pkt/s
+proto 17:     637031 pkt/s
+proto 0:          0 pkt/s
+proto 6:          0 pkt/s
+proto 17:     636984 pkt/s
+proto 17:     637092 pkt/s
+proto 17:     637095 pkt/s
+proto 17:     637108 pkt/s
+</pre>
+
+<p>
+XDP redirect to CPUMAP performance, still with iptables-raw DROP rule
+installed:
+</p>
+
+<pre class="example">
+./xdp_redirect_cpu --dev eth0 --cpu 1 --prog 0
+
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          0       599627         0           0          
+XDP-RX          total   599627         0          
+cpumap-enqueue    0:1   599629         146492      7.68       bulk-average
+cpumap-enqueue  sum:1   599629         146492      7.68       bulk-average
+cpumap_kthread  1       453146         0           10         sched
+cpumap_kthread  total   453146         0           10         sched-sum
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+
+## How is the two CPUs stall states in this case:
+
+root@espressobin:~# perf stat -C0 -r 3 -e instructions -e cycles \
+&gt;  -e ic_dep_stall -e ld_dep_stall -e st_dep_stall \
+&gt;  -e agu_dep_stall -e other_interlock_stall \
+&gt;  sleep 1
+
+ Performance counter stats for 'CPU(s) 0' (3 runs):
+
+   416818501      instructions              #    0.41  insn per cycle           ( +-  0.20% )
+  1006393445      cycles                                                        ( +-  0.24% )
+     5354128      ic_dep_stall                                                  ( +-  2.56% )
+   440123686      ld_dep_stall                                                  ( +-  0.27% )
+   146402891      st_dep_stall                                                  ( +-  0.29% )
+    45322568      agu_dep_stall                                                 ( +-  0.21% )
+    39839152      other_interlock_stall                                         ( +-  0.22% )
+
+     1.00663 +- 0.00238 seconds time elapsed  ( +-  0.24% )
+
+root@espressobin:~# perf stat -C1 -r 3 -e instructions -e cycles  -e ic_dep_stall -e ld_dep_stall -e st_dep_stall  -e agu_dep_stall -e other_interlock_stall  sleep 1
+
+ Performance counter stats for 'CPU(s) 1' (3 runs):
+
+    623493723      instructions              #    0.62  insn per cycle           ( +-  0.23% )
+   1003541681      cycles                                                        ( +-  0.26% )
+     89469357      ic_dep_stall                                                  ( +-  0.48% )
+    249753757      ld_dep_stall                                                  ( +-  0.30% )
+     17664197      st_dep_stall                                                  ( +-  0.44% )
+     73642323      agu_dep_stall                                                 ( +-  0.21% )
+     52164271      other_interlock_stall                                         ( +-  0.26% )
+
+      1.00555 +- 0.00126 seconds time elapsed  ( +-  0.13% )
+</pre>
+
+<p>
+See if it crash with tcpdump&#x2026; it unfortunately did crash, with
+CONFIG_NET_DSA disabled:
+</p>
+
+<pre class="example">
+root@espressobin:~# tcpdump -ni eth0 -c 10
+
+[ 1090.840107] Unable to handle kernel paging request at virtual address ffff80002830b0a2
+[ 1090.845430] Mem abort info:
+[ 1090.848314]   ESR = 0x96000021
+[ 1090.851425]   Exception class = DABT (current EL), IL = 32 bits
+[ 1090.857545]   SET = 0, FnV = 0
+[ 1090.860680]   EA = 0, S1PTW = 0
+[ 1090.863902] Data abort info:
+[ 1090.866828]   ISV = 0, ISS = 0x00000021
+[ 1090.870807]   CM = 0, WnR = 0
+[ 1090.873857] swapper pgtable: 4k pages, 48-bit VAs, pgdp = 00000000e1121d66
+[ 1090.880922] [ffff80002830b0a2] pgd=000000002fff9803, pud=000000002fff8803, pmd=00f8000028200f11
+[ 1090.889886] Internal error: Oops: 96000021 [#1] SMP
+[ 1090.894877] Modules linked in:
+[ 1090.898016] CPU: 1 PID: 2595 Comm: cpumap/1/map:9 Tainted: G        W         4.20.0-rc1-mvneta_04-ftrace+ #34
+[ 1090.908313] Hardware name: Globalscale Marvell ESPRESSOBin Board (DT)
+[ 1090.914947] pstate: 40000005 (nZcv daif -PAN -UAO)
+[ 1090.919886] pc : __ll_sc_atomic_add+0x4/0x18
+[ 1090.924269] lr : __skb_clone+0xe0/0x110
+[ 1090.928203] sp : ffff800029983c50
+[ 1090.931608] x29: ffff800029983c50 x28: 0000000000000008 
+[ 1090.937074] x27: ffff0000093ff528 x26: ffff80002830b050 
+[ 1090.942538] x25: 000000000000002e x24: 000000000000003c 
+[ 1090.948004] x23: 000000000000003c x22: ffff80002e063000 
+[ 1090.953470] x21: ffff80002e063000 x20: ffff80002cc29000 
+[ 1090.958935] x19: ffff80002cc29800 x18: 0000000000000000 
+[ 1090.964401] x17: 0000000000000000 x16: 0000000000000000 
+[ 1090.969867] x15: 0000000000000000 x14: 0000000000000000 
+[ 1090.975332] x13: 0000000000000000 x12: 0000000000000000 
+[ 1090.980797] x11: 0000000000000000 x10: 0000000000000000 
+[ 1090.986263] x9 : 0000000000000000 x8 : 000000000000000c 
+[ 1090.991728] x7 : 0000000000000010 x6 : ffff80002cc29700 
+[ 1090.997194] x5 : 000000000cecf1f0 x4 : ffff80002ffde6e0 
+[ 1091.002660] x3 : 0000000000000001 x2 : ffff80002830b082 
+[ 1091.008126] x1 : ffff80002830b0a2 x0 : 0000000000000001 
+[ 1091.013594] Process cpumap/1/map:9 (pid: 2595, stack limit = 0x0000000066b64fd9)
+[ 1091.021208] Call trace:
+[ 1091.023722]  __ll_sc_atomic_add+0x4/0x18
+[ 1091.027751]  skb_clone+0x74/0xd8
+[ 1091.031068]  packet_rcv+0xf4/0x3c8
+[ 1091.034562]  __netif_receive_skb_core+0x4ec/0x8a8
+[ 1091.039399]  __netif_receive_skb_one_core+0x4c/0x90
+[ 1091.044416]  netif_receive_skb_core+0x24/0x30
+[ 1091.048900]  cpu_map_kthread_run+0x1b8/0x330
+[ 1091.053289]  kthread+0x134/0x138
+[ 1091.056603]  ret_from_fork+0x10/0x1c
+[ 1091.060278] Code: 97fffe9d 17ffffee 00000000 f9800031 (885f7c31) 
+[ 1091.066555] ---[ end trace 7cc3f44ef88b16d7 ]---
+[ 1091.071297] Kernel panic - not syncing: Fatal exception in interrupt
+[ 1091.077836] SMP: stopping secondary CPUs
+[ 1091.081871] Kernel Offset: disabled
+[ 1091.085453] CPU features: 0x2,2080200c
+[ 1091.089304] Memory Limit: none
+[ 1091.092443] ---[ end Kernel panic - not syncing: Fatal exception in interrupt ]---
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

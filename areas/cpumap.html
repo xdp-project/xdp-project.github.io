@@ -1,0 +1,479 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Project management for CPUMAP</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Project management for CPUMAP</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgb646395">Important medium-term tasks</a>
+<ul>
+<li><a href="#org3128b1a"><span class="todo TODO">TODO</span> Use-case cpumap: Solving qdisc TX lock congestion for BW shaping</a>
+<ul>
+<li><a href="#org80051b5"><span class="done DONE">DONE</span> cpumap: Create script MQ-HTB silo setup</a></li>
+<li><a href="#org173e15a"><span class="done DONE">DONE</span> cpumap: Test cpumap redirect works with MQ-HTB silo setup</a></li>
+<li><a href="#org23e1033"><span class="done DONE">DONE</span> Allow BPF clsact write access to skb-&gt;queue_mapping</a></li>
+<li><a href="#orgc58b9b0"><span class="done DONE">DONE</span> TC-skbedit: possible issue with TC action skbedit</a></li>
+<li><a href="#org2e25134"><span class="done DONE">DONE</span> cpumap: create git project xdp-cpumap-tc</a></li>
+<li><a href="#orgddd9169"><span class="todo TODO">TODO</span> xdp-cpumap-tc: add some documentation</a></li>
+<li><a href="#orgcf05570"><span class="todo TODO">TODO</span> xdp-cpumap-tc: public release of code/repo</a></li>
+<li><a href="#orge513ab7"><span class="todo TODO">TODO</span> cpumap: quantify effect of cpumap (currently) don't transfer RX-csum info</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#org164eb1f">Longer-term preliminary plans</a>
+<ul>
+<li><a href="#orgd3290b7">Allocate SKB outside driver code</a></li>
+<li><a href="#org21448e4"><span class="todo TODO">TODO</span> Various cpumap features</a>
+<ul>
+<li><a href="#org88d1fc1"><span class="todo TODO">TODO</span> BUG: cpumap not working for generic-XDP</a></li>
+<li><a href="#org44d5919"><span class="todo TODO">TODO</span> Feature: cpumap could use netif_receive_skb_list()</a></li>
+<li><a href="#org71b065f"><span class="todo TODO">TODO</span> Feature: cpumap implement GRO handling</a></li>
+<li><a href="#org4aedf65"><span class="todo TODO">TODO</span> sample xdp_redirect_cpu should output interface-name and ifindex</a></li>
+<li><a href="#orge8e82c1"><span class="todo NEXT">NEXT</span> investigate sample xdp_redirect_cpu counters</a></li>
+<li><a href="#org5d6b09e"><span class="todo TODO">TODO</span> cpumap: implement dynamic load-balancer that is OoO safe</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#org91919fb">Completed tasks</a>
+<ul>
+<li><a href="#org2de9d53"><span class="done DONE">DONE</span> Implement CPUMAP redirect with connection hashing over CPUs</a></li>
+<li><a href="#org4cb4a63"><span class="done DONE">DONE</span> Feature: cpumap bulk alloc SKBs</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+This document contains <b>org-mode tasks</b> and TODOs for <a href="https://github.com/torvalds/linux/blob/master/kernel/bpf/cpumap.c">cpumap</a>.
+</p>
+
+<p>
+This BPF map type CPUMAP (<code>BPF_MAP_TYPE_CPUMAP</code>) is used by XDP to
+<code>XDP_REDIRECT</code> into via BPF helper <code>bpf_redirect_map()</code>. This map type
+redirects raw XDP frames to another CPU. The remote CPU will do
+SKB-allocation and call the normal network stack.
+</p>
+
+<p>
+This is a scalability and isolation mechanism, that allow separating the
+early driver network XDP layer, from the rest of the netstack, and assigning
+dedicated CPUs for this stage. This basically allows for 10G wirespeed
+pre-filtering via bpf, on the serving end-host running Linux.
+</p>
+
+<p>
+Top-level headings indicate category, as explained in <a href="../xdp-project.html">../xdp-project.html</a>.
+</p>
+
+<div id="outline-container-orgb646395" class="outline-2">
+<h2 id="orgb646395">Important medium-term tasks</h2>
+<div class="outline-text-2" id="text-orgb646395">
+</div>
+<div id="outline-container-org3128b1a" class="outline-3">
+<h3 id="org3128b1a"><span class="todo TODO">TODO</span> Use-case cpumap: Solving qdisc TX lock congestion for BW shaping</h3>
+<div class="outline-text-3" id="text-org3128b1a">
+<p>
+This is a project that verifies and demonstrate how <code>cpumap</code> can be used for
+more complex use-cases like IP-forwarding and bandwidth shaping, while
+working in concert with other parts of the network stack, like qdisc and
+other eBPF hooks.
+</p>
+
+<p>
+The use-case is when a service provider (ISP or cloud provider) want to
+bandwidth rate-limited outgoing traffic for each service e.g. via HTB qdisc,
+but don't need global NIC rate-limiting. Where the service that need
+individual rate-limiting can be a broad variety, e.g. ISP end-user customers
+buying bandwidth, daemon services using network traffic, a container, etc.
+As long as this can be matched via a BPF hook or TC filter, and that the NIC
+link-rate is higher than the sold rate.
+</p>
+
+<p>
+The <b>problem</b>: With a default HTB setup, such a service will not scale with
+the number of CPU and NIC hardware RX+TX queues. The reason is that every
+transmitted packet have to be serialised through the qdisc root-lock on the
+HTB root qdisc.  This cause many CPUs to cause congestion on this lock.
+</p>
+
+<p>
+This project demonstrates how this can be solved by using the <code>MQ</code> qdisc and
+attaching a qdisc <code>HTB</code> on each leaf of <code>MQ</code>, and via an eBPF prog make sure
+the customers/services grouping is maintained and hit the same CPU+MQ TXq.
+</p>
+</div>
+
+<div id="outline-container-org80051b5" class="outline-4">
+<h4 id="org80051b5"><span class="done DONE">DONE</span> cpumap: Create script MQ-HTB silo setup</h4>
+<div class="outline-text-4" id="text-org80051b5">
+<p>
+<a href="https://github.com/netoptimizer/network-testing/blob/master/tc/tc_mq_htb_setup.sh">https://github.com/netoptimizer/network-testing/blob/master/tc/tc_mq_htb_setup.sh</a>
+</p>
+</div>
+</div>
+
+<div id="outline-container-org173e15a" class="outline-4">
+<h4 id="org173e15a"><span class="done DONE">DONE</span> cpumap: Test cpumap redirect works with MQ-HTB silo setup</h4>
+<div class="outline-text-4" id="text-org173e15a">
+<p>
+Yes, MQ-HTB silo setup (example <a href="https://github.com/netoptimizer/network-testing/blob/master/tc/tc_mq_htb_setup.sh">tc_mq_htb_setup.sh</a>) it works.
+</p>
+
+<p>
+BUT watch-out, as XPS (Transmit Packet Steering) will take precedence over
+any changes to <code>skb-&gt;queue_mapping</code>.  You need to disable XDP via mask=00 in
+files <code>/sys/class/net/DEV/queues/tx-*/xps_cpus</code> .
+</p>
+
+<p>
+To help people out, here is a script for easier setup of XPS:
+<a href="https://github.com/netoptimizer/network-testing/blob/master/tc/xps_setup.sh">xps_setup.sh</a>
+Run the script with &#x2013;help.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org23e1033" class="outline-4">
+<h4 id="org23e1033"><span class="done DONE">DONE</span> Allow BPF clsact write access to skb-&gt;queue_mapping</h4>
+<div class="outline-text-4" id="text-org23e1033">
+<p>
+Summary: Choose NOT to create BPF helper for skb_set_queue_mapping, instead
+we allow BPF TC hook (clsact/cls bpf) write access to <code>skb-&gt;queue_mapping</code>.
+</p>
+
+<p>
+Fixed in BPF-NEXT commit: <a href="https://git.kernel.org/bpf/bpf-next/c/74e31ca850c1">https://git.kernel.org/bpf/bpf-next/c/74e31ca850c1</a>
+</p>
+
+<p>
+When doing CPUMAP redirect, then the SKB created have no <code>skb-&gt;queue_mapping</code>
+configured. This could be set by e.g. using TC filter/action <code>skbedit</code> (see man
+<a href="https://www.linux.org/docs/man8/tc-skbedit.html">tc-skbedit(8)</a>), but we also want to allow this from TC cls_bpf. Reading
+<code>queue_mapping</code> from TC cls_bpf is already possible.
+</p>
+</div>
+
+<ul class="org-ul">
+<li><a id="orgb17f523"></a><span class="done DONE">DONE</span> Code analysis before BPF helper for skb_set_queue_mapping<br />
+<div class="outline-text-5" id="text-orgb17f523">
+<p>
+Following the kernel code is a little tricky, so adding some notes here.
+Invoking skb_set_queue_mapping() <b>directly</b> set <code>skb-&gt;queue_mapping</code> to the
+value provided.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">static</span> <span style="font-weight: bold;">inline</span> <span style="font-weight: bold; text-decoration: underline;">void</span> <span style="font-weight: bold;">skb_set_queue_mapping</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">sk_buff</span> *<span style="font-weight: bold; font-style: italic;">skb</span>, <span style="font-weight: bold; text-decoration: underline;">u16</span> <span style="font-weight: bold; font-style: italic;">queue_mapping</span>)
+{
+        skb-&gt;queue_mapping = queue_mapping;
+}
+</pre>
+</div>
+
+<p>
+The confusing part is the value zero, is used for signalling that no queue
+number is "recorded". So, when helper functions record or extract the
+queue_mapping, they adjust with +/-1. The naming of the helper function are
+also a bit confusing, as they are called <code>skb_xxx_rx_queue()</code>. One could say
+that the queue_mapping is 1-indexed, when using skb_set_queue_mapping() to
+set it directly.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">static</span> <span style="font-weight: bold;">inline</span> <span style="font-weight: bold; text-decoration: underline;">void</span> <span style="font-weight: bold;">skb_record_rx_queue</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">sk_buff</span> *<span style="font-weight: bold; font-style: italic;">skb</span>, <span style="font-weight: bold; text-decoration: underline;">u16</span> <span style="font-weight: bold; font-style: italic;">rx_queue</span>)
+{
+        skb-&gt;queue_mapping = rx_queue + 1;
+}
+
+<span style="font-weight: bold;">static</span> <span style="font-weight: bold;">inline</span> <span style="font-weight: bold; text-decoration: underline;">u16</span> <span style="font-weight: bold;">skb_get_rx_queue</span>(<span style="font-weight: bold;">const</span> <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">sk_buff</span> *<span style="font-weight: bold; font-style: italic;">skb</span>)
+{
+        <span style="font-weight: bold;">return</span> skb-&gt;queue_mapping - 1;
+}
+
+<span style="font-weight: bold;">static</span> <span style="font-weight: bold;">inline</span> <span style="font-weight: bold; text-decoration: underline;">bool</span> <span style="font-weight: bold;">skb_rx_queue_recorded</span>(<span style="font-weight: bold;">const</span> <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">sk_buff</span> *<span style="font-weight: bold; font-style: italic;">skb</span>)
+{
+        <span style="font-weight: bold;">return</span> skb-&gt;queue_mapping != 0;
+}
+</pre>
+</div>
+
+<p>
+When <code>skbedit</code> record the <code>queue_mapping</code> it also does a direct store of the
+value, without taking this adjustment into account (looked through kernel
+code <code>net/sched/act_skbedit.c</code> and iproute2 code <code>tc/m_skbedit.c</code>).
+</p>
+
+<p>
+When kernel extract the <code>skb-&gt;queue_mapping</code> in <code>skb_tx_hash()</code> the helpers
+<code>skb_rx_queue_recorded()</code> and <code>skb_get_rx_queue()</code>  are used.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold; font-style: italic;">/*</span>
+<span style="font-weight: bold; font-style: italic;"> * Returns a Tx hash based on the given packet descriptor a Tx queues' number</span>
+<span style="font-weight: bold; font-style: italic;"> * to be used as a distribution range.</span>
+<span style="font-weight: bold; font-style: italic;"> </span><span style="font-weight: bold; font-style: italic;">*/</span>
+<span style="font-weight: bold;">static</span> <span style="font-weight: bold; text-decoration: underline;">u16</span> <span style="font-weight: bold;">skb_tx_hash</span>(<span style="font-weight: bold;">const</span> <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">net_device</span> *<span style="font-weight: bold; font-style: italic;">dev</span>,
+                       <span style="font-weight: bold;">const</span> <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">net_device</span> *<span style="font-weight: bold; font-style: italic;">sb_dev</span>,
+                       <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">sk_buff</span> *<span style="font-weight: bold; font-style: italic;">skb</span>)
+{
+        <span style="font-weight: bold; text-decoration: underline;">u32</span> <span style="font-weight: bold; font-style: italic;">hash</span>;
+        <span style="font-weight: bold; text-decoration: underline;">u16</span> <span style="font-weight: bold; font-style: italic;">qoffset</span> = 0;
+        <span style="font-weight: bold; text-decoration: underline;">u16</span> <span style="font-weight: bold; font-style: italic;">qcount</span> = dev-&gt;real_num_tx_queues;
+
+        <span style="font-weight: bold;">if</span> (dev-&gt;num_tc) {
+                <span style="font-weight: bold; text-decoration: underline;">u8</span> <span style="font-weight: bold; font-style: italic;">tc</span> = netdev_get_prio_tc_map(dev, skb-&gt;priority);
+
+                qoffset = sb_dev-&gt;tc_to_txq[tc].offset;
+                qcount = sb_dev-&gt;tc_to_txq[tc].count;
+        }
+
+        <span style="font-weight: bold;">if</span> (skb_rx_queue_recorded(skb)) { <span style="font-weight: bold; font-style: italic;">// </span><span style="font-weight: bold; font-style: italic;">Test if set here</span>
+                hash = skb_get_rx_queue(skb); <span style="font-weight: bold; font-style: italic;">// </span><span style="font-weight: bold; font-style: italic;">Extract here</span>
+                <span style="font-weight: bold;">while</span> (unlikely(hash &gt;= qcount))
+                        hash -= qcount;
+                <span style="font-weight: bold;">return</span> hash + qoffset; <span style="font-weight: bold; font-style: italic;">// </span><span style="font-weight: bold; font-style: italic;">RETURN here</span>
+        }
+
+        <span style="font-weight: bold;">return</span> (<span style="font-weight: bold; text-decoration: underline;">u16</span>) reciprocal_scale(skb_get_hash(skb), qcount) + qoffset;
+}
+</pre>
+</div>
+
+<p>
+Details: How <code>skb_tx_hash</code> connected to <code>__netdev_pick_tx()</code> can also be a
+little tricky to spot. Unless XPS via <code>get_xps_queue</code> overrides by finding a
+"new_index", then <code>skb_tx_hash</code> will be asked to determine the queue_index.
+(And for IP-forwarding there is not <code>sk</code> socket).
+</p>
+</div>
+</li>
+</ul>
+</div>
+
+<div id="outline-container-orgc58b9b0" class="outline-4">
+<h4 id="orgc58b9b0"><span class="done DONE">DONE</span> TC-skbedit: possible issue with TC action skbedit</h4>
+<div class="outline-text-4" id="text-orgc58b9b0">
+<p>
+The man page for tc-skbedit(8) does not mention that the queue_mapping is
+1-indexed, but my code analysis says so, report and perhaps test before.
+This is true, but it might not be an issue for users of skbedit, because TC
+MQ-indexing classids also start at "1".
+</p>
+
+<p>
+The biggest surprise for users is likely that XPS will overwrite their
+choice (and XPS seems to be default enabled). Users must first disable XPS
+via mask=00, before their changes via <code>skbedit</code> takes any effect.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org2e25134" class="outline-4">
+<h4 id="org2e25134"><span class="done DONE">DONE</span> cpumap: create git project xdp-cpumap-tc</h4>
+<div class="outline-text-4" id="text-org2e25134">
+<p>
+Create git project xdp-cpumap-tc, that demonstrate how XDP cpumap redirect
+can be used together with Linux TC (Traffic Control) for solving the Qdisc
+locking problem.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgddd9169" class="outline-4">
+<h4 id="orgddd9169"><span class="todo TODO">TODO</span> xdp-cpumap-tc: add some documentation</h4>
+</div>
+<div id="outline-container-orgcf05570" class="outline-4">
+<h4 id="orgcf05570"><span class="todo TODO">TODO</span> xdp-cpumap-tc: public release of code/repo</h4>
+</div>
+<div id="outline-container-orge513ab7" class="outline-4">
+<h4 id="orge513ab7"><span class="todo TODO">TODO</span> cpumap: quantify effect of cpumap (currently) don't transfer RX-csum info</h4>
+<div class="outline-text-4" id="text-orge513ab7">
+<p>
+Verify csum is recalculated on IP-forward TX path for cpumap redirected
+packets.  Try to asses/measure overhead this cause.
+</p>
+</div>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org164eb1f" class="outline-2">
+<h2 id="org164eb1f">Longer-term preliminary plans</h2>
+<div class="outline-text-2" id="text-org164eb1f">
+</div>
+<div id="outline-container-orgd3290b7" class="outline-3">
+<h3 id="orgd3290b7">Allocate SKB outside driver code</h3>
+<div class="outline-text-3" id="text-orgd3290b7">
+<p>
+The revolutionary and controversial idea with cpumap redirect is to remove
+the SKB allocation inside the drivers RX-path. Instead an <code>xdp_frame</code> is
+created that contains enough info to allocated the SKB later outside the
+driver code, in cpumap's case on a remote CPU, but the idea is to take this
+even further.
+</p>
+
+<p>
+<b>The future plans</b> are working towards creating Ethernet drivers that have
+no SKB allocations. Instead they will send these <code>xdp_frame</code> packets (in a
+bulk) to the network stack, that will handle creation of the SKBs and
+populate the appropriate SKB-fields. This work is currently stalled on a
+generic way to transfer info needed for the SKB-fields, this related to XDP
+<b>metadata</b> and <b>BTF</b> working areas.
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-org21448e4" class="outline-3">
+<h3 id="org21448e4"><span class="todo TODO">TODO</span> Various cpumap features</h3>
+<div class="outline-text-3" id="text-org21448e4">
+<p>
+This section contains various feature ideas related to <code>cpumap</code>.
+</p>
+</div>
+
+<div id="outline-container-org88d1fc1" class="outline-4">
+<h4 id="org88d1fc1"><a id="ID-8f4953c1-a862-46f2-b456-da187008f355"></a><span class="todo TODO">TODO</span> BUG: cpumap not working for generic-XDP</h4>
+<div class="outline-text-4" id="text-org88d1fc1">
+<p>
+The <code>cpumap</code> does not handle redirect for generic-XDP.  This have already
+confused people.  For completeness this should be fixed, but there is also
+an opportunity for performance improvements.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org44d5919" class="outline-4">
+<h4 id="org44d5919"><span class="todo TODO">TODO</span> Feature: cpumap could use netif_receive_skb_list()</h4>
+</div>
+
+<div id="outline-container-org71b065f" class="outline-4">
+<h4 id="org71b065f"><span class="todo TODO">TODO</span> Feature: cpumap implement GRO handling</h4>
+</div>
+
+<div id="outline-container-org4aedf65" class="outline-4">
+<h4 id="org4aedf65"><span class="todo TODO">TODO</span> sample xdp_redirect_cpu should output interface-name and ifindex</h4>
+<div class="outline-text-4" id="text-org4aedf65">
+<p>
+This is a minor improvement. QA is giving output from xdp_redirect_cpu, but
+forget to say what interface this is loaded on.  Solve by simply outputting
+the interface in the output. Even better would be outputting driver name
+from corresponding ifindex.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orge8e82c1" class="outline-4">
+<h4 id="orge8e82c1"><span class="todo NEXT">NEXT</span> investigate sample xdp_redirect_cpu counters</h4>
+<div class="outline-text-4" id="text-orge8e82c1">
+<p>
+Playing with xdp_redirect_cpu, and the enqueue and kthread counters are not
+getting updated, something in stats reporting looks wrong.  Maybe latest
+upstream changes to libbpf broke something?
+</p>
+</div>
+</div>
+
+<div id="outline-container-org5d6b09e" class="outline-4">
+<h4 id="org5d6b09e"><span class="todo TODO">TODO</span> cpumap: implement dynamic load-balancer that is OoO safe</h4>
+<div class="outline-text-4" id="text-org5d6b09e">
+<p>
+This is a project to test the limits of eBPF programming.
+</p>
+
+<p>
+The kernels existing facilities, that <code>cpumap</code> is "competing" against, RSS
+(Receive Side Scaling) and Receive Packet Steering (RPS) have mechanisms
+that makes sure that Out-of-Order (OoO) packets does not occur when the
+config change runtime. For <code>cpumap</code> this is left up to the eBPF programmer
+to hand if he needs to do dynamic config changes.
+</p>
+
+<p>
+The question is how difficult is this to implement in eBPF, and do we need
+some helpers or extra state exposed to eBPF, e.g. in-flight-packets, for
+this to be possible to implement in eBPF.
+</p>
+
+<p>
+Idea from <a href="http://people.netfilter.org/hawk/presentations/NetConf2017_Seoul/XDP_devel_update_NetConf2017_Seoul.pdf">slide 29 + 30</a>:
+Implement in BPF-code an Out-of-Order safe way to use cpumap-redirect to
+dynamically load-balance IP-flows.
+</p>
+</div>
+</div>
+</div>
+</div>
+
+
+
+
+<div id="outline-container-org91919fb" class="outline-2">
+<h2 id="org91919fb">Completed tasks</h2>
+<div class="outline-text-2" id="text-org91919fb">
+</div>
+<div id="outline-container-org2de9d53" class="outline-3">
+<h3 id="org2de9d53"><span class="done DONE">DONE</span> Implement CPUMAP redirect with connection hashing over CPUs</h3>
+<div class="outline-text-3" id="text-org2de9d53">
+<p>
+The xdp_redirect_cpu code should default distribute packets via IP-flow
+hashing to avoid creating Out-of-Order packets, if someone just runs this
+out-of-the box.
+</p>
+
+<p>
+Upstream in commits:
+</p>
+<ul class="org-ul">
+<li><a href="https://git.kernel.org/torvalds/c/c4c202175424">c4c202175424</a> ("Merge branch 'bpf-sample-cpumap-lb'")</li>
+<li><a href="https://git.kernel.org/torvalds/c/1bca4e6b1863">1bca4e6b1863</a> ("samples/bpf: xdp_redirect_cpu load balance like Suricata")</li>
+<li><a href="https://git.kernel.org/torvalds/c/11395686586b">11395686586b</a> ("samples/bpf: add Paul Hsieh's (LGPL 2.1) hash function SuperFastHash")</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org4cb4a63" class="outline-3">
+<h3 id="org4cb4a63"><span class="done DONE">DONE</span> Feature: cpumap bulk alloc SKBs</h3>
+<div class="outline-text-3" id="text-org4cb4a63">
+<p>
+Upstream: <a href="https://git.kernel.org/torvalds/c/8f0504a97e1ba6b70">8f0504a97e1b ("bpf: cpumap do bulk allocation of SKBs")</a>
+</p>
+
+<p>
+It would be fairly trivial to bulk alloc SKBs via <code>kmem_cache_alloc_bulk()</code>
+API, when dequeuing in kthread (<code>cpu_map_kthread_run</code>).  One point is that
+when dequeuing xdp_frames from ptr_ring, a cacheline between two CPUs are
+touched, and we should reduce the time window as much as possible.  Then
+there is of-cause also the performance improvement of bulk alloc.
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

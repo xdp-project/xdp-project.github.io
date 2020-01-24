@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Project management for XDP and Open vSwitch integration</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Project management for XDP and Open vSwitch integration</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org66d270c">Possible approach for re-implement this using XDP</a>
+<ul>
+<li><a href="#org646d836">Helper for the flow lookup</a></li>
+<li><a href="#orgf0ea673">Action processing</a></li>
+<li><a href="#orgeeb1a9c">Actions required to be implemented in XDP</a></li>
+</ul>
+</li>
+<li><a href="#orga048188">List of open items</a></li>
+</ul>
+</div>
+</div>
+<p>
+This document tries to describe the XDP requirements for Open vSwitch(OVS)
+to implement its full datapath in XDP.
+</p>
+
+<p>
+The current OVS kernel datapath through the openvswitch kernel module
+consists roughly of two stages:
+</p>
+
+<ul class="org-ul">
+<li>Match the packet against an OpenFlow rule</li>
+<li>Do the list of actions assigned to this OpenFlow rule (one last action can
+be to continue with another match, recirculation)</li>
+</ul>
+
+<p>
+More information can be found in the following paper <a href="https://www.openvswitch.org/support/papers/nsdi2015.pdf">The Design and
+Implementation of Open vSwitch</a>
+</p>
+
+
+<div id="outline-container-org66d270c" class="outline-2">
+<h2 id="org66d270c">Possible approach for re-implement this using XDP</h2>
+<div class="outline-text-2" id="text-org66d270c">
+</div>
+<div id="outline-container-org646d836" class="outline-3">
+<h3 id="org646d836">Helper for the flow lookup</h3>
+<div class="outline-text-3" id="text-org646d836">
+<p>
+To simplify the design it would be beneficial to add a helper function to
+the OVS kernel module which will do the flow lookup and return the set of
+actions. If the flow does not exist, or can't be handled by XDP no actions
+are returned and the flow can pass through the normal kernel pipeline.
+</p>
+
+<p>
+This design will also remove the complexity of duplicating the flow table in
+the XDP data space, and keeping it in sync.
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-orgf0ea673" class="outline-3">
+<h3 id="orgf0ea673">Action processing</h3>
+<div class="outline-text-3" id="text-orgf0ea673">
+<p>
+Actions are processed in a linear fashion, one at a time, where the last
+action can be a recirculation resulting in another lookup and another set of
+actions.
+</p>
+
+<p>
+In pseudo code the XDP main part could look like this:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">for</span> (iter = 0; iter &lt; OVS_RECURSION_LIMIT; iter++) {
+
+    actions = ovs_flow_lookup_helper(&amp;key)
+    <span style="font-weight: bold;">if</span> (!actions)
+        <span style="font-weight: bold;">return</span> XDP_PASS; <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">We need to handle the none first iter case </span><span style="font-weight: bold; font-style: italic;">*/</span>
+
+    ret = do_ovs_actions(actions, &amp;key)
+    <span style="font-weight: bold;">if</span> (ret != RECIRCUITATE)
+        <span style="font-weight: bold;">break</span>;
+
+    <span style="font-weight: bold;">if</span> (iter == OVS_RECURSION_LIMIT - 1) {
+                warn(<span style="font-weight: bold; text-decoration: underline;">unsupported</span> <span style="font-weight: bold; font-style: italic;">flow</span>)
+        <span style="font-weight: bold;">return</span> XDP_DROP;
+    }
+}
+<span style="font-weight: bold;">return</span> XDP_REDIRECT; <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">If one or more packets got sent </span><span style="font-weight: bold; font-style: italic;">*/</span>
+</pre>
+</div>
+
+<p>
+In the current OVS kernel code, the recirculation is limited to 5 iterations.
+</p>
+
+
+<p>
+The sequence of actions can consist of sending the packet to port A, do
+some conntrack handling, add a tunnel header and sent it out port B.
+</p>
+
+<p>
+So there is a need to make multiple clones of an ingress packet, do
+modifications, and sent out the clones to different ports. This part is
+currently missing from XDP.
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-orgeeb1a9c" class="outline-3">
+<h3 id="orgeeb1a9c">Actions required to be implemented in XDP</h3>
+<div class="outline-text-3" id="text-orgeeb1a9c">
+<p>
+TODO: Add more details on what actions the datapath can/will take. See the
+kernel function <a href="https://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next.git/tree/net/openvswitch/actions.c?h=v5.1#n1217">do_execute_actions()</a> for some  reference.
+</p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orga048188" class="outline-2">
+<h2 id="orga048188">List of open items</h2>
+<div class="outline-text-2" id="text-orga048188">
+<ul class="org-ul">
+<li>Support for Cloning packets, and work on multiple clones in the XDP
+program, and be able to sent the clones to different egress ports.</li>
+<li>No hardware metadata, i.e. checksums, frame valid, etc.</li>
+<li>Specific offloads might need to be disabled, for example VLAN offload</li>
+<li>Fragmented tunnel packets need kernel processing for re-assembly</li>
+<li>Conntrack handling, including IP fragments</li>
+<li>Ingress / Egress shaping</li>
+<li>Tunnel handling</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

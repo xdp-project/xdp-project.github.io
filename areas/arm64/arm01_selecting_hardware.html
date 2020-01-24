@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Finding ARM64 hardware for XDP project</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Finding ARM64 hardware for XDP project</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org20829f4">Driver: mvneta</a></li>
+<li><a href="#org53b0207">Driver: mvpp2</a></li>
+</ul>
+</div>
+</div>
+<p>
+XDP does in principle work on ARM
+</p>
+<ul class="org-ul">
+<li>Drivers: cavium/thunderx</li>
+<li>But upstream XDP developers don't have HW to test/improve</li>
+</ul>
+
+<p>
+XDP is centered around support in the NIC driver.  Thus, this search for
+suitable ARM64 developement boards, order the document after the NIC driver and
+finds boards that have the NIC hardware corresponding to the driver.
+</p>
+
+<p>
+NIC drivers and corresponding ARM64 boards:
+</p>
+
+<div id="outline-container-org20829f4" class="outline-2">
+<h2 id="org20829f4">Driver: mvneta</h2>
+<div class="outline-text-2" id="text-org20829f4">
+<p>
+(mvneta) Board#1: <b>ClearFog</b>
+</p>
+<ul class="org-ul">
+<li>(ARMADA 38x SoC) from Marvell</li>
+<li>single or dual core ARMv7 (Cortex A9) @ up to 1.6 GHz with 1MB L2 cache (32bit)</li>
+<li><a href="https://www.solid-run.com/marvell-armada-family/clearfog/">https://www.solid-run.com/marvell-armada-family/clearfog/</a></li>
+<li><a href="https://blog.hypriot.com/post/introducing-the-clearfog-pro-router-board/">https://blog.hypriot.com/post/introducing-the-clearfog-pro-router-board/</a></li>
+<li><a href="https://blog.hypriot.com/post/clearfog-pro-part-2-lets-run-docker/">https://blog.hypriot.com/post/clearfog-pro-part-2-lets-run-docker/</a></li>
+</ul>
+
+<p>
+(mvneta) Board#2: <b>Espressobin</b>
+</p>
+<ul class="org-ul">
+<li>Marvell Armada 3700LP (88F3720)</li>
+<li>dual core ARM Cortex A53 processor up to 1.2GHz</li>
+<li><a href="http://espressobin.net/tech-spec/">http://espressobin.net/tech-spec/</a></li>
+</ul>
+
+<p>
+(mvneta) Board#3: <b>OpenBlocks AX3</b>
+</p>
+<ul class="org-ul">
+<li><a href="http://wtarreau.blogspot.com/2013/12/line-rate-http-server-on-openblocks-ax3.html">http://wtarreau.blogspot.com/2013/12/line-rate-http-server-on-openblocks-ax3.html</a></li>
+</ul>
+
+<p>
+(mvneta) Board#4: <b>Turris Omnia</b>
+</p>
+<ul class="org-ul">
+<li>Marvell Armada 385 (32bit)</li>
+<li><a href="https://omnia.turris.cz/en/">https://omnia.turris.cz/en/</a></li>
+</ul>
+
+<p>
+(mvneta) Board#5: <b>Linksys WRT1200AC/WRT1900ACS/WRT3200ACS</b>
+</p>
+<ul class="org-ul">
+<li>Marvell Armada 385</li>
+<li>ARM v7 / Cortexa9 (32bit)</li>
+<li>Well supported with OpenWrt</li>
+<li><a href="https://openwrt.org/toh/hwdata/linksys/linksys_wrt1200ac">https://openwrt.org/toh/hwdata/linksys/linksys_wrt1200ac</a></li>
+<li><a href="https://www.marvell.com/documents/egrkpyqzpoebxblyeept/">https://www.marvell.com/documents/egrkpyqzpoebxblyeept/</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org53b0207" class="outline-2">
+<h2 id="org53b0207">Driver: mvpp2</h2>
+<div class="outline-text-2" id="text-org53b0207">
+<p>
+(mvpp2) Board: 2x10G MACCHIATObin (Quad 1.6GHz ARMADA A8040)
+</p>
+<ul class="org-ul">
+<li><a href="https://www.solid-run.com/marvell-armada-family/macchiatobin/">https://www.solid-run.com/marvell-armada-family/macchiatobin/</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,1123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>V2: Setup notes for board espressobin</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">V2: Setup notes for board espressobin</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgc3807d0">Why Fedora 31</a></li>
+<li><a href="#org1f5cdce">Board info in U-Boot</a>
+<ul>
+<li><a href="#org51a2d26">original printenv</a></li>
+</ul>
+</li>
+<li><a href="#org3952857">Creating Fedora 31 rootfs.tar</a>
+<ul>
+<li><a href="#org56df516">Official fedora approach</a></li>
+<li><a href="#org7dcf107">Download F31 image for aarch64</a></li>
+<li><a href="#org3334b22">Mounting raw image</a>
+<ul>
+<li><a href="#org4d3c98a">LVM tricks</a></li>
+<li><a href="#orgc0c5c7a">Mounting /dev/fedora/root</a></li>
+</ul>
+</li>
+<li><a href="#org378fe26">Prepare and modify rootfs</a></li>
+<li><a href="#orgd4ddf0a">Create tarball</a></li>
+</ul>
+</li>
+<li><a href="#org8c7032a">Create SDcard</a>
+<ul>
+<li><a href="#org21f82d2">sdcard: Partition</a></li>
+<li><a href="#org5b5df8d">sdcard: rootfs data</a></li>
+<li><a href="#orgf1bb093">sdcard: Update kernel</a></li>
+</ul>
+</li>
+<li><a href="#org9e62c54">Setup U-Boot on Espressobin</a>
+<ul>
+<li><a href="#org39f8f03">Initial failed boot</a></li>
+<li><a href="#org8618716">Setting U-Boot parameters</a></li>
+<li><a href="#org9e985ca">Update kernel on SDcard</a></li>
+<li><a href="#org81d8463">Populating /dev</a></li>
+<li><a href="#org4015b88">Fixing etc/fstab and etc/shadow</a></li>
+</ul>
+</li>
+<li><a href="#org99590db">Network setup</a>
+<ul>
+<li><a href="#orgf7ccf31">Network interfaces</a></li>
+<li><a href="#org71d0105">Setup network old style (failed)</a></li>
+<li><a href="#orgcb8b362">Setup network new style (NetworkManager)</a>
+<ul>
+<li><a href="#orgb1637f8">List current setup via nmcli</a></li>
+<li><a href="#org6a2f059">Task: Setup static IP-address in 'wan'</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#org7bf2031">Installing extra software</a>
+<ul>
+<li><a href="#orgace7271">Installing LLVM version 9</a></li>
+<li><a href="#org0be1da1">Developer packages</a></li>
+<li><a href="#org0ff688e">Extra software packages</a></li>
+<li><a href="#org3b51c61">BCC and bpftrace</a></li>
+</ul>
+</li>
+<li><a href="#org703f4ce">Setup adjustments</a>
+<ul>
+<li><a href="#orgc902955">Disable audit</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+This doc is notes on howto setup/install Fedora 31 on an Espressobin board.
+</p>
+
+<p>
+This is very similar to <a href="board_espressobin01_setup.html">board_espressobin01_setup.html</a> what show howto
+get Ubuntu working on the same board.
+</p>
+
+<p>
+The Espressobin board homepage:
+</p>
+<ul class="org-ul">
+<li><a href="http://espressobin.net/tech-spec/">http://espressobin.net/tech-spec/</a></li>
+</ul>
+
+<div id="outline-container-orgc3807d0" class="outline-2">
+<h2 id="orgc3807d0">Why Fedora 31</h2>
+<div class="outline-text-2" id="text-orgc3807d0">
+<p>
+The main reason for choosing Fedora 31, is that this distro include LLVM9.
+This is connected with LLVM9 can produce BTF (BPF Type Format).
+</p>
+</div>
+</div>
+
+<div id="outline-container-org1f5cdce" class="outline-2">
+<h2 id="org1f5cdce">Board info in U-Boot</h2>
+<div class="outline-text-2" id="text-org1f5cdce">
+<p>
+Jesper's new board:
+</p>
+<pre class="example">
+U-Boot 2017.03-armada-17.10.2-g255b9cc9c1 (Jun 10 2019 - 17:35:12 +0800)
+
+Model: Marvell Armada 3720 Community Board ESPRESSOBin
+       CPU    @ 1200 [MHz]
+       L2     @ 800 [MHz]
+       TClock @ 200 [MHz]
+       DDR    @ 750 [MHz]
+DRAM:  1 GiB
+U-Boot DT blob at : 000000003f716298
+Comphy-0: USB3          5 Gbps    
+Comphy-1: PEX0          2.5 Gbps  
+Comphy-2: SATA0         6 Gbps    
+</pre>
+</div>
+
+<div id="outline-container-org51a2d26" class="outline-3">
+<h3 id="org51a2d26">original printenv</h3>
+<div class="outline-text-3" id="text-org51a2d26">
+<p>
+List existing env via printenv:
+</p>
+
+<pre class="example">
+Marvell&gt;&gt; printenv
+baudrate=115200
+bootargs=console=ttyMV0,115200 earlycon=ar3700_uart,0xd0012000 root=/dev/mmcblk0p1 rw rootwait net.ifnames=00
+bootcmd=mmc dev 0; ext4load mmc 0:1 $kernel_addr $image_name;ext4load mmc 0:1 $fdt_addr $fdt_name;setenv boor
+bootdelay=2
+console=console=ttyMV0,115200 earlycon=ar3700_uart,0xd0012000
+eth1addr=00:51:82:11:22:01
+eth2addr=00:51:82:11:22:02
+eth3addr=00:51:82:11:22:03
+ethact=neta@30000
+ethaddr=F0:AD:4E:0A:A5:2B
+ethprime=eth0
+fdt_addr=0x4f00000
+fdt_high=0xffffffffffffffff
+fdt_name=boot/armada-3720-community-v7.dtb
+fdtcontroladdr=3f716298
+gatewayip=10.4.50.254
+get_images=tftpboot $kernel_addr $image_name; tftpboot $fdt_addr $fdt_name; run get_ramfs
+get_ramfs=if test "${ramfs_name}" != "-"; then setenv ramfs_addr 0x8000000; tftpboot $ramfs_addr $ramfs_namei
+hostname=marvell
+image_name=boot/Image
+initrd_addr=0xa00000
+initrd_size=0x2000000
+ipaddr=0.0.0.0
+kernel_addr=0x5000000
+loadaddr=0x5000000
+netdev=eth0
+netmask=255.255.255.0
+ramfs_addr=0x8000000
+ramfs_name=-
+root=root=/dev/nfs rw
+rootpath=/srv/nfs/
+serverip=0.0.0.0
+set_bootargs=setenv bootargs $console $root ip=$ipaddr:$serverip:$gatewayip:$netmask:$hostname:$netdev:none s
+stderr=serial@12000
+stdin=serial@12000
+stdout=serial@12000
+
+Environment size: 1477/65532 bytes
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org3952857" class="outline-2">
+<h2 id="org3952857">Creating Fedora 31 rootfs.tar</h2>
+<div class="outline-text-2" id="text-org3952857">
+<p>
+This section describe the manual process of creating a rootfs for ARM64,
+based off the Fedora 31 aarch64 "raw" image.
+</p>
+</div>
+
+<div id="outline-container-org56df516" class="outline-3">
+<h3 id="org56df516">Official fedora approach</h3>
+<div class="outline-text-3" id="text-org56df516">
+<p>
+We are not using this official fedora approach.
+The Fedora project do have ARM install wiki here:
+</p>
+<ul class="org-ul">
+<li><a href="https://fedoraproject.org/wiki/Architectures/ARM/Installation">https://fedoraproject.org/wiki/Architectures/ARM/Installation</a></li>
+</ul>
+
+<p>
+There is an <code>arm-image-installer</code> software package, but it didn't contain
+EspressoBin as a supported target, and it looks like its more target for
+ARM-32 bit boards (although I think I spotted a 64-bit board).
+</p>
+</div>
+</div>
+
+<div id="outline-container-org7dcf107" class="outline-3">
+<h3 id="org7dcf107">Download F31 image for aarch64</h3>
+<div class="outline-text-3" id="text-org7dcf107">
+<p>
+Download the <b>server edition</b> of "Fedora 31: Raw image for aarch64"
+</p>
+<ul class="org-ul">
+<li>Here: <a href="https://getfedora.org/en/server/download/">https://getfedora.org/en/server/download/</a></li>
+<li><a href="https://download.fedoraproject.org/pub/fedora/linux/releases/31/Server/aarch64/images/Fedora-Server-31-1.9.aarch64.raw.xz">Deep-link: Fedora-Server-31-1.9.aarch64.raw.xz</a></li>
+</ul>
+
+<p>
+All the Fedora Alternate Architectures image variants are here:
+</p>
+<ul class="org-ul">
+<li><a href="https://alt.fedoraproject.org/alt/">https://alt.fedoraproject.org/alt/</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org3334b22" class="outline-3">
+<h3 id="org3334b22">Mounting raw image</h3>
+<div class="outline-text-3" id="text-org3334b22">
+<p>
+It requires some tricks to mount the 'raw' file. Via using the <code>losetup</code>
+command:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">sudo losetup -f -P Fedora-Server-31-1.9.aarch64.raw
+$ ls -1 /dev/loop*
+/dev/loop0
+/dev/loop1
+/dev/loop1p1
+/dev/loop1p2
+/dev/loop1p3
+/dev/loop-control
+</pre>
+</div>
+
+<p>
+(Hint: Cleanup the /dev/loop1pX files via: <code>sudo losetup -D</code>)
+</p>
+
+<p>
+The partition <code>/dev/loop1p3</code> contains the data, but we cannot mount it
+directly because it is a LVM partition.
+See full disk layout via: <code>fdisk -l /dev/loop1</code>.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">$ sudo mount /dev/loop1p3 /mnt/raw/
+mount: /mnt/raw: unknown filesystem type <span style="font-style: italic;">'LVM2_member'</span>.
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org4d3c98a" class="outline-4">
+<h4 id="org4d3c98a">LVM tricks</h4>
+<div class="outline-text-4" id="text-org4d3c98a">
+<p>
+Getting LVM help from guide:
+</p>
+<ul class="org-ul">
+<li><a href="https://www.svennd.be/mount-unknown-filesystem-type-lvm2_member/">https://www.svennd.be/mount-unknown-filesystem-type-lvm2_member/</a></li>
+</ul>
+
+<p>
+The <code>lvscan</code> shows an <b>inactive</b> <code>/dev/fedora/root</code> device.
+</p>
+
+<pre class="example">
+$ sudo lvscan
+  /dev/sda: open failed: No medium found
+  /dev/sdb: open failed: No medium found
+  inactive          '/dev/fedora/root' [5,41 GiB] inherit
+</pre>
+
+<p>
+Activate it via: <code>vgchange -ay</code>
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">$ sudo vgchange -ay
+  1 logical volume(s) <span style="font-weight: bold;">in</span> volume group <span style="font-style: italic;">"fedora"</span> now active
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgc0c5c7a" class="outline-4">
+<h4 id="orgc0c5c7a">Mounting /dev/fedora/root</h4>
+<div class="outline-text-4" id="text-orgc0c5c7a">
+<p>
+Now <code>/dev/fedora/root</code> have appeared, lets mount it. Mounting the RAW image
+as root is important to get the file ownership permissions correct.
+</p>
+
+<pre class="example">
+sudo mkdir /mnt/fedora-rootfs
+sudo mount /dev/fedora/root /mnt/fedora-rootfs
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org378fe26" class="outline-3">
+<h3 id="org378fe26">Prepare and modify rootfs</h3>
+<div class="outline-text-3" id="text-org378fe26">
+<p>
+The ARM64/aarch64 rootfs (<code>/dev/fedora/root</code>) is now mounted at
+<code>/mnt/fedora-rootfs</code>.
+</p>
+
+<p>
+Copy via <code>rsync</code> files over to a local directory, to allow us to modify it.
+Important do copy as 'root' to get all files and correct ownership.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">mkdir rootfs-f31
+sudo rsync -av /mnt/fedora-rootfs/ rootfs-f31/
+</pre>
+</div>
+
+<p>
+Modify the /etc/shadow file and give root an empty password, to allow us
+access after booting (delete the <code>!locked</code> part).
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">sudo vim rootfs-f31/etc/shadow
+</pre>
+</div>
+
+<p>
+The <code>/dev/fstab</code> also contain wrong setup. The device the espressobin sees
+as root-dev is called <code>/dev/mmcblk0p1</code>. Thus, update <code>rootfs-f31/etc/fstab</code>
+with e.g.:
+</p>
+
+<pre class="example">
+# From: /etc/fstab
+/dev/mmcblk0p1	/	ext4	defaults	0 0
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgd4ddf0a" class="outline-3">
+<h3 id="orgd4ddf0a">Create tarball</h3>
+<div class="outline-text-3" id="text-orgd4ddf0a">
+<p>
+Create the tarball, with <code>-p</code> to preserves the permissions of the files put
+in the archive for restoration later:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh"><span style="font-weight: bold;">cd</span> rootfs-f31/
+sudo tar -cvpzf ../rootfs.tar.gz --one-file-system .
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org8c7032a" class="outline-2">
+<h2 id="org8c7032a">Create SDcard</h2>
+<div class="outline-text-2" id="text-org8c7032a">
+<p>
+Given <a href="http://espressobin.net/tech-spec/">Espressobin download</a> doesn't have Fedora 31, we have to create a boot
+image from scratch.
+</p>
+
+<p>
+Follow the instructions here:
+</p>
+<ul class="org-ul">
+<li><a href="http://wiki.espressobin.net/tiki-index.php?page=Boot+from+removable+storage+-+Buildroot">http://wiki.espressobin.net/tiki-index.php?page=Boot+from+removable+storage+-+Buildroot</a></li>
+</ul>
+</div>
+
+<div id="outline-container-org21f82d2" class="outline-3">
+<h3 id="org21f82d2">sdcard: Partition</h3>
+<div class="outline-text-3" id="text-org21f82d2">
+<p>
+On my system, sdcard device name was also /dev/sdb. Created partition
+/dev/sdb1 and <code>ext4</code> formatted it like this:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh"><span style="font-weight: bold; font-style: italic;">#</span><span style="font-weight: bold; font-style: italic;">(on laptop)</span>
+mkfs.ext4 -O ^metadata_csum,^64bit /dev/sdb1
+</pre>
+</div>
+
+<p>
+Mount on laptop
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh"><span style="font-weight: bold; font-style: italic;">#</span><span style="font-weight: bold; font-style: italic;">(on laptop)</span>
+mkdir -p /mnt/sdcard
+mount /dev/sdb1 /mnt/sdcard
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org5b5df8d" class="outline-3">
+<h3 id="org5b5df8d">sdcard: rootfs data</h3>
+<div class="outline-text-3" id="text-org5b5df8d">
+<p>
+Now it's time to use the 'rootfs.tar.gz' file that we created above.
+</p>
+
+<p>
+Simply extract this rootfs into <i>mnt/sdcard</i>:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh"><span style="font-weight: bold; font-style: italic;">#</span><span style="font-weight: bold; font-style: italic;">(on laptop)</span>
+sudo tar -xpvf rootfs.tar.gz -C /mnt/sdcard --numeric-owner
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgf1bb093" class="outline-3">
+<h3 id="orgf1bb093">sdcard: Update kernel</h3>
+<div class="outline-text-3" id="text-orgf1bb093">
+<p>
+The contents in <i>mnt/sdcard/boot</i> is empty.  Thus, upload a kernel.
+</p>
+
+<p>
+Follow compile instruction in <a href="arm02_cross_compile_setup.html">arm02_cross_compile_setup.html</a>.
+(Mount sdcard on laptop)
+</p>
+
+<p>
+In the kernel source, after compiling, the binary 'Image' file is located in
+<code>arch/arm64/boot/Image</code>
+</p>
+
+<pre class="example">
+# git kernel source
+cp arch/arm64/boot/Image /mnt/sdcard/boot/
+</pre>
+
+<p>
+For booting the 'dtb' file is also needed. The file for espressobin is
+called: <code>arch/arm64/boot/dts/marvell/armada-3720-espressobin.dtb</code>
+</p>
+
+<p>
+Copy over that file too:
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">cp arch/arm64/boot/dts/marvell/armada-3720-espressobin.dtb /mnt/sdcard/boot/
+</pre>
+</div>
+
+<p>
+Contents in <i>mnt/sdcard/boot</i> :
+</p>
+<pre class="example">
+[laptop sdcard]# ll /mnt/sdcard/boot/
+total 26972
+-rw-r--r--. 1 root root    10826 Nov 20 12:34 armada-3720-espressobin.dtb
+-rwxr-xr-x. 1 root root 27603456 Nov 20 12:34 Image
+</pre>
+
+<p>
+Remember to unmount:
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">sudo umount /mnt/sdcard
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org9e62c54" class="outline-2">
+<h2 id="org9e62c54">Setup U-Boot on Espressobin</h2>
+<div class="outline-text-2" id="text-org9e62c54">
+<p>
+Again follow
+</p>
+<ul class="org-ul">
+<li><a href="http://wiki.espressobin.net/tiki-index.php?page=Boot+from+removable+storage+-+Buildroot">http://wiki.espressobin.net/tiki-index.php?page=Boot+from+removable+storage+-+Buildroot</a></li>
+</ul>
+</div>
+
+<div id="outline-container-org39f8f03" class="outline-3">
+<h3 id="org39f8f03">Initial failed boot</h3>
+<div class="outline-text-3" id="text-org39f8f03">
+<p>
+Without any setup boards fails to boot with following output:
+</p>
+
+<p>
+#+begin_example
+U-Boot 2017.03-armada-17.10.2-g255b9cc9c1 (Jun 10 2019 - 17:35:12 +0800)
+</p>
+
+<p>
+Model: Marvell Armada 3720 Community Board ESPRESSOBin
+       CPU    @ 1200 [MHz]
+       L2     @ 800 [MHz]
+       TClock @ 200 [MHz]
+       DDR    @ 750 [MHz]
+DRAM:  1 GiB
+U-Boot DT blob at : 000000003f716298
+Comphy-0: USB3          5 Gbps    
+Comphy-1: PEX0          2.5 Gbps  
+Comphy-2: SATA0         6 Gbps    
+SATA link 0 timeout.
+AHCI 0001.0300 32 slots 1 ports 6 Gbps 0x1 impl SATA mode
+flags: ncq led only pmp fbss pio slum part sxs 
+PCIE-0: Link down
+MMC:   sdhci@d0000: 0, sdhci@d8000: 1
+SF: Detected gd25lq32d with page size 256 Bytes, erase size 64 KiB, total 4 MiB
+Net:   eth0: neta@30000 [PRIME]
+Hit any key to stop autoboot:  0 
+switch to partitions #0, OK
+mmc0 is current device
+9027813 bytes read in 400 ms (21.5 MiB/s)
+ <b>* File not found boot/armada-3720-community-v7.dtb *</b>
+Bad Linux ARM64 Image magic!
+Marvell&gt;&gt;
++end_example
+</p>
+</div>
+</div>
+
+<div id="outline-container-org8618716" class="outline-3">
+<h3 id="org8618716">Setting U-Boot parameters</h3>
+<div class="outline-text-3" id="text-org8618716">
+<p>
+Listing contents of mmc:
+</p>
+
+<pre class="example">
+Marvell&gt;&gt; ext4ls mmc 0:1 boot
+&lt;DIR&gt;       4096 .
+&lt;DIR&gt;       4096 ..
+           10590 armada-3720-espressobin.dtb
+         9027813 Image
+        72276159 initramfs-5.3.7-301.fc31.aarch64.img
+Marvell&gt;&gt;
+</pre>
+
+<p>
+First, set the proper boot image name and device tree path and name:
+</p>
+<pre class="example">
+Marvell&gt;&gt; setenv image_name boot/Image
+Marvell&gt;&gt; setenv fdt_name boot/armada-3720-espressobin.dtb
+</pre>
+
+<p>
+Next, define the bootmmc variable which we will use to boot from the microSD
+card:
+</p>
+<pre class="example">
+setenv bootmmc 'mmc dev 0; ext4load mmc 0:1 $kernel_addr $image_name;ext4load mmc 0:1 $fdt_addr $fdt_name;setenv bootargs $console root=/dev/mmcblk0p1 rw rootwait; booti $kernel_addr - $fdt_addr'
+saveenv
+</pre>
+
+<p>
+Booting fails:
+</p>
+<pre class="example">
+Marvell&gt;&gt; run bootmmc
+switch to partitions #0, OK
+mmc0 is current device
+9027813 bytes read in 400 ms (21.5 MiB/s)
+10590 bytes read in 6 ms (1.7 MiB/s)
+Bad Linux ARM64 Image magic!
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org9e985ca" class="outline-3">
+<h3 id="org9e985ca">Update kernel on SDcard</h3>
+<div class="outline-text-3" id="text-org9e985ca">
+<p>
+The kernel on SDcard seems be broken, try to update it.
+Follow compile instruction in <a href="arm02_cross_compile_setup.html">arm02_cross_compile_setup.html</a>.
+</p>
+
+<p>
+Mount sdcard on laptop again.
+</p>
+
+<p>
+In the kernel source, after compiling, the binary 'Image' file is located in
+<code>arch/arm64/boot/Image</code>
+</p>
+
+<pre class="example">
+cp Image /mnt/sdcard/boot/
+umount /mnt/sdcard
+</pre>
+
+<p>
+Booting kernel worked.
+</p>
+
+<p>
+But new distro challenges:
+</p>
+<pre class="example">
+You are in emergency mode. After logging in, type "journalctl -xb" to view
+system logs, "systemctl reboot" to reboot, "systemctl default" or "exit"
+to boot into
+Cannot open access to console, the root account is locked.
+See sulogin(8) man page for more details.
+
+Press Enter to continue.
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org81d8463" class="outline-3">
+<h3 id="org81d8463">Populating /dev</h3>
+<div class="outline-text-3" id="text-org81d8463">
+<p>
+The rootfs was extracted as root, but it seems that come files in <code>/dev</code>
+have not been created correctly.
+</p>
+
+<p>
+Getting help from:
+</p>
+<ul class="org-ul">
+<li><a href="http://www.linuxfromscratch.org/lfs/view/6.1/chapter06/devices.html">http://www.linuxfromscratch.org/lfs/view/6.1/chapter06/devices.html</a></li>
+</ul>
+
+<p>
+Mount sdcard on laptop again.
+</p>
+
+<p>
+Creating Initial Device Nodes:
+</p>
+
+<p>
+When the kernel boots the system, it requires the presence of a few device
+nodes, in particular the console and null devices. Create these by running
+the following commands (as root):
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">mknod -m 600 /mnt/sdcard/dev/console c 5 1
+mknod -m 666 /mnt/sdcard/dev/null c 1 3
+</pre>
+</div>
+
+<p>
+Also fix permissions on /tmp:
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">chmod 1777 /mnt/sdcard/tmp
+</pre>
+</div>
+
+<p>
+Issue: System still doesn't boot.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org4015b88" class="outline-3">
+<h3 id="org4015b88">Fixing etc/fstab and etc/shadow</h3>
+<div class="outline-text-3" id="text-org4015b88">
+<p>
+Real issue seems to be related to not mounting rootfs:
+</p>
+
+<pre class="example">
+[ TIME ] Timed out waiting for device ¦e-687a-49e0-9a7c-b9a403fc4027.
+[DEPEND] Dependency failed for /boot.
+[DEPEND] Dependency failed for /boot/efi.
+[DEPEND] Dependency failed for Local File Systems.
+[ TIME ] Timed out waiting for device /dev/disk/by-uuid/B7C7-D61F.
+[DEPEND] Dependency failed for Fileâ¦n /dev/disk/by-uuid/B7C7-D61F.
+</pre>
+
+<p>
+Original /mnt/sdcard/etc/fstab contained:
+</p>
+<pre class="example">
+/dev/mapper/fedora-root /                       xfs     defaults        0 0
+UUID=983cb62e-687a-49e0-9a7c-b9a403fc4027 /boot                   xfs     defaults        0 0
+UUID=B7C7-D61F          /boot/efi               vfat    umask=0077,shortname=winnt 0 2
+</pre>
+
+<p>
+New entry in /mnt/sdcard/etc/fstab:
+</p>
+<pre class="example">
+/dev/mmcblk0p1   /boot                   ext4     defaults        0 0
+</pre>
+
+<p>
+Also edit <code>/mnt/sdcard/etc/shadow</code> and change root password to nothing.
+Do remember to set a password after boot!
+</p>
+</div>
+</div>
+</div>
+
+
+
+
+<div id="outline-container-org99590db" class="outline-2">
+<h2 id="org99590db">Network setup</h2>
+<div class="outline-text-2" id="text-org99590db">
+<p>
+Keeping network simple via old-style <code>/etc/sysconfig/network-scripts/</code>
+files.
+</p>
+</div>
+
+<div id="outline-container-orgf7ccf31" class="outline-3">
+<h3 id="orgf7ccf31">Network interfaces</h3>
+<div class="outline-text-3" id="text-orgf7ccf31">
+<p>
+Network interfaces available:
+</p>
+<pre class="example">
+[root@localhost /]# ip link ls
+1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: bond0: &lt;BROADCAST,MULTICAST,MASTER&gt; mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/ether de:27:5e:43:ee:50 brd ff:ff:ff:ff:ff:ff
+3: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1508 qdisc mq state UP mode DEFAULT group default qlen 1024
+    link/ether 6e:a2:a3:96:32:71 brd ff:ff:ff:ff:ff:ff
+4: wan@eth0: &lt;NO-CARRIER,BROADCAST,MULTICAST,UP&gt; mtu 1500 qdisc noqueue state LOWERLAYERDOWN mode DEFAULT group default qlen 1000
+    link/ether 2a:42:5f:1f:43:fb brd ff:ff:ff:ff:ff:ff
+5: lan0@eth0: &lt;NO-CARRIER,BROADCAST,MULTICAST,UP&gt; mtu 1500 qdisc noqueue state LOWERLAYERDOWN mode DEFAULT group default qlen 1000
+    link/ether f6:e0:e5:99:b5:22 brd ff:ff:ff:ff:ff:ff
+6: lan1@eth0: &lt;NO-CARRIER,BROADCAST,MULTICAST,UP&gt; mtu 1500 qdisc noqueue state LOWERLAYERDOWN mode DEFAULT group default qlen 1000
+    link/ether 8a:a3:cf:35:00:5a brd ff:ff:ff:ff:ff:ff
+</pre>
+
+<pre class="example">
+ethtool -i wan | grep driver
+driver: dsa
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org71d0105" class="outline-3">
+<h3 id="org71d0105">Setup network old style (failed)</h3>
+<div class="outline-text-3" id="text-org71d0105">
+<p>
+File: /etc/sysconfig/network-scripts/ifcfg-wan
+</p>
+
+<pre class="example">
+NM_CONTROLLED="no"
+NAME="wan"
+ONBOOT="yes"
+TYPE="Ethernet"
+BOOTPROTO="none"
+DEFROUTE="no"
+IPV4_FAILURE_FATAL="no"
+IPV6INIT="no"
+IPV6_AUTOCONF="no"
+IPV6_DEFROUTE="no"
+IPV6_FAILURE_FATAL="no"
+#IPV6_PEERDNS="yes"
+#IPV6_PEERROUTES="yes"
+IPADDR=192.168.42.44
+PREFIX=24
+</pre>
+
+<p>
+Very strange, command <code>ifup</code> says it cannot load the file, even-though it
+does exist:
+</p>
+<pre class="example">
+[root@localhost /]# ls -l /etc/sysconfig/network-scripts/ifcfg-wan
+-rw-r--r-- 1 root root 245 Oct 10 09:19 /etc/sysconfig/network-scripts/ifcfg-wan
+
+[root@localhost /]# ifup wan
+Could not load file '/etc/sysconfig/network-scripts/ifcfg-wan'
+Error: unknown connection '/etc/sysconfig/network-scripts/ifcfg-wan'.
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgcb8b362" class="outline-3">
+<h3 id="orgcb8b362">Setup network new style (NetworkManager)</h3>
+<div class="outline-text-3" id="text-orgcb8b362">
+<p>
+Still want/need to strictly use cmdline tools for network setup, given the
+access is over USB serial cable (via minicom).
+</p>
+</div>
+
+<div id="outline-container-orgb1637f8" class="outline-4">
+<h4 id="orgb1637f8">List current setup via nmcli</h4>
+<div class="outline-text-4" id="text-orgb1637f8">
+<p>
+Trying out <code>nmcli</code> command:
+</p>
+<div class="org-src-container">
+<pre class="src src-sh"><span style="font-weight: bold; font-style: italic;"># </span><span style="font-weight: bold; font-style: italic;">nmcli</span>
+wan: connected to Wired connection 4
+        <span style="font-style: italic;">"wan"</span>
+        ethernet (mv88e6085), 2A:42:5F:1F:43:FB, hw, mtu 1500
+        ip4 default
+        inet4 192.168.42.226/24
+        route4 0.0.0.0/0
+        route4 192.168.42.0/24
+        inet6 fe80::3d09:5fb4:404c:bc9b/64
+        route6 fe80::/64
+        route6 ff00::/8
+
+eth0: connecting (getting IP configuration) to Wired connection 1
+        <span style="font-style: italic;">"eth0"</span>
+        ethernet (mvneta), 6E:A2:A3:96:32:71, hw, mtu 1508
+
+lan0: unavailable
+        <span style="font-style: italic;">"lan0"</span>
+        ethernet (mv88e6085), F6:E0:E5:99:B5:22, hw, mtu 1500
+
+lan1: unavailable
+        <span style="font-style: italic;">"lan1"</span>
+        ethernet (mv88e6085), 8A:A3:CF:35:00:5A, hw, mtu 1500
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org6a2f059" class="outline-4">
+<h4 id="org6a2f059">Task: Setup static IP-address in 'wan'</h4>
+<div class="outline-text-4" id="text-org6a2f059">
+<p>
+List connections:
+</p>
+<pre class="example">
+# nmcli connection
+NAME                UUID                                  TYPE      DEVICE 
+Wired connection 4  7b62939e-5b3c-3876-84f6-87aa08be43f3  ethernet  wan    
+Wired connection 1  475e922f-bf29-3517-847a-697dc42b699c  ethernet  --     
+Wired connection 2  162d9794-6481-3ab7-a3ac-258d93167b3d  ethernet  --     
+Wired connection 3  cff3dfb2-2788-3209-b681-0225fd02a60e  ethernet  --     
+</pre>
+
+<p>
+We guess that UUID '7b62939e-5b3c-3876-84f6-87aa08be43f3' is the connection
+we want to modify.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">nmcli connection modify 7b62939e-5b3c-3876-84f6-87aa08be43f3 IPv4.address 192.168.42.44/24
+nmcli connection modify 7b62939e-5b3c-3876-84f6-87aa08be43f3 IPv4.gateway 192.168.42.1
+nmcli connection modify 7b62939e-5b3c-3876-84f6-87aa08be43f3 IPv4.dns 1.1.1.1
+nmcli connection modify 7b62939e-5b3c-3876-84f6-87aa08be43f3 IPv4.method manual
+</pre>
+</div>
+
+<p>
+Restart network to apply changes:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">nmcli connection down 7b62939e-5b3c-3876-84f6-87aa08be43f3 ;<span style="font-style: italic;">\</span>
+nmcli connection up   7b62939e-5b3c-3876-84f6-87aa08be43f3
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org7bf2031" class="outline-2">
+<h2 id="org7bf2031">Installing extra software</h2>
+<div class="outline-text-2" id="text-org7bf2031">
+</div>
+<div id="outline-container-orgace7271" class="outline-3">
+<h3 id="orgace7271">Installing LLVM version 9</h3>
+<div class="outline-text-3" id="text-orgace7271">
+<p>
+It is a priority to get LLVM9 working on arm64.
+</p>
+<pre class="example">
+dnf install -y llvm
+
+Last metadata expiration check: 0:00:03 ago on Tue 19 Nov 2019 09:20:48 AM EST.
+Dependencies resolved.
+================================================================================
+ Package           Architecture    Version                 Repository      Size
+================================================================================
+Installing:
+ llvm              aarch64         9.0.0-1.fc31            fedora         4.2 M
+Installing dependencies:
+ llvm-libs         aarch64         9.0.0-1.fc31            fedora          20 M
+
+Transaction Summary
+================================================================================
+Install  2 Packages
+
+Total download size: 24 M
+Installed size: 107 M
+</pre>
+
+<p>
+Success and 'llc &#x2013;version' shows a lot of targets, including BPF.
+</p>
+<pre class="example">
+# llc --version
+LLVM (http://llvm.org/):
+  LLVM version 9.0.0
+  Optimized build.
+  Default target: aarch64-unknown-linux-gnu
+  Host CPU: cortex-a53
+
+  Registered Targets:
+    aarch64    - AArch64 (little endian)
+    aarch64_32 - AArch64 (little endian ILP32)
+    aarch64_be - AArch64 (big endian)
+    amdgcn     - AMD GCN GPUs
+    arm        - ARM
+    arm64      - ARM64 (little endian)
+    arm64_32   - ARM64 (little endian ILP32)
+    armeb      - ARM (big endian)
+    avr        - Atmel AVR Microcontroller
+    bpf        - BPF (host endian)
+    bpfeb      - BPF (big endian)
+    bpfel      - BPF (little endian)
+    hexagon    - Hexagon
+    lanai      - Lanai
+    mips       - MIPS (32-bit big endian)
+    mips64     - MIPS (64-bit big endian)
+    mips64el   - MIPS (64-bit little endian)
+    mipsel     - MIPS (32-bit little endian)
+    msp430     - MSP430 [experimental]
+    nvptx      - NVIDIA PTX 32-bit
+    nvptx64    - NVIDIA PTX 64-bit
+    ppc32      - PowerPC 32
+    ppc64      - PowerPC 64
+    ppc64le    - PowerPC 64 LE
+    r600       - AMD GPUs HD2XXX-HD6XXX
+    riscv32    - 32-bit RISC-V
+    riscv64    - 64-bit RISC-V
+    sparc      - Sparc
+    sparcel    - Sparc LE
+    sparcv9    - Sparc V9
+    systemz    - SystemZ
+    thumb      - Thumb
+    thumbeb    - Thumb (big endian)
+    wasm32     - WebAssembly 32-bit
+    wasm64     - WebAssembly 64-bit
+    x86        - 32-bit X86: Pentium-Pro and above
+    x86-64     - 64-bit X86: EM64T and AMD64
+    xcore      - XCore
+</pre>
+
+<p>
+Also install <code>clang</code>:
+</p>
+
+<pre class="example">
+dnf install -y clang
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org0be1da1" class="outline-3">
+<h3 id="org0be1da1">Developer packages</h3>
+<div class="outline-text-3" id="text-org0be1da1">
+<p>
+Installing devel packages for building the kernel. We usually cross compile
+kernel on a faster build host and push/rsync it to target host (see
+<a href="https://github.com/netoptimizer/prototype-kernel/tree/master/scripts">scripts</a>).
+</p>
+
+<p>
+For testing samples/bpf/ and compiling libbpf we also want the build tools
+avail on the ARM64/aarch64 target system.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">dnf builddep kernel
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org0ff688e" class="outline-3">
+<h3 id="org0ff688e">Extra software packages</h3>
+<div class="outline-text-3" id="text-org0ff688e">
+<p>
+For building xdp-tcpdump install: <code>libpcap-devel</code>
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">dnf install -y bpftool
+dnf install -y perf
+dnf install -y vim
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org3b51c61" class="outline-3">
+<h3 id="org3b51c61">BCC and bpftrace</h3>
+<div class="outline-text-3" id="text-org3b51c61">
+<pre class="example">
+dnf install -y bcc
+
+Dependencies resolved.
+=============================================================================================================================
+ Package                         Architecture              Version                           Repository                 Size
+=============================================================================================================================
+Installing:
+ bcc                             aarch64                   0.10.0-2.fc31                     fedora                     11 M
+Installing dependencies:
+ kernel-devel                    aarch64                   5.3.11-300.fc31                   updates                    11 M
+ bcc-tools                       aarch64                   0.10.0-2.fc31                     fedora                    398 k
+ clang8.0-libs                   aarch64                   8.0.0-5.fc31                      fedora                     13 M
+ llvm8.0-libs                    aarch64                   8.0.0-10.fc31                     fedora                     19 M
+ python3-bcc                     noarch                    0.10.0-2.fc31                     fedora                     76 k
+</pre>
+
+<p>
+Package for building bpftrace from git-tree:
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">dnf install -y bcc-devel
+dnf install -y cmake stow bcc
+</pre>
+</div>
+
+<p>
+Getting all build dependencies for bpftrace via: <code>dnf builddep bpftrace</code>
+</p>
+
+<pre class="example">
+sudo dnf builddep -y bpftrace
+
+Dependencies resolved.
+=============================================================================================================================
+ Package                          Architecture           Version                                Repository              Size
+=============================================================================================================================
+Installing:
+ clang-devel                      aarch64                9.0.0-1.fc31                           fedora                 1.7 M
+ llvm-devel                       aarch64                9.0.0-1.fc31                           fedora                 2.6 M
+Installing dependencies:
+ libedit-devel                    aarch64                3.1-29.20191025cvs.fc31                updates                 40 k
+ clang-tools-extra                aarch64                9.0.0-1.fc31                           fedora                 596 k
+ ncurses-c++-libs                 aarch64                6.1-12.20190803.fc31                   fedora                  37 k
+ ncurses-devel                    aarch64                6.1-12.20190803.fc31                   fedora                 503 k
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org703f4ce" class="outline-2">
+<h2 id="org703f4ce">Setup adjustments</h2>
+<div class="outline-text-2" id="text-org703f4ce">
+<p>
+Notes about some setup adjustments.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">hostnamectl set-hostname espressobin
+</pre>
+</div>
+
+<p>
+Loading libs from <i>usr/local</i> 
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">cat &gt;&gt; /etc/ld.so.conf.d/usr_local.conf &lt;&lt; EOF
+<span style="font-weight: bold;">/usr/local/lib</span>
+<span style="font-weight: bold;">/usr/local/lib64</span>
+<span style="font-weight: bold;">EOF</span>
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgc902955" class="outline-3">
+<h3 id="orgc902955">Disable audit</h3>
+<div class="outline-text-3" id="text-orgc902955">
+<pre class="example">
+systemctl disable auditd.service
+systemctl mask systemd-journald-audit.socket
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Implementing page_pool return-hook via SKB</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Implementing page_pool return-hook via SKB</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org6fd7ead">Basic idea</a></li>
+<li><a href="#org390896d">New RFC patchset(ongoing work)</a>
+<ul>
+<li><a href="#org3b172dd">pp_recycle semantics</a>
+<ul>
+<li><a href="#orgf138b24">What can go wrong if this doesn't happen:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#org2b573af">Different ideas on skb marking</a></li>
+</ul>
+</div>
+</div>
+
+
+<div id="outline-container-org6fd7ead" class="outline-2">
+<h2 id="org6fd7ead">Basic idea</h2>
+<div class="outline-text-2" id="text-org6fd7ead">
+<p>
+Initial design ideas can be found at <a href="page_pool02_SKB_return_callback.html">page_pool02_SKB_return_callback.html</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org390896d" class="outline-2">
+<h2 id="org390896d">New RFC patchset(ongoing work)</h2>
+<div class="outline-text-2" id="text-org390896d">
+<p>
+This patchset corresponds to:
+</p>
+<ul class="org-ul">
+<li>Git tree: <a href="https://github.com/xdp-project/bpf-next">https://github.com/xdp-project/bpf-next</a></li>
+<li>Branch: <a href="https://github.com/apalos/bpf-next/commits/rfc_06_recycle">rfc_06_recycle</a></li>
+</ul>
+
+<p>
+The main difference between this patchset and the original RFC is that the
+place were we store xdp_mem_info has changed. Instead of using 4 bytes on
+the skb, we store the information on page-&gt;private. This allowed us to
+recycle skb-&gt;data and skb fragments that followed in shinfo. 
+</p>
+
+<p>
+Note here that on the original version we only tried to match that
+page-&gt;private had mem_info.type == MEM_TYPE_PAGE_POOL in order to
+recycle so storing the info on the page was needed.
+This was not safe since other netstack functions use page-&gt;private
+(i.e skb_copy_ubufs()). In order to avoid this we introduced a new bit in
+the skb, called pp_recycle. Since we now pass the skb-&gt;pp_recycle bit into 
+__skb_frag_unref() to trigger recycling, we could add xdp_mem_info back into
+the skb instead of the page-&gt;private.
+</p>
+
+<p>
+Both free related functions in skb_free_head() and __skb_frag_unref() are
+intercepted and if the skb is marked for recycle, we are trying to return
+the page into the pool, without unmapping the associated DMA addresses.
+</p>
+</div>
+
+<div id="outline-container-org3b172dd" class="outline-3">
+<h3 id="org3b172dd">pp_recycle semantics</h3>
+<div class="outline-text-3" id="text-org3b172dd">
+<p>
+On skb cloning we replicate the pp_recycle bit on the clone, since we have no
+idea if the original skb or it's clone will be freed first.
+</p>
+
+<p>
+In order for this to work all skb fragments must be allocated via page_pool
+and the driver must use build_skb to construct the skb it passes on the
+network stack. Any driver that decides to set the pp_recycle bit must make
+sure the skb holds a page_pool allocated skb-&gt;data
+</p>
+</div>
+
+<div id="outline-container-orgf138b24" class="outline-4">
+<h4 id="orgf138b24">What can go wrong if this doesn't happen:</h4>
+<div class="outline-text-4" id="text-orgf138b24">
+<ul class="org-ul">
+<li>The pp_recycle bit on the skb gets set when marking fragments for
+recycling. (skb_mark_for_recycle should NEVER be used on skb-&gt;head that are
+not allocate via page_pool).
+Since pp_recycle lives in the initial skb, we'll try to recycle it. The
+xdp_mem_info of the slab allocated skb won't match (again as long as the
+driver writer has not wrongly used skb_mark_for_recycle). The skb will be freed
+normally and the fragments (which will will match both the pp_recycle bit
+and the xdp_mem_info) will be properly recycled. A WARN_ON will be displayed
+for the slab allocated skb.</li>
+<li>In order to prevent coalescing of skb's that hold slab allocated data +
+page_pool data an if statement has been added which prevents that from
+happening. Both skb (from, to) should have their pp_recycle bit value
+equal to allow coalescing. 
+If we don't do that we'll try to recycle memory that does not belong to
+page_pool and we'll crash.</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org2b573af" class="outline-2">
+<h2 id="org2b573af">Different ideas on skb marking</h2>
+<div class="outline-text-2" id="text-org2b573af">
+<p>
+Right now we are using an skb bit for that. This is nice because the overhead
+on the free path is going to be minimal, since the bit we need to access for
+our recycling decisions is probably already in cache. 
+Using a single bit in the skb has an implication though. We rely on that bit
+to recycle skb and fragments and have to check validity of that bit in
+skb_try_coalesce() (and maybe other places we missed)
+</p>
+
+<p>
+We could use a page flag to trigger the recycling (PG_owner_priv_1 in
+page-flags.h looks like a good candidate). This will in general be 'safer'
+since each page will have it's own recycle 'trigger' and we won't have to
+check all the corner cases were netstack packs skb-&gt;data (i.e coalescing)
+This would slow down the free path though since it's an extra cache line
+access per packet to retrieve the information.
+</p>
+
+<p>
+In any case we should use PG_owner_priv_1 to mark the page and track down
+packets that were freed prior to unmapping their DMA (DMA leaks) regardless
+of what we use as our recycle 'trigger'.
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

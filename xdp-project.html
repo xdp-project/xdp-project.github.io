@@ -22,111 +22,105 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org2c88e35">Current high-priority tasks</a>
+<li><a href="#orgd710b34">Current high-priority tasks</a>
 <ul>
-<li><a href="#org877bbcf"><span class="todo TODO">TODO</span> Consistency for statistics with XDP</a>
+<li><a href="#org71938cf"><span class="todo TODO">TODO</span> Consistency for statistics with XDP</a>
 <ul>
-<li><a href="#org282e760"><span class="todo TODO">TODO</span> Missing update of ifconfig counters</a></li>
-<li><a href="#orgf35b3a4"><span class="todo NEXT">NEXT</span> Figure out the counter semantics upstream</a></li>
-<li><a href="#org7760e27"><span class="todo TODO">TODO</span> Statistics per XDP-action</a></li>
+<li><a href="#org4008d6a"><span class="todo TODO">TODO</span> Missing update of ifconfig counters</a></li>
+<li><a href="#org70eb15c"><span class="todo NEXT">NEXT</span> Figure out the counter semantics upstream</a></li>
+<li><a href="#orgd4a7c31"><span class="todo TODO">TODO</span> Statistics per XDP-action</a></li>
 </ul>
 </li>
-<li><a href="#org2906984"><span class="todo TODO">TODO</span> Better ndo_xdp_xmit resource management</a>
+<li><a href="#orgd446596"><span class="todo TODO">TODO</span> Better ndo_xdp_xmit resource management</a>
 <ul>
-<li><a href="#orge7a41c4"><span class="todo NEXT">NEXT</span> Change non-map xdp_redirect helper to use a hidden map</a></li>
-<li><a href="#orgf3aac5b"><span class="todo TODO">TODO</span> Ethtool interface for enabling TX resources</a></li>
-<li><a href="#orge52cb4d"><span class="todo TODO">TODO</span> Add automatic TX resource allocation to libbpf</a></li>
+<li><a href="#orgcdc1515"><span class="todo NEXT">NEXT</span> Change non-map xdp_redirect helper to use a hidden map</a></li>
+<li><a href="#orge75edd0"><span class="todo TODO">TODO</span> Ethtool interface for enabling TX resources</a></li>
+<li><a href="#org177f021"><span class="todo TODO">TODO</span> Add automatic TX resource allocation to libbpf</a></li>
 </ul>
 </li>
-<li><a href="#org25f2885"><span class="todo TODO">TODO</span> XDP feature flags</a>
+<li><a href="#org60fd451"><span class="todo TODO">TODO</span> XDP feature flags</a>
 <ul>
-<li><a href="#orgb41d3ac"><span class="done DONE">DONE</span> Submit LPC network track talk about: XDP feature detection</a></li>
-<li><a href="#org4497278"><span class="todo NEXT">NEXT</span> Propose a driver API to communicate feature flags</a></li>
-<li><a href="#orgdc5475e"><span class="todo TODO">TODO</span> Add a userspace API to query features</a></li>
+<li><a href="#org04c0dc1"><span class="done DONE">DONE</span> Submit LPC network track talk about: XDP feature detection</a></li>
+<li><a href="#org39e7510"><span class="todo NEXT">NEXT</span> Propose a driver API to communicate feature flags</a></li>
+<li><a href="#org680b858"><span class="todo TODO">TODO</span> Add a userspace API to query features</a></li>
 </ul>
 </li>
-<li><a href="#orgde95199"><span class="todo TODO">TODO</span> Multiple XDP programs on a single interface</a>
+<li><a href="#org36f67d2"><span class="todo TODO">TODO</span> Multiple XDP programs on a single interface</a>
 <ul>
-<li><a href="#orga4b98e6"><span class="todo TODO">TODO</span> Build an XDP chain loader on top of the kernel support</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#org5e2d090">Important medium-term tasks</a>
-<ul>
-<li><a href="#orge9da6cf"><span class="todo TODO">TODO</span> Usability of programs in samples/bpf</a>
-<ul>
-<li><a href="#org1119f0c"><span class="done DONE">DONE</span> Change sample programs to accept ifnames as well as indexes</a></li>
-<li><a href="#org90c788a"><span class="todo NEXT">NEXT</span> Add TX counters to redirect samples/bpf programs</a></li>
-<li><a href="#org8e38e1d"><span class="done DONE">DONE</span> Fix unloading wrong XDP on xdp-sample exit</a></li>
-<li><a href="#orgbc61064"><span class="todo TODO">TODO</span> Change XDP-samples to enforce native-XDP and report if not avail</a></li>
-<li><a href="#orgf4fc011"><span class="todo TODO">TODO</span> Add xdpsock option to allow XDP_PASS for AF_XDP zero-copy mode</a></li>
-<li><a href="#org0c79295"><span class="todo TODO">TODO</span> xdp_monitor: record and show errno</a></li>
-<li><a href="#org31de162"><span class="todo TODO">TODO</span> xdp_monitor: convert to use raw-tracepoints</a></li>
-</ul>
-</li>
-<li><a href="#org937fa4e"><span class="todo TODO">TODO</span> BPF-selftests - top-level TODOs</a>
-<ul>
-<li><a href="#org226bd89"><span class="done DONE">DONE</span> bpf-selftest: improve XDP VLAN selftests</a></li>
-<li><a href="#org4e1419a"><span class="todo TODO">TODO</span> bpf-selftest: find XDP-selftests affected by veth native-XDP</a></li>
-<li><a href="#org00c6fd3"><span class="todo TODO">TODO</span> Make more XDP tests using BPF_PROG_TEST_RUN</a></li>
-<li><a href="#orgefd9340"><span class="todo NEXT">NEXT</span> Could this be a "introduction job"?</a></li>
-</ul>
-</li>
-<li><a href="#org9b922bb"><span class="todo TODO">TODO</span> Busy-poll support for AF_XDP</a></li>
-<li><a href="#orgc49f047"><span class="todo TODO">TODO</span> Exposing more kernel data structures through helpers</a>
-<ul>
-<li><a href="#org0ded67b"><span class="todo NEXT">NEXT</span> Layer-2 bridging helper</a></li>
-<li><a href="#orgeea64fc"><span class="todo TODO">TODO</span> Connection/flow tracking</a></li>
-</ul>
-</li>
-<li><a href="#org00dce3f"><span class="todo TODO">TODO</span> Port iproute2 to libbpf</a></li>
-<li><a href="#orgc8dfe1b"><span class="todo TODO">TODO</span> Metadata available to programs</a>
-<ul>
-<li><a href="#org5c370f9"><span class="todo TODO">TODO</span> XDP frame length</a></li>
-<li><a href="#org96e8937"><span class="todo TODO">TODO</span> Metadata from hardware</a></li>
-</ul>
-</li>
-<li><a href="#org11380bb"><span class="todo TODO">TODO</span> Improvements to XDP_REDIRECT</a>
-<ul>
-<li><a href="#org0b4b071"><span class="todo TODO">TODO</span> Handling multicast</a></li>
-<li><a href="#org98ceae2"><span class="todo TODO">TODO</span> Queueing and QoS</a></li>
-<li><a href="#orgde0ebbe"><span class="todo TODO">TODO</span> Handling XDP_REDIRECT failures</a></li>
-</ul>
-</li>
-<li><a href="#org2f5ddcc"><span class="todo TODO">TODO</span> Multi-buffer XDP (aka. jumbo-frames)</a>
-<ul>
-<li><a href="#orgd358eb5"><span class="done DONE">DONE</span> Start upstream discussion on multi-buffer</a></li>
-<li><a href="#orgca080d9"><span class="todo TODO">TODO</span> Create plan to move forward with initial constraints</a></li>
-<li><a href="#org94efc41"><span class="todo TODO">TODO</span> Find driver developers that will participate in multi-buffer work</a></li>
+<li><a href="#orge38486f"><span class="todo TODO">TODO</span> Build an XDP chain loader on top of the kernel support</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org1ac8544">Longer-term preliminary plans</a>
+<li><a href="#org71cedfa">Important medium-term tasks</a>
 <ul>
-<li><a href="#orgdda58a3"><span class="todo TODO">TODO</span> Adding AF_XDP support to relevant userspace programs</a></li>
-<li><a href="#orga5df6b4"><span class="todo WAIT">WAIT</span> BTF-based metadata for XDP</a></li>
-<li><a href="#orgef03d75"><span class="todo WAIT">WAIT</span> XDP latency jit-vs-no jit, tuning etc</a></li>
-<li><a href="#orge606153"><span class="todo TODO">TODO</span> Generic XDP fixes</a>
+<li><a href="#org43be4d5"><span class="todo TODO">TODO</span> Usability of programs in samples/bpf</a>
 <ul>
-<li><a href="#org2297b89"><span class="todo TODO">TODO</span> Bulking for redirect maps</a></li>
-<li><a href="#org2a414a0"><span class="todo TODO">TODO</span> BUG: TCP packets skip (?)</a></li>
-<li><a href="#org03344b1"><span class="todo TODO">TODO</span> Fix CPUMAP</a></li>
+<li><a href="#org7e98aca"><span class="done DONE">DONE</span> Change sample programs to accept ifnames as well as indexes</a></li>
+<li><a href="#org3a6e1ce"><span class="todo NEXT">NEXT</span> Add TX counters to redirect samples/bpf programs</a></li>
+<li><a href="#orgdde9f73"><span class="todo TODO">TODO</span> Fix unloading wrong XDP on xdp-sample exit</a></li>
+<li><a href="#orga3b9b47"><span class="todo TODO">TODO</span> Change XDP-samples to enforce native-XDP and report if not avail</a></li>
+<li><a href="#orgde19a9c"><span class="todo TODO">TODO</span> Add xdpsock option to allow XDP_PASS for AF_XDP zero-copy mode</a></li>
+<li><a href="#orgba6dd06"><span class="todo TODO">TODO</span> xdp_monitor: record and show errno</a></li>
+<li><a href="#org28c0e4c"><span class="todo TODO">TODO</span> xdp_monitor: convert to use raw-tracepoints</a></li>
 </ul>
 </li>
-<li><a href="#org82c0abc"><span class="todo TODO">TODO</span> XDP hook at TX</a></li>
+<li><a href="#org812975b"><span class="todo TODO">TODO</span> BPF-selftests - top-level TODOs</a>
+<ul>
+<li><a href="#org3e16aa0"><span class="todo NEXT">NEXT</span> bpf-selftest: improve XDP VLAN selftests</a></li>
+<li><a href="#orgd8a174b"><span class="todo TODO">TODO</span> bpf-selftest: find XDP-selftests affected by veth native-XDP</a></li>
+<li><a href="#org22636ec"><span class="todo TODO">TODO</span> Make more XDP tests using BPF_PROG_TEST_RUN</a></li>
+<li><a href="#org5e78941"><span class="todo NEXT">NEXT</span> Could this be a "introduction job"?</a></li>
 </ul>
 </li>
-<li><a href="#org0668e62">Sub-categories and their tasks</a></li>
+<li><a href="#orgc8a3631"><span class="todo TODO">TODO</span> Busy-poll support for AF_XDP</a></li>
+<li><a href="#org896bf93"><span class="todo TODO">TODO</span> Exposing more kernel data structures through helpers</a>
+<ul>
+<li><a href="#orgdddc405"><span class="todo NEXT">NEXT</span> Layer-2 bridging helper</a></li>
+<li><a href="#orgcc4b503"><span class="todo TODO">TODO</span> Connection/flow tracking</a></li>
+</ul>
+</li>
+<li><a href="#org681ffad"><span class="todo TODO">TODO</span> Port iproute2 to libbpf</a></li>
+<li><a href="#orgd13976f"><span class="todo TODO">TODO</span> Metadata available to programs</a>
+<ul>
+<li><a href="#orgef93002"><span class="todo TODO">TODO</span> XDP frame length</a></li>
+<li><a href="#orgc30458c"><span class="todo TODO">TODO</span> Metadata from hardware</a></li>
+</ul>
+</li>
+<li><a href="#org2013abb"><span class="todo TODO">TODO</span> Improvements to XDP_REDIRECT</a>
+<ul>
+<li><a href="#orge80513f"><span class="todo TODO">TODO</span> Handling multicast</a></li>
+<li><a href="#org4c09206"><span class="todo TODO">TODO</span> Queueing and QoS</a></li>
+<li><a href="#orgcfaa39c"><span class="todo TODO">TODO</span> Handling XDP_REDIRECT failures</a></li>
+</ul>
+</li>
+<li><a href="#orgfdc3430"><span class="todo TODO">TODO</span> Multi-buffer XDP (aka. jumbo-frames)</a>
+<ul>
+<li><a href="#org63c710f"><span class="done DONE">DONE</span> Start upstream discussion on multi-buffer</a></li>
+<li><a href="#org81955be"><span class="todo TODO">TODO</span> Create plan to move forward with initial constraints</a></li>
+<li><a href="#org4951af1"><span class="todo TODO">TODO</span> Find driver developers that will participate in multi-buffer work</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#org551dbf9">Longer-term preliminary plans</a>
+<ul>
+<li><a href="#org9d4ab29"><span class="todo TODO">TODO</span> Adding AF_XDP support to relevant userspace programs</a></li>
+<li><a href="#orge79f32a"><span class="todo WAIT">WAIT</span> BTF-based metadata for XDP</a></li>
+<li><a href="#org72c1461"><span class="todo WAIT">WAIT</span> XDP latency jit-vs-no jit, tuning etc</a></li>
+<li><a href="#orge650d70"><span class="todo TODO">TODO</span> Generic XDP fixes</a>
+<ul>
+<li><a href="#org2897851"><span class="todo TODO">TODO</span> Bulking for redirect maps</a></li>
+<li><a href="#org761cf44"><span class="todo TODO">TODO</span> BUG: TCP packets skip (?)</a></li>
+<li><a href="#orgffc78c6"><span class="todo TODO">TODO</span> Fix CPUMAP</a></li>
+</ul>
+</li>
+<li><a href="#org3ac3810"><span class="todo TODO">TODO</span> XDP hook at TX</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
-<p>
-This is the XDP project website - a rendered version of <a href="https://github.com/xdp-project/xdp-project">the Github repository</a>
-for project planning.
-</p>
-
 <p>
 This file contains the high-level XDP tasks. The items in this file are
 divided into three categories, reflecting the urgency and time frame we
@@ -147,9 +141,9 @@ and each category contains a description of what it (is supposed to)
 include.
 </p>
 
-<div id="outline-container-org2c88e35" class="outline-2">
-<h2 id="org2c88e35">Current high-priority tasks</h2>
-<div class="outline-text-2" id="text-org2c88e35">
+<div id="outline-container-orgd710b34" class="outline-2">
+<h2 id="orgd710b34">Current high-priority tasks</h2>
+<div class="outline-text-2" id="text-orgd710b34">
 <p>
 These are tasks that are blockers for getting the XDP system ready for
 general consumption, i.e., to a state that might reasonably be considered
@@ -164,9 +158,9 @@ preferably a plan and someone working on them.
 </p>
 </div>
 
-<div id="outline-container-org877bbcf" class="outline-3">
-<h3 id="org877bbcf"><span class="todo TODO">TODO</span> Consistency for statistics with XDP</h3>
-<div class="outline-text-3" id="text-org877bbcf">
+<div id="outline-container-org71938cf" class="outline-3">
+<h3 id="org71938cf"><span class="todo TODO">TODO</span> Consistency for statistics with XDP</h3>
+<div class="outline-text-3" id="text-org71938cf">
 <p>
 The short of it is that we need consistency in the counters across NIC
 drivers and virtual devices. Right now stats are specific to a driver with
@@ -179,9 +173,9 @@ subject: <a href="https://www.spinics.net/lists/netdev/msg535239.html">consisten
 </p>
 </div>
 
-<div id="outline-container-org282e760" class="outline-4">
-<h4 id="org282e760"><span class="todo TODO">TODO</span> Missing update of ifconfig counters</h4>
-<div class="outline-text-4" id="text-org282e760">
+<div id="outline-container-org4008d6a" class="outline-4">
+<h4 id="org4008d6a"><span class="todo TODO">TODO</span> Missing update of ifconfig counters</h4>
+<div class="outline-text-4" id="text-org4008d6a">
 <p>
 Some drivers are not updating the "ifconfig" stats counters,
 when in XDP mode.  This makes receive or send via XDP invisible to
@@ -206,9 +200,9 @@ monitor when testing).</li>
 </div>
 </div>
 
-<div id="outline-container-orgf35b3a4" class="outline-4">
-<h4 id="orgf35b3a4"><span class="todo NEXT">NEXT</span> Figure out the counter semantics upstream</h4>
-<div class="outline-text-4" id="text-orgf35b3a4">
+<div id="outline-container-org70eb15c" class="outline-4">
+<h4 id="org70eb15c"><span class="todo NEXT">NEXT</span> Figure out the counter semantics upstream</h4>
+<div class="outline-text-4" id="text-org70eb15c">
 <p>
 Need to have an upstream discussion, on what is the semantic.  IHMO
 the regular RX/TX counters must be updated even for XDP frames.
@@ -216,9 +210,9 @@ the regular RX/TX counters must be updated even for XDP frames.
 </div>
 </div>
 
-<div id="outline-container-org7760e27" class="outline-4">
-<h4 id="org7760e27"><span class="todo TODO">TODO</span> Statistics per XDP-action</h4>
-<div class="outline-text-4" id="text-org7760e27">
+<div id="outline-container-orgd4a7c31" class="outline-4">
+<h4 id="orgd4a7c31"><span class="todo TODO">TODO</span> Statistics per XDP-action</h4>
+<div class="outline-text-4" id="text-orgd4a7c31">
 <p>
 Accounting per XDP-action is also inconsistent across drivers. Some driver
 account nothing, while others have elaborate counters exposed as ethtool
@@ -247,8 +241,8 @@ that the sysadm explicitly enable when needed, and not default on.
 </div>
 
 <ul class="org-ul">
-<li><a id="org08211ea"></a><span class="todo NEXT">NEXT</span> Implement simple XDP-actions counter and measure<br />
-<div class="outline-text-5" id="text-org08211ea">
+<li><a id="org833c617"></a><span class="todo NEXT">NEXT</span> Implement simple XDP-actions counter and measure<br />
+<div class="outline-text-5" id="text-org833c617">
 <p>
 As Saeed suggested do something really simple and central like:
 </p>
@@ -281,8 +275,8 @@ Intel might lead to the wrong conclusion.
 </div>
 </li>
 
-<li><a id="orga0a4ee0"></a><span class="todo TODO">TODO</span> Exporting XDP-actions counter to userspace<br />
-<div class="outline-text-5" id="text-orga0a4ee0">
+<li><a id="org1f28c50"></a><span class="todo TODO">TODO</span> Exporting XDP-actions counter to userspace<br />
+<div class="outline-text-5" id="text-org1f28c50">
 <p>
 Collecting XDP-actions counter is only the first step.  We need to figure
 out the best solution for exporting this to userspace.
@@ -299,13 +293,9 @@ and it would also standardise the driver related XDP ethool stats.
 </div>
 
 
-<div id="outline-container-org2906984" class="outline-3">
-<h3 id="org2906984"><a id="ID-dbb66cde-82e6-47ba-be0f-5ebb8baa1cd2"></a><span class="todo TODO">TODO</span> Better ndo_xdp_xmit resource management</h3>
-<div class="outline-text-3" id="text-org2906984">
-<p>
-Stalled on Intel/Magnus NIC queue management interface.
-</p>
-
+<div id="outline-container-orgd446596" class="outline-3">
+<h3 id="orgd446596"><a id="ID-dbb66cde-82e6-47ba-be0f-5ebb8baa1cd2"></a><span class="todo TODO">TODO</span> Better ndo_xdp_xmit resource management</h3>
+<div class="outline-text-3" id="text-orgd446596">
 <p>
 Driver resources needed to handle a ndo_xdp_xmit() is currently tied
 to the driver having loaded an RX XDP program. This is strange, as
@@ -319,9 +309,9 @@ for each CPU core.
 </p>
 </div>
 
-<div id="outline-container-orge7a41c4" class="outline-4">
-<h4 id="orge7a41c4"><span class="todo NEXT">NEXT</span> Change non-map xdp_redirect helper to use a hidden map</h4>
-<div class="outline-text-4" id="text-orge7a41c4">
+<div id="outline-container-orgcdc1515" class="outline-4">
+<h4 id="orgcdc1515"><span class="todo NEXT">NEXT</span> Change non-map xdp_redirect helper to use a hidden map</h4>
+<div class="outline-text-4" id="text-orgcdc1515">
 <p>
 To be able to tie resource allocation to the interface maps (<code>devmap</code>), we
 first need to change the non-map redirect variant so it uses a map under the
@@ -339,9 +329,9 @@ v1 comments and discussion: <a href="https://patchwork.ozlabs.org/patch/1046099/
 </div>
 </div>
 
-<div id="outline-container-orgf3aac5b" class="outline-4">
-<h4 id="orgf3aac5b"><span class="todo TODO">TODO</span> Ethtool interface for enabling TX resources</h4>
-<div class="outline-text-4" id="text-orgf3aac5b">
+<div id="outline-container-orge75edd0" class="outline-4">
+<h4 id="orge75edd0"><span class="todo TODO">TODO</span> Ethtool interface for enabling TX resources</h4>
+<div class="outline-text-4" id="text-orge75edd0">
 <p>
 Turns out the initial idea of using insertion into devmap as a trigger for
 resource allocation doesn't work because of generic XDP. So we'll need an
@@ -352,8 +342,8 @@ good way.
 </div>
 
 <ul class="org-ul">
-<li><a id="org0a7d32e"></a>Interface for defining what a TX resource is<br />
-<div class="outline-text-5" id="text-org0a7d32e">
+<li><a id="org64d8883"></a>Interface for defining what a TX resource is<br />
+<div class="outline-text-5" id="text-org64d8883">
 <p>
 Need to define:
 </p>
@@ -372,9 +362,9 @@ How to handle life cycle management?
 </ul>
 </div>
 
-<div id="outline-container-orge52cb4d" class="outline-4">
-<h4 id="orge52cb4d"><span class="todo TODO">TODO</span> Add automatic TX resource allocation to libbpf</h4>
-<div class="outline-text-4" id="text-orge52cb4d">
+<div id="outline-container-org177f021" class="outline-4">
+<h4 id="org177f021"><span class="todo TODO">TODO</span> Add automatic TX resource allocation to libbpf</h4>
+<div class="outline-text-4" id="text-org177f021">
 <p>
 Because we can't tie resource allocation to map insertion on the kernel
 side, we need to solve the UI interface in userspace. So add a hook/wrapper
@@ -386,9 +376,9 @@ a map.
 </div>
 
 
-<div id="outline-container-org25f2885" class="outline-3">
-<h3 id="org25f2885"><span class="todo TODO">TODO</span> XDP feature flags</h3>
-<div class="outline-text-3" id="text-org25f2885">
+<div id="outline-container-org60fd451" class="outline-3">
+<h3 id="org60fd451"><span class="todo TODO">TODO</span> XDP feature flags</h3>
+<div class="outline-text-3" id="text-org60fd451">
 <p>
 We are probably going to need feature flags for XDP after all. There are use
 cases (e.g. Surricata, VM migration) that will want to know what to expect
@@ -396,9 +386,9 @@ from the system before committing to loading an XDP program.
 </p>
 </div>
 
-<div id="outline-container-orgb41d3ac" class="outline-4">
-<h4 id="orgb41d3ac"><span class="done DONE">DONE</span> Submit LPC network track talk about: XDP feature detection</h4>
-<div class="outline-text-4" id="text-orgb41d3ac">
+<div id="outline-container-org04c0dc1" class="outline-4">
+<h4 id="org04c0dc1"><span class="done DONE">DONE</span> Submit LPC network track talk about: XDP feature detection</h4>
+<div class="outline-text-4" id="text-org04c0dc1">
 <p><span class="timestamp-wrapper"><span class="timestamp-kwd">CLOSED:</span> <span class="timestamp">[2019-07-31 Wed 17:10]</span></span></p>
 <p>
 Title:
@@ -469,9 +459,9 @@ The open question are:
 </div>
 </div>
 
-<div id="outline-container-org4497278" class="outline-4">
-<h4 id="org4497278"><span class="todo NEXT">NEXT</span> Propose a driver API to communicate feature flags</h4>
-<div class="outline-text-4" id="text-org4497278">
+<div id="outline-container-org39e7510" class="outline-4">
+<h4 id="org39e7510"><span class="todo NEXT">NEXT</span> Propose a driver API to communicate feature flags</h4>
+<div class="outline-text-4" id="text-org39e7510">
 <ul class="org-ul">
 <li>Daniel: Needs to go through driver BPF ndo</li>
 </ul>
@@ -485,8 +475,8 @@ is tail-calling into.
 </div>
 
 <ul class="org-ul">
-<li><a id="org2207740"></a>Notes: implementation plan<br />
-<div class="outline-text-5" id="text-org2207740">
+<li><a id="org68c2d37"></a>Notes: implementation plan<br />
+<div class="outline-text-5" id="text-org68c2d37">
 <ul class="org-ul">
 <li>On load: verifier populates bpf_prog-&gt;feature_bits</li>
 <li>On load, if ifindex: reject if prog-&gt;features ^ iface-&gt;features</li>
@@ -505,9 +495,9 @@ progs-&gt;features |= ifindex-&gt;features</li>
 </ul>
 </div>
 
-<div id="outline-container-orgdc5475e" class="outline-4">
-<h4 id="orgdc5475e"><span class="todo TODO">TODO</span> Add a userspace API to query features</h4>
-<div class="outline-text-4" id="text-orgdc5475e">
+<div id="outline-container-org680b858" class="outline-4">
+<h4 id="org680b858"><span class="todo TODO">TODO</span> Add a userspace API to query features</h4>
+<div class="outline-text-4" id="text-org680b858">
 <p>
 Netlink? Ethtool?
 </p>
@@ -515,9 +505,9 @@ Netlink? Ethtool?
 </div>
 </div>
 
-<div id="outline-container-orgde95199" class="outline-3">
-<h3 id="orgde95199"><span class="todo TODO">TODO</span> Multiple XDP programs on a single interface</h3>
-<div class="outline-text-3" id="text-orgde95199">
+<div id="outline-container-org36f67d2" class="outline-3">
+<h3 id="org36f67d2"><span class="todo TODO">TODO</span> Multiple XDP programs on a single interface</h3>
+<div class="outline-text-3" id="text-org36f67d2">
 <p>
 Being able to load multiple programs on the same XDP interface is an
 important use case if XDP is to see more widespread deployment (as otherwise
@@ -533,9 +523,9 @@ of the kernel functionality for this was posted upstream on January 18th:
 </p>
 </div>
 
-<div id="outline-container-orga4b98e6" class="outline-4">
-<h4 id="orga4b98e6"><span class="todo TODO">TODO</span> Build an XDP chain loader on top of the kernel support</h4>
-<div class="outline-text-4" id="text-orga4b98e6">
+<div id="outline-container-orge38486f" class="outline-4">
+<h4 id="orge38486f"><span class="todo TODO">TODO</span> Build an XDP chain loader on top of the kernel support</h4>
+<div class="outline-text-4" id="text-orge38486f">
 <p>
 This will be included in <a href="https://github.com/xdp-project/xdp-tools">https://github.com/xdp-project/xdp-tools</a> in both
 library and binary form, to hopefully be widely applicable.
@@ -545,9 +535,9 @@ library and binary form, to hopefully be widely applicable.
 </div>
 </div>
 
-<div id="outline-container-org5e2d090" class="outline-2">
-<h2 id="org5e2d090">Important medium-term tasks</h2>
-<div class="outline-text-2" id="text-org5e2d090">
+<div id="outline-container-org71cedfa" class="outline-2">
+<h2 id="org71cedfa">Important medium-term tasks</h2>
+<div class="outline-text-2" id="text-org71cedfa">
 <p>
 These are tasks that are important to fix in the medium term, but that are
 not immediate blockers for functionality. This includes things like
@@ -561,9 +551,9 @@ description.
 </p>
 </div>
 
-<div id="outline-container-orge9da6cf" class="outline-3">
-<h3 id="orge9da6cf"><span class="todo TODO">TODO</span> Usability of programs in samples/bpf</h3>
-<div class="outline-text-3" id="text-orge9da6cf">
+<div id="outline-container-org43be4d5" class="outline-3">
+<h3 id="org43be4d5"><span class="todo TODO">TODO</span> Usability of programs in samples/bpf</h3>
+<div class="outline-text-3" id="text-org43be4d5">
 <p>
 The samples/bpf programs xdp_redirect + xdp_redirect_map are very user
 unfriendly. #1 they use raw ifindex'es as input + output. #2 the pkt/s
@@ -572,9 +562,9 @@ Red Hat QA, got very confused by #2.
 </p>
 </div>
 
-<div id="outline-container-org1119f0c" class="outline-4">
-<h4 id="org1119f0c"><span class="done DONE">DONE</span> Change sample programs to accept ifnames as well as indexes</h4>
-<div class="outline-text-4" id="text-org1119f0c">
+<div id="outline-container-org7e98aca" class="outline-4">
+<h4 id="org7e98aca"><span class="done DONE">DONE</span> Change sample programs to accept ifnames as well as indexes</h4>
+<div class="outline-text-4" id="text-org7e98aca">
 <p><span class="timestamp-wrapper"><span class="timestamp-kwd">CLOSED:</span> <span class="timestamp">[2019-06-25 Tue 13:32]</span></span></p>
 <p>
 Fixed by <a href="https://patchwork.ozlabs.org/patch/1121683/">https://patchwork.ozlabs.org/patch/1121683/</a>
@@ -582,19 +572,18 @@ Fixed by <a href="https://patchwork.ozlabs.org/patch/1121683/">https://patchwork
 </div>
 </div>
 
-<div id="outline-container-org90c788a" class="outline-4">
-<h4 id="org90c788a"><span class="todo NEXT">NEXT</span> Add TX counters to redirect samples/bpf programs</h4>
-<div class="outline-text-4" id="text-org90c788a">
+<div id="outline-container-org3a6e1ce" class="outline-4">
+<h4 id="org3a6e1ce"><span class="todo NEXT">NEXT</span> Add TX counters to redirect samples/bpf programs</h4>
+<div class="outline-text-4" id="text-org3a6e1ce">
 <p>
 Simply include/sample the net_device TX stats.
 </p>
 </div>
 </div>
 
-<div id="outline-container-org8e38e1d" class="outline-4">
-<h4 id="org8e38e1d"><span class="done DONE">DONE</span> Fix unloading wrong XDP on xdp-sample exit</h4>
-<div class="outline-text-4" id="text-org8e38e1d">
-<p><span class="timestamp-wrapper"><span class="timestamp-kwd">CLOSED:</span> <span class="timestamp">[2020-01-24 Fri 10:50]</span></span></p>
+<div id="outline-container-orgdde9f73" class="outline-4">
+<h4 id="orgdde9f73"><span class="todo TODO">TODO</span> Fix unloading wrong XDP on xdp-sample exit</h4>
+<div class="outline-text-4" id="text-orgdde9f73">
 <p>
 The XDP sample programs unconditionally unload the current running XDP
 program (via -1) on exit. If users are not careful with the order in-which
@@ -602,14 +591,16 @@ they start and stop XDP programs, then they get confused.
 </p>
 
 <p>
-This was fixed upstream by by <a href="https://patchwork.ozlabs.org/project/netdev/list/?series=89625&amp;state=%2A&amp;archive=both">Maciej Fijalkowski</a>.
+Almost done, but followup to make sure this gets merged upstream:
+Upstream <a href="https://patchwork.ozlabs.org/project/netdev/list/?series=86597&amp;state=%2a">proposal V1</a> (by <a href="https://patchwork.ozlabs.org/project/netdev/list/?submitter=75761">Maciej Fijalkowski</a>) is to check if the BPF-prog-ID
+numbers match, before removing the current XDP-prog.
 </p>
 </div>
 </div>
 
-<div id="outline-container-orgbc61064" class="outline-4">
-<h4 id="orgbc61064"><span class="todo TODO">TODO</span> Change XDP-samples to enforce native-XDP and report if not avail</h4>
-<div class="outline-text-4" id="text-orgbc61064">
+<div id="outline-container-orga3b9b47" class="outline-4">
+<h4 id="orga3b9b47"><span class="todo TODO">TODO</span> Change XDP-samples to enforce native-XDP and report if not avail</h4>
+<div class="outline-text-4" id="text-orga3b9b47">
 <p>
 The default behaviour when attaching an XDP program on a driver that doesn't
 have native-XDP is to fallback to generic-XDP, without notifying the user of
@@ -630,9 +621,9 @@ enabling generic-XDP/SKB-mode.
 </div>
 </div>
 
-<div id="outline-container-orgf4fc011" class="outline-4">
-<h4 id="orgf4fc011"><span class="todo TODO">TODO</span> Add xdpsock option to allow XDP_PASS for AF_XDP zero-copy mode</h4>
-<div class="outline-text-4" id="text-orgf4fc011">
+<div id="outline-container-orgde19a9c" class="outline-4">
+<h4 id="orgde19a9c"><span class="todo TODO">TODO</span> Add xdpsock option to allow XDP_PASS for AF_XDP zero-copy mode</h4>
+<div class="outline-text-4" id="text-orgde19a9c">
 <p>
 In AF_XDP zero-copy mode, sending frame to the network stack via XDP_PASS
 results in an expense code path, e.g new page_alloc for copy of payload and
@@ -647,9 +638,9 @@ mem_type).
 </div>
 </div>
 
-<div id="outline-container-org0c79295" class="outline-4">
-<h4 id="org0c79295"><span class="todo TODO">TODO</span> xdp_monitor: record and show errno</h4>
-<div class="outline-text-4" id="text-org0c79295">
+<div id="outline-container-orgba6dd06" class="outline-4">
+<h4 id="orgba6dd06"><span class="todo TODO">TODO</span> xdp_monitor: record and show errno</h4>
+<div class="outline-text-4" id="text-orgba6dd06">
 <p>
 It would be a big help diagnosing XDP issues if the xdp_monitor program also
 reported the errno.
@@ -657,9 +648,9 @@ reported the errno.
 </div>
 </div>
 
-<div id="outline-container-org31de162" class="outline-4">
-<h4 id="org31de162"><span class="todo TODO">TODO</span> xdp_monitor: convert to use raw-tracepoints</h4>
-<div class="outline-text-4" id="text-org31de162">
+<div id="outline-container-org28c0e4c" class="outline-4">
+<h4 id="org28c0e4c"><span class="todo TODO">TODO</span> xdp_monitor: convert to use raw-tracepoints</h4>
+<div class="outline-text-4" id="text-org28c0e4c">
 <p>
 The raw-tracepoints are suppose to be much faster, and XDP monitor want to
 have as little impact on the system as possible. Thus, convert to use
@@ -669,9 +660,9 @@ raw-tracepoints.
 </div>
 </div>
 
-<div id="outline-container-org937fa4e" class="outline-3">
-<h3 id="org937fa4e"><span class="todo TODO">TODO</span> BPF-selftests - top-level TODOs</h3>
-<div class="outline-text-3" id="text-org937fa4e">
+<div id="outline-container-org812975b" class="outline-3">
+<h3 id="org812975b"><span class="todo TODO">TODO</span> BPF-selftests - top-level TODOs</h3>
+<div class="outline-text-3" id="text-org812975b">
 <p>
 The kernel git-tree contains a lot of selftests for BPF located in:
 <code>tools/testing/selftests/bpf/</code>.
@@ -690,10 +681,9 @@ writing selftests that cover both generic-XDP and native-XDP.
 </p>
 </div>
 
-<div id="outline-container-org226bd89" class="outline-4">
-<h4 id="org226bd89"><span class="done DONE">DONE</span> bpf-selftest: improve XDP VLAN selftests</h4>
-<div class="outline-text-4" id="text-org226bd89">
-<p><span class="timestamp-wrapper"><span class="timestamp-kwd">CLOSED:</span> <span class="timestamp">[2020-01-24 Fri 10:55]</span></span></p>
+<div id="outline-container-org3e16aa0" class="outline-4">
+<h4 id="org3e16aa0"><span class="todo NEXT">NEXT</span> bpf-selftest: improve XDP VLAN selftests</h4>
+<div class="outline-text-4" id="text-org3e16aa0">
 <p>
 <b>Assignment</b> is to improve the selftest shell-script to test both
 generic-XDP and native-XDP (for veth driver).
@@ -725,9 +715,9 @@ must use generic XDP when loading an XDP prog (option <code>xdpgeneric</code>).
 </div>
 </div>
 
-<div id="outline-container-org4e1419a" class="outline-4">
-<h4 id="org4e1419a"><span class="todo TODO">TODO</span> bpf-selftest: find XDP-selftests affected by veth native-XDP</h4>
-<div class="outline-text-4" id="text-org4e1419a">
+<div id="outline-container-orgd8a174b" class="outline-4">
+<h4 id="orgd8a174b"><span class="todo TODO">TODO</span> bpf-selftest: find XDP-selftests affected by veth native-XDP</h4>
+<div class="outline-text-4" id="text-orgd8a174b">
 <p>
 When driver <code>veth</code> got native-XDP support, then the XDP-selftests that were
 based on <code>veth</code> changed from testing generic-XDP into testing native-XDP.
@@ -743,9 +733,9 @@ based on <code>veth</code> changed from testing generic-XDP into testing native-
 </div>
 </div>
 
-<div id="outline-container-org00c6fd3" class="outline-4">
-<h4 id="org00c6fd3"><span class="todo TODO">TODO</span> Make more XDP tests using BPF_PROG_TEST_RUN</h4>
-<div class="outline-text-4" id="text-org00c6fd3">
+<div id="outline-container-org22636ec" class="outline-4">
+<h4 id="org22636ec"><span class="todo TODO">TODO</span> Make more XDP tests using BPF_PROG_TEST_RUN</h4>
+<div class="outline-text-4" id="text-org22636ec">
 <p>
 <a href="https://twitter.com/bjorntopel/status/1098563282884014080?s=03">Tweet</a> by Björn Töpel (@bjorntopel):
 </p>
@@ -758,14 +748,14 @@ lot. Docs: <a href="https://t.co/GDd7SfNYng">https://t.co/GDd7SfNYng</a> and exa
 </div>
 </div>
 
-<div id="outline-container-orgefd9340" class="outline-4">
-<h4 id="orgefd9340"><span class="todo NEXT">NEXT</span> Could this be a "introduction job"?</h4>
+<div id="outline-container-org5e78941" class="outline-4">
+<h4 id="org5e78941"><span class="todo NEXT">NEXT</span> Could this be a "introduction job"?</h4>
 </div>
 </div>
 
-<div id="outline-container-org9b922bb" class="outline-3">
-<h3 id="org9b922bb"><span class="todo TODO">TODO</span> Busy-poll support for AF_XDP</h3>
-<div class="outline-text-3" id="text-org9b922bb">
+<div id="outline-container-orgc8a3631" class="outline-3">
+<h3 id="orgc8a3631"><span class="todo TODO">TODO</span> Busy-poll support for AF_XDP</h3>
+<div class="outline-text-3" id="text-orgc8a3631">
 <p>
 Adding BUSY_POLL support to AF_XDP sockets was presented at the Linux
 Plumbers Conference 2018 in Vancouver, BC. With this feature, the NAPI
@@ -855,9 +845,9 @@ by the xsk poll code to drive the correct NAPI.
 </div>
 </div>
 
-<div id="outline-container-orgc49f047" class="outline-3">
-<h3 id="orgc49f047"><span class="todo TODO">TODO</span> Exposing more kernel data structures through helpers</h3>
-<div class="outline-text-3" id="text-orgc49f047">
+<div id="outline-container-org896bf93" class="outline-3">
+<h3 id="org896bf93"><span class="todo TODO">TODO</span> Exposing more kernel data structures through helpers</h3>
+<div class="outline-text-3" id="text-org896bf93">
 <p>
 One of the strengths of XDP over kernel bypass solutions is the ability to
 re-use existing in-kernel data structures, such as the routing table. This
@@ -866,9 +856,9 @@ more helpers.
 </p>
 </div>
 
-<div id="outline-container-org0ded67b" class="outline-4">
-<h4 id="org0ded67b"><a id="ID-2e026d1b-d1a1-4fd4-8097-08991cbb8fec"></a><span class="todo NEXT">NEXT</span> Layer-2 bridging helper</h4>
-<div class="outline-text-4" id="text-org0ded67b">
+<div id="outline-container-orgdddc405" class="outline-4">
+<h4 id="orgdddc405"><a id="ID-2e026d1b-d1a1-4fd4-8097-08991cbb8fec"></a><span class="todo NEXT">NEXT</span> Layer-2 bridging helper</h4>
+<div class="outline-text-4" id="text-orgdddc405">
 <p>
 The obvious next step is a l2 bridging helper that mirrors the l3 routing
 one. Should be fairly straight forward to implement.
@@ -876,19 +866,19 @@ one. Should be fairly straight forward to implement.
 </div>
 
 <ul class="org-ul">
-<li><a id="org9eaf27b"></a><span class="todo TODO">TODO</span> What to do about broadcast/multicast?<br />
-<div class="outline-text-5" id="text-org9eaf27b">
+<li><a id="org02bb438"></a><span class="todo TODO">TODO</span> What to do about broadcast/multicast?<br />
+<div class="outline-text-5" id="text-org02bb438">
 <p>
-See <a href="#org0b4b071">Handling multicast</a> below.
+See <a href="#orge80513f">Handling multicast</a> below.
 </p>
 </div>
 </li>
 </ul>
 </div>
 
-<div id="outline-container-orgeea64fc" class="outline-4">
-<h4 id="orgeea64fc"><span class="todo TODO">TODO</span> Connection/flow tracking</h4>
-<div class="outline-text-4" id="text-orgeea64fc">
+<div id="outline-container-orgcc4b503" class="outline-4">
+<h4 id="orgcc4b503"><span class="todo TODO">TODO</span> Connection/flow tracking</h4>
+<div class="outline-text-4" id="text-orgcc4b503">
 <p>
 Exposing either full conntrack, or the more light-weight flow tracking
 support would make things like stateful firewalls easier to implement.
@@ -898,9 +888,9 @@ Probably need a concrete use case for this first, though.
 </div>
 </div>
 
-<div id="outline-container-org00dce3f" class="outline-3">
-<h3 id="org00dce3f"><span class="todo TODO">TODO</span> Port iproute2 to libbpf</h3>
-<div class="outline-text-3" id="text-org00dce3f">
+<div id="outline-container-org681ffad" class="outline-3">
+<h3 id="org681ffad"><span class="todo TODO">TODO</span> Port iproute2 to libbpf</h3>
+<div class="outline-text-3" id="text-org681ffad">
 <p>
 The iproute2 XDP loader does not use libbpf, because its implementation
 predates the introduction of libbpf as the "official" upstream-blessed
@@ -914,9 +904,9 @@ The easiest way to fix this is probably just to port iproute2 to use libbpf.
 </div>
 </div>
 
-<div id="outline-container-orgc8dfe1b" class="outline-3">
-<h3 id="orgc8dfe1b"><span class="todo TODO">TODO</span> Metadata available to programs</h3>
-<div class="outline-text-3" id="text-orgc8dfe1b">
+<div id="outline-container-orgd13976f" class="outline-3">
+<h3 id="orgd13976f"><span class="todo TODO">TODO</span> Metadata available to programs</h3>
+<div class="outline-text-3" id="text-orgd13976f">
 <p>
 The metadata available to XDP programs through the XDP context object could
 be expanded with other useful entries. This section collects lists of which
@@ -924,9 +914,9 @@ items would be useful to have, and explains why for each of them.
 </p>
 </div>
 
-<div id="outline-container-org5c370f9" class="outline-4">
-<h4 id="org5c370f9"><span class="todo TODO">TODO</span> XDP frame length</h4>
-<div class="outline-text-4" id="text-org5c370f9">
+<div id="outline-container-orgef93002" class="outline-4">
+<h4 id="orgef93002"><span class="todo TODO">TODO</span> XDP frame length</h4>
+<div class="outline-text-4" id="text-orgef93002">
 <p>
 The length of the XDP <b>frame</b> (as opposed to the data packet) is needed for
 various things:
@@ -940,9 +930,9 @@ various things:
 </div>
 </div>
 
-<div id="outline-container-org96e8937" class="outline-4">
-<h4 id="org96e8937"><span class="todo TODO">TODO</span> Metadata from hardware</h4>
-<div class="outline-text-4" id="text-org96e8937">
+<div id="outline-container-orgc30458c" class="outline-4">
+<h4 id="orgc30458c"><span class="todo TODO">TODO</span> Metadata from hardware</h4>
+<div class="outline-text-4" id="text-orgc30458c">
 <p>
 There are various hardware metadata items that would be useful for XDP
 programs to access, to reduce the amount of processing that needs to happen
@@ -959,11 +949,11 @@ in eBPF. These include:
 </div>
 
 <ul class="org-ul">
-<li><a id="org93d45e3"></a><span class="todo TODO">TODO</span> Needs BTF-based metadata<br />
-<div class="outline-text-5" id="text-org93d45e3">
+<li><a id="orgf7df7da"></a><span class="todo TODO">TODO</span> Needs BTF-based metadata<br />
+<div class="outline-text-5" id="text-orgf7df7da">
 <p>
 To express this in a vendor-neutral way, we probably need to depend on the
-<a href="#orga5df6b4">BTF-based metadata for XDP</a>
+<a href="#orge79f32a">BTF-based metadata for XDP</a>
 </p>
 </div>
 </li>
@@ -971,16 +961,16 @@ To express this in a vendor-neutral way, we probably need to depend on the
 </div>
 </div>
 
-<div id="outline-container-org11380bb" class="outline-3">
-<h3 id="org11380bb"><span class="todo TODO">TODO</span> Improvements to XDP_REDIRECT</h3>
-<div class="outline-text-3" id="text-org11380bb">
+<div id="outline-container-org2013abb" class="outline-3">
+<h3 id="org2013abb"><span class="todo TODO">TODO</span> Improvements to XDP_REDIRECT</h3>
+<div class="outline-text-3" id="text-org2013abb">
 </div>
-<div id="outline-container-org0b4b071" class="outline-4">
-<h4 id="org0b4b071"><a id="ID-7e5439f6-7603-4df6-8164-7d2bc5dcd8c3"></a><span class="todo TODO">TODO</span> Handling multicast</h4>
-<div class="outline-text-4" id="text-org0b4b071">
+<div id="outline-container-orge80513f" class="outline-4">
+<h4 id="orge80513f"><a id="ID-7e5439f6-7603-4df6-8164-7d2bc5dcd8c3"></a><span class="todo TODO">TODO</span> Handling multicast</h4>
+<div class="outline-text-4" id="text-orge80513f">
 <p>
 We want to be able to REDIRECT a packet to multiple interfaces in order to
-implement multicast. Relevant for the <a href="#org0ded67b">Layer-2 bridging helper</a>.
+implement multicast. Relevant for the <a href="#orgdddc405">Layer-2 bridging helper</a>.
 </p>
 
 <p>
@@ -1004,9 +994,9 @@ destinations.
 </div>
 </div>
 
-<div id="outline-container-org98ceae2" class="outline-4">
-<h4 id="org98ceae2"><span class="todo TODO">TODO</span> Queueing and QoS</h4>
-<div class="outline-text-4" id="text-org98ceae2">
+<div id="outline-container-org4c09206" class="outline-4">
+<h4 id="org4c09206"><span class="todo TODO">TODO</span> Queueing and QoS</h4>
+<div class="outline-text-4" id="text-org4c09206">
 <p>
 .
 </p>
@@ -1030,9 +1020,9 @@ target, does queueing, and can forward packets on afterwards</li>
 </div>
 </div>
 
-<div id="outline-container-orgde0ebbe" class="outline-4">
-<h4 id="orgde0ebbe"><a id="ID-760b03fc-2a8e-499c-a90c-74dbc4716cbc"></a><span class="todo TODO">TODO</span> Handling XDP_REDIRECT failures</h4>
-<div class="outline-text-4" id="text-orgde0ebbe">
+<div id="outline-container-orgcfaa39c" class="outline-4">
+<h4 id="orgcfaa39c"><a id="ID-760b03fc-2a8e-499c-a90c-74dbc4716cbc"></a><span class="todo TODO">TODO</span> Handling XDP_REDIRECT failures</h4>
+<div class="outline-text-4" id="text-orgcfaa39c">
 <p>
 Presently, an XDP program cannot know if a call to bpf_redirect_map() is
 going to fail. This means that programs end up doing things like using
@@ -1042,8 +1032,8 @@ being silently dropped.
 </div>
 
 <ul class="org-ul">
-<li><a id="orga650659"></a><span class="done DONE">DONE</span> Allow lookups in devmap/cpumap<br />
-<div class="outline-text-5" id="text-orga650659">
+<li><a id="orgde974c4"></a><span class="done DONE">DONE</span> Allow lookups in devmap/cpumap<br />
+<div class="outline-text-5" id="text-orgde974c4">
 <p><span class="timestamp-wrapper"><span class="timestamp-kwd">CLOSED:</span> <span class="timestamp">[2019-06-29 Sat 18:24]</span></span></p>
 <p>
 Return pointer to same ID as we insert, just copy it to a scratch space
@@ -1056,8 +1046,8 @@ Merged as <a href="https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.
 </div>
 </li>
 
-<li><a id="orge364cdd"></a><span class="done DONE">DONE</span> Make bpf_redirect_map() check map contents<br />
-<div class="outline-text-5" id="text-orge364cdd">
+<li><a id="orgddf3268"></a><span class="done DONE">DONE</span> Make bpf_redirect_map() check map contents<br />
+<div class="outline-text-5" id="text-orgddf3268">
 <p><span class="timestamp-wrapper"><span class="timestamp-kwd">CLOSED:</span> <span class="timestamp">[2019-06-29 Sat 18:25]</span></span></p>
 <p>
 If we simply make the redirect_map() helper check that something exists in
@@ -1087,8 +1077,8 @@ Merged as <a href="https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.
 </div>
 </li>
 
-<li><a id="org7b069cc"></a><span class="todo NEXT">NEXT</span> In samples/bpf: use that bpf_redirect_map() can check map content<br />
-<div class="outline-text-5" id="text-org7b069cc">
+<li><a id="org9a2ade8"></a><span class="todo NEXT">NEXT</span> In samples/bpf: use that bpf_redirect_map() can check map content<br />
+<div class="outline-text-5" id="text-org9a2ade8">
 <p>
 Toke's patchset for allowing reading redirect maps were accepted upstream,
 and also the fallback return codes if map index were unpopulated.  BUT the
@@ -1098,8 +1088,8 @@ samples/bpf to demonstrate these new features.
 </div>
 </li>
 
-<li><a id="org3ff28d4"></a><span class="done CANCELLED">CANCELLED</span> Retire bpf_redirect() helper<br />
-<div class="outline-text-5" id="text-org3ff28d4">
+<li><a id="org848153b"></a><span class="done CANCELLED">CANCELLED</span> Retire bpf_redirect() helper<br />
+<div class="outline-text-5" id="text-org848153b">
 <p><span class="timestamp-wrapper"><span class="timestamp-kwd">CLOSED:</span> <span class="timestamp">[2020-01-16 Thu 15:49]</span></span></p>
 <p>
 Rather than extending the bpf_redirect() helper to use hidden maps, it is
@@ -1109,26 +1099,26 @@ bpf_redirect_map() helper.
 </div>
 </li>
 
-<li><a id="org70ada1a"></a><span class="todo TODO">TODO</span> What happens if redirect fails even though TX resources are available?<br />
-<div class="outline-text-5" id="text-org70ada1a">
+<li><a id="org1e0abf9"></a><span class="todo TODO">TODO</span> What happens if redirect fails even though TX resources are available?<br />
+<div class="outline-text-5" id="text-org1e0abf9">
 <p>
 Even with the above, we can still get failures if, e.g., TX ring runs out of
 space. We can't really handle this by return, so what should we do instead?
-Maybe just defer this to <a href="#org82c0abc">XDP hook at TX</a>.
+Maybe just defer this to <a href="#org3ac3810">XDP hook at TX</a>.
 </p>
 </div>
 </li>
 
-<li><a id="orgba6103c"></a><span class="todo TODO">TODO</span> Add selftests for devmaps<br />
-<div class="outline-text-5" id="text-orgba6103c">
+<li><a id="orgfbd90ae"></a><span class="todo TODO">TODO</span> Add selftests for devmaps<br />
+<div class="outline-text-5" id="text-orgfbd90ae">
 <p>
 <span class="timestamp-wrapper"><span class="timestamp">[2019-08-09 Fri 20:51]</span></span>
 
 </p>
 </div>
 </li>
-<li><a id="org585dfd6"></a><span class="todo TODO">TODO</span> REDIRECT_MAP idx type - what happens with namespace moving?<br />
-<div class="outline-text-5" id="text-org585dfd6">
+<li><a id="orgb202ad1"></a><span class="todo TODO">TODO</span> REDIRECT_MAP idx type - what happens with namespace moving?<br />
+<div class="outline-text-5" id="text-orgb202ad1">
 <p>
 <span class="timestamp-wrapper"><span class="timestamp">[2019-05-13 Mon 14:03]</span></span>
 </p>
@@ -1137,9 +1127,9 @@ Maybe just defer this to <a href="#org82c0abc">XDP hook at TX</a>.
 </ul>
 </div>
 </div>
-<div id="outline-container-org2f5ddcc" class="outline-3">
-<h3 id="org2f5ddcc"><span class="todo TODO">TODO</span> Multi-buffer XDP (aka. jumbo-frames)</h3>
-<div class="outline-text-3" id="text-org2f5ddcc">
+<div id="outline-container-orgfdc3430" class="outline-3">
+<h3 id="orgfdc3430"><span class="todo TODO">TODO</span> Multi-buffer XDP (aka. jumbo-frames)</h3>
+<div class="outline-text-3" id="text-orgfdc3430">
 <p>
 As described in the design document
 <a href="areas/core/xdp-multi-buffer01-design.html">areas/core/xdp-multi-buffer01-design.html</a> we need to come up with a
@@ -1153,9 +1143,9 @@ Add TODO steps here to move this forward.
 </p>
 </div>
 
-<div id="outline-container-orgd358eb5" class="outline-4">
-<h4 id="orgd358eb5"><span class="done DONE">DONE</span> Start upstream discussion on multi-buffer</h4>
-<div class="outline-text-4" id="text-orgd358eb5">
+<div id="outline-container-org63c710f" class="outline-4">
+<h4 id="org63c710f"><span class="done DONE">DONE</span> Start upstream discussion on multi-buffer</h4>
+<div class="outline-text-4" id="text-org63c710f">
 <p><span class="timestamp-wrapper"><span class="timestamp-kwd">CLOSED:</span> <span class="timestamp">[2019-07-03 Wed 13:15]</span></span></p>
 <p>
 Link to upstream discussion:
@@ -1164,9 +1154,9 @@ Link to upstream discussion:
 </div>
 </div>
 
-<div id="outline-container-orgca080d9" class="outline-4">
-<h4 id="orgca080d9"><span class="todo TODO">TODO</span> Create plan to move forward with initial constraints</h4>
-<div class="outline-text-4" id="text-orgca080d9">
+<div id="outline-container-org81955be" class="outline-4">
+<h4 id="org81955be"><span class="todo TODO">TODO</span> Create plan to move forward with initial constraints</h4>
+<div class="outline-text-4" id="text-org81955be">
 <p>
 As <a href="https://lore.kernel.org/netdev/CA+FuTSfKnhv9rr=cDa_4m7Dd9qkEm_oabDfyvH0T0sM+fQTU=w@mail.gmail.com/">Willem points out</a>:
 As long as we don't arrive at a design that cannot be extended with
@@ -1175,9 +1165,9 @@ those features later.
 </div>
 </div>
 
-<div id="outline-container-org94efc41" class="outline-4">
-<h4 id="org94efc41"><span class="todo TODO">TODO</span> Find driver developers that will participate in multi-buffer work</h4>
-<div class="outline-text-4" id="text-org94efc41">
+<div id="outline-container-org4951af1" class="outline-4">
+<h4 id="org4951af1"><span class="todo TODO">TODO</span> Find driver developers that will participate in multi-buffer work</h4>
+<div class="outline-text-4" id="text-org4951af1">
 <p>
 We need some developers that have an actual use-case for this multi-buffer
 feature, and also buy-in from some driver team, else this sub-project will
@@ -1189,9 +1179,9 @@ not see any progress.  The Amazon guys seems to have a interest.
 </div>
 
 
-<div id="outline-container-org1ac8544" class="outline-2">
-<h2 id="org1ac8544">Longer-term preliminary plans</h2>
-<div class="outline-text-2" id="text-org1ac8544">
+<div id="outline-container-org551dbf9" class="outline-2">
+<h2 id="org551dbf9">Longer-term preliminary plans</h2>
+<div class="outline-text-2" id="text-org551dbf9">
 <p>
 These are longer-term plans or ideas that either fall into the "nice to
 have" category, or which are blocked on other pieces of kernel development;
@@ -1205,9 +1195,9 @@ so some of them may simply have a sentence or two describing them.
 </p>
 </div>
 
-<div id="outline-container-orgdda58a3" class="outline-3">
-<h3 id="orgdda58a3"><span class="todo TODO">TODO</span> Adding AF_XDP support to relevant userspace programs</h3>
-<div class="outline-text-3" id="text-orgdda58a3">
+<div id="outline-container-org9d4ab29" class="outline-3">
+<h3 id="org9d4ab29"><span class="todo TODO">TODO</span> Adding AF_XDP support to relevant userspace programs</h3>
+<div class="outline-text-3" id="text-org9d4ab29">
 <p>
 There are several high-profile userspace programs that might benefit from
 AF_XDP support. Adding this (or coordinating it with the program authors)
@@ -1216,17 +1206,17 @@ could be a way to show the benefits of XDP.
 </div>
 </div>
 
-<div id="outline-container-orga5df6b4" class="outline-3">
-<h3 id="orga5df6b4"><a id="ID-25240998-2037-4ebf-befe-c0d0fdacb9c7"></a><span class="todo WAIT">WAIT</span> BTF-based metadata for XDP</h3>
-<div class="outline-text-3" id="text-orga5df6b4">
+<div id="outline-container-orge79f32a" class="outline-3">
+<h3 id="orge79f32a"><a id="ID-25240998-2037-4ebf-befe-c0d0fdacb9c7"></a><span class="todo WAIT">WAIT</span> BTF-based metadata for XDP</h3>
+<div class="outline-text-3" id="text-orge79f32a">
 <p>
 Waiting for tracing people to work out the details of BTF.
 </p>
 </div>
 </div>
-<div id="outline-container-orgef03d75" class="outline-3">
-<h3 id="orgef03d75"><span class="todo WAIT">WAIT</span> XDP latency jit-vs-no jit, tuning etc</h3>
-<div class="outline-text-3" id="text-orgef03d75">
+<div id="outline-container-org72c1461" class="outline-3">
+<h3 id="org72c1461"><span class="todo WAIT">WAIT</span> XDP latency jit-vs-no jit, tuning etc</h3>
+<div class="outline-text-3" id="text-org72c1461">
 <p>
 <span class="timestamp-wrapper"><span class="timestamp">[2019-01-18 Fri 13:55]</span></span>
 How do we ensure consistently low latency packet processing is possible with
@@ -1249,23 +1239,23 @@ WAIT status as this is low priority for now.
 </p>
 </div>
 </div>
-<div id="outline-container-orge606153" class="outline-3">
-<h3 id="orge606153"><span class="todo TODO">TODO</span> Generic XDP fixes</h3>
-<div class="outline-text-3" id="text-orge606153">
+<div id="outline-container-orge650d70" class="outline-3">
+<h3 id="orge650d70"><span class="todo TODO">TODO</span> Generic XDP fixes</h3>
+<div class="outline-text-3" id="text-orge650d70">
 <p>
 Various fixes that should be fixed in generic XDP eventually
 </p>
 </div>
 
-<div id="outline-container-org2297b89" class="outline-4">
-<h4 id="org2297b89"><span class="todo TODO">TODO</span> Bulking for redirect maps</h4>
+<div id="outline-container-org2897851" class="outline-4">
+<h4 id="org2897851"><span class="todo TODO">TODO</span> Bulking for redirect maps</h4>
 </div>
-<div id="outline-container-org2a414a0" class="outline-4">
-<h4 id="org2a414a0"><span class="todo TODO">TODO</span> BUG: TCP packets skip (?)</h4>
+<div id="outline-container-org761cf44" class="outline-4">
+<h4 id="org761cf44"><span class="todo TODO">TODO</span> BUG: TCP packets skip (?)</h4>
 </div>
-<div id="outline-container-org03344b1" class="outline-4">
-<h4 id="org03344b1"><span class="todo TODO">TODO</span> Fix CPUMAP</h4>
-<div class="outline-text-4" id="text-org03344b1">
+<div id="outline-container-orgffc78c6" class="outline-4">
+<h4 id="orgffc78c6"><span class="todo TODO">TODO</span> Fix CPUMAP</h4>
+<div class="outline-text-4" id="text-orgffc78c6">
 <p>
 <a href="areas/cpumap.html#ID-8f4953c1-a862-46f2-b456-da187008f355">BUG: cpumap not working for generic-XDP</a>
 </p>
@@ -1273,9 +1263,9 @@ Various fixes that should be fixed in generic XDP eventually
 </div>
 </div>
 
-<div id="outline-container-org82c0abc" class="outline-3">
-<h3 id="org82c0abc"><a id="ID-24faae01-542b-4882-9f7a-5ab283e657b0"></a><span class="todo TODO">TODO</span> XDP hook at TX</h3>
-<div class="outline-text-3" id="text-org82c0abc">
+<div id="outline-container-org3ac3810" class="outline-3">
+<h3 id="org3ac3810"><a id="ID-24faae01-542b-4882-9f7a-5ab283e657b0"></a><span class="todo TODO">TODO</span> XDP hook at TX</h3>
+<div class="outline-text-3" id="text-org3ac3810">
 <p>
 From <a href="https://www.linuxplumbersconf.org/event/2/contributions/92/attachments/91/103/lpc18-xdp-future.pdf">the LPC 2018 paper</a>:
 </p>
@@ -1311,83 +1301,6 @@ described in <a href="http://doi.acm.org/10.1145/3098822.3098825">http://doi.acm
 </p>
 </blockquote>
 </div>
-</div>
-</div>
-
-<div id="outline-container-org0668e62" class="outline-2">
-<h2 id="org0668e62">Sub-categories and their tasks</h2>
-<div class="outline-text-2" id="text-org0668e62">
-<p>
-The repository contains a number of files that track more specific areas of XDP
-development. These are included in the following list:
-</p>
-
-<ul class="org-ul">
-<li><a href="brainstorm.html">Brainstorm notes</a></li>
-<li><a href="conference.html">Conference planning document</a></li>
-<li><a href="people.html">People involved in XDP development</a></li>
-<li>areas
-<ul class="org-ul">
-<li><a href="areas/xdp_flowcache.html">Brainstorming around XDP-accelerated flowcache</a></li>
-<li><a href="areas/cpumap.html">Project management for CPUMAP</a></li>
-<li><a href="areas/ovs.html">Project management for XDP and Open vSwitch integration</a></li>
-<li><a href="areas/drivers.html">Project management for XDP driver support</a></li>
-<li><a href="areas/xdp-tutorial.html">Project management for XDP-tutorial</a></li>
-<li><a href="areas/mem.html">Project management for areas/mem</a></li>
-<li>arm64
-<ul class="org-ul">
-<li><a href="areas/arm64/board_espressobin08_bench_xdp.html">Benchmarks for Espressobin driver mvneta</a></li>
-<li><a href="areas/arm64/board_espressobin03_bench_page_pool.html">Benchmarks for branch mvneta_03_page_pool_recycle</a></li>
-<li><a href="areas/arm64/board_espressobin05_bench_xdp.html">Benchmarks for branch mvneta_04_page_pool_recycle_xdp</a></li>
-<li><a href="areas/arm64/board_espressobin04_bench_xdp.html">Benchmarks for branch mvneta_04_page_pool_xdp</a></li>
-<li><a href="areas/arm64/board_espressobin07_kernel_config.html">Espressobin config based on macchiatobin</a></li>
-<li><a href="areas/arm64/board_espressobin02_initial_benchmarks.html">Espressobin initial benchmarks</a></li>
-<li><a href="areas/arm64/arm01_selecting_hardware.html">Finding ARM64 hardware for XDP project</a></li>
-<li><a href="areas/arm64/board_macchiatobin02_initial_benchmarks.html">MacchiatoBIN initial benchmarks and troubleshooting</a></li>
-<li><a href="areas/arm64/board_espressobin06_RFC_patchset.html">Prepare RFC patchset for upstream to show page_pool plans</a></li>
-<li><a href="areas/arm64/arm02_cross_compile_setup.html">Setup ARM cross compiler on build server</a></li>
-<li><a href="areas/arm64/board_espressobin01_setup.html">Setup notes for board espressobin</a></li>
-<li><a href="areas/arm64/board_macchiatobin01_setup.html">Setup notes for board macchiatobin</a></li>
-<li><a href="areas/arm64/board_espressobin09_setup.html">V2: Setup notes for board espressobin</a></li>
-<li><a href="areas/arm64/xdp_for_tsn.html">xdp_for_tsn</a></li>
-<li>board_nxp_ls1088
-<ul class="org-ul">
-<li><a href="areas/arm64/board_nxp_ls1088/nxp-board02-create-rootfs.html">NXP LS1088A - Create rootfs</a></li>
-<li><a href="areas/arm64/board_nxp_ls1088/nxp-board03-NIC-setup.html">NXP LS1088A - NIC setup</a></li>
-</ul></li>
-</ul></li>
-<li>core
-<ul class="org-ul">
-<li><a href="areas/core/xdp_per_rxq01.html">Design: Having XDP programs per RX-queue</a></li>
-<li><a href="areas/core/xdp_fwd01_notes.html">Improvements to xdp_fwd sample</a></li>
-<li><a href="areas/core/libbpf01-map-pinning-reuse.html">Using libbpf to share maps between programs</a></li>
-<li><a href="areas/core/xdp-multi-buffer01-design.html">XDP multi buffer design</a></li>
-<li><a href="areas/core/xdp-stats01-design.html">xdp-stats01-design</a></li>
-</ul></li>
-<li>cpumap
-<ul class="org-ul">
-<li><a href="areas/cpumap/cpumap02-optimizations.html">CPUMAP optimizations patchset-V1</a></li>
-<li><a href="areas/cpumap/cpumap03-optimizations.html">CPUMAP optimizations patchset-V2</a></li>
-<li><a href="areas/cpumap/cpumap01-bugfix.html">Hunting bug in CPUMAP</a></li>
-</ul></li>
-<li>dma
-<ul class="org-ul">
-<li><a href="areas/dma/dma01_test_hellwig_direct_dma.html">Testing Hellwig "dma-direct-calls" patchset</a></li>
-</ul></li>
-<li>mem
-<ul class="org-ul">
-<li><a href="areas/mem/page_pool04_inflight_changes.html">Change page_pool handling in-flight frames during shutdown</a></li>
-<li><a href="areas/mem/page_pool01_evolving_API.html">Evolving the page_pool API</a></li>
-<li><a href="areas/mem/page_pool05_SKB_recycle_rfc.html">Implementing page_pool return-hook via SKB</a></li>
-<li><a href="areas/mem/page_pool02_SKB_return_callback.html">Implementing page_pool return-hook via SKB</a></li>
-<li><a href="areas/mem/page_pool03_shutdown_inflight.html">page_pool handling in-flight frames during shutdown</a></li>
-<li>bpftrace
-<ul class="org-ul">
-<li><a href="areas/mem/bpftrace/INSTALL.html">Installing bpftrace and manage with stow</a></li>
-</ul></li>
-</ul></li>
-</ul></li>
-</ul>
 </div>
 </div>
 </div>

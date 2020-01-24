@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>&lrm;</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org11d527e">XDP for TSN (Time-Sensitive Networking)</a></li>
+<li><a href="#orgf98d5e4">Measuring on armv8</a></li>
+<li><a href="#orgda260d3">Caveats and future improvements/testcases</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org11d527e" class="outline-2">
+<h2 id="org11d527e">XDP for TSN (Time-Sensitive Networking)</h2>
+<div class="outline-text-2" id="text-org11d527e">
+<p>
+TSN requires low latency and bounded jitter. 
+Although XDP doesn't offer bounded jitter the latency is greatly improved
+compared to the Linux kernel network stack on AF_XDP sockets.
+An idea would be to isolate a number of CPUs from the scheduler and assign the
+NIC (and Rx irqs) on these CPUs. This would at least eliminate most of the
+jitter on the Rx path.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgf98d5e4" class="outline-2">
+<h2 id="orgf98d5e4">Measuring on armv8</h2>
+<div class="outline-text-2" id="text-orgf98d5e4">
+<p>
+An easy way of measuring latency from the napi Rx poller down to user-space
+is piggyback on XDP data_meta of the xdp_buff struct.
+</p>
+
+<p>
+In the armv8 specific case the timestamp is acquired via 
+asm volatile("mrs %0, CNTVCT_EL0" : "=r" (ts));
+The user has to check the CNTFRQ_EL0 Timer Counter Frequency register and
+adjust to get proper ns latency.
+Arm Timer Counter Frequency resides in CNTFRQ_EL0 and is not guaranteed to 
+match CPU core speed. On our test platform this was set to 10^8 while the 
+core(s) were running on 1GHz.
+The Virtual Timer Count register must also be identical in all CPUs.
+</p>
+
+<p>
+An easier way to implement this with slight more overhead (vDSO + LIBC) would
+be to use ktime_get_ns() in kernel and clock_gettime(CLOCK_MONOTONIC, &amp;ts);
+in user-space. The asm approach offers more accuracy if all the requirements
+are met since the timer register is accessible at EL0 and everything
+completes at EL0 without the need of any system calls.
+</p>
+
+<p>
+pseudo code can look line this:
+</p>
+<div class="org-src-container">
+<pre class="src src-C">- kernel driver:
+
+napi_poller(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">netsec_priv</span> *<span style="font-weight: bold; font-style: italic;">priv</span>, <span style="font-weight: bold; text-decoration: underline;">int</span> <span style="font-weight: bold; font-style: italic;">budget</span>)
+{
+      <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">xdp_buff</span> <span style="font-weight: bold; font-style: italic;">xdp</span>;
+      <span style="font-weight: bold; text-decoration: underline;">u64</span> <span style="font-weight: bold; font-style: italic;">ts</span>;
+
+        <span style="font-weight: bold;">asm</span> <span style="font-weight: bold;">volatile</span>(<span style="font-style: italic;">"mrs %0, CNTVCT_EL0"</span> : <span style="font-style: italic;">"=r"</span> (ts));
+      <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">asm volatile ("isb sy"); </span><span style="font-weight: bold; font-style: italic;">*/</span>
+
+      <span style="font-weight: bold;">while</span> (done &lt; budget) {
+            <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">place timestamp ahead of the packet </span><span style="font-weight: bold; font-style: italic;">*/</span>
+            xdp.data_meta = xdp.data - <span style="font-weight: bold;">sizeof</span>(ts);
+            memcpy(xdp.data_meta, &amp;ts, <span style="font-weight: bold;">sizeof</span>(ts));
+      }
+}
+</pre>
+</div>
+
+<p>
+Patch for xdpsock_user.c. After running xdpsock, we'll get a file 'xdp_speed'
+with recorded latencies. The example is really simple for now and doesn't
+account for possibly missed packets etc.
+</p>
+<div class="org-src-container">
+<pre class="src src-diff">- userspace xdpsock_user.c
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/samples/bpf/xdpsock_user.c</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/samples/bpf/xdpsock_user.c</span>
+<span style="font-weight: bold;">@@ -61,6 +61,10 @@</span><span style="font-weight: bold;"> typedef __u32 u32;</span>
+
+ static unsigned long prev_time;
+
++FILE *outfile;
++int cnt = 0;
++u64 packets[1048576];
++
+ enum benchmark_type {
+    BENCH_RXDROP = 0,
+    BENCH_TXONLY = 1,
+<span style="font-weight: bold;">@@ -631,9 +635,14 @@</span><span style="font-weight: bold;"> static void *poller(void *arg)</span>
+
+ static void int_exit(int sig)
+ {
++   int i;
++
+    (void)sig;
+    dump_stats();
+    bpf_set_link_xdp_fd(opt_ifindex, -1, opt_xdp_flags);
++
++   for (i = 0; i &lt; cnt; i++)
++       fprintf(outfile, "%d:%lld\n", i, packets[i]);
+    exit(EXIT_SUCCESS);
+ }
+
+<span style="font-weight: bold;">@@ -791,14 +800,23 @@</span><span style="font-weight: bold;"> static void rx_drop(struct xdpsock *xsk)</span>
+ {
+    struct xdp_desc descs[BATCH_SIZE];
+    unsigned int rcvd, i;
++   __u64 tss, ts = 0;
+
+    rcvd = xq_deq(&amp;xsk-&gt;rx, descs, BATCH_SIZE);
+    if (!rcvd)
+        return;
+
+    for (i = 0; i &lt; rcvd; i++) {
+-       char *pkt = xq_get_data(xsk, descs[i].addr);
+-
++       char *pkt = xq_get_data(xsk, descs[i].addr - sizeof(ts));
++
++       asm volatile("mrs %0, CNTVCT_EL0" : "=r" (tss));
++       /* asm volatile ("isb sy"); */
++       ts = (u64) pkt[7] &lt;&lt; 56 | (u64) pkt[6] &lt;&lt; 48 |
++           (u64) pkt[5] &lt;&lt; 40  | (u64) pkt[4] &lt;&lt; 32 |
++           (u64) pkt[3] &lt;&lt; 24 | (u64) pkt[2] &lt;&lt; 16 |
++           (u64) pkt[1] &lt;&lt; 8  | (u64) pkt[0];
++       packets[cnt] = (tss - ts) * 10; /* multiply value depends on CNTFRQ_EL0 */
++       cnt++;
+        hex_dump(pkt, descs[i].len, descs[i].addr);
+    }
+
+<span style="font-weight: bold;">@@ -910,6 +928,9 @@</span><span style="font-weight: bold;"> int main(int argc, char **argv)</span>
+    int i, ret, key = 0;
+    pthread_t pt;
+
++   if ((outfile = fopen("xdp_speed", "w+")) == NULL)
++       return -1;
++
+    parse_command_line(argc, argv);
+
+    if (setrlimit(RLIMIT_MEMLOCK, &amp;r)) {
+-- 
+2.19.1
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgda260d3" class="outline-2">
+<h2 id="orgda260d3">Caveats and future improvements/testcases</h2>
+<div class="outline-text-2" id="text-orgda260d3">
+<p>
+This approach will <b>not</b> offer absolute timings and can't serve as a
+guarantee. 
+It will give as a rough estimation of the latency imporovements XDP sockets 
+can offer.  This only measures the time spent from napi poll handler-&gt;userspace.
+It does not include the time needed for the hardirq to be served or the
+softirq to be raised and executed. 
+</p>
+
+<p>
+If the NIC hardware offers timestamping we can sync (phc2sys) the userspace
+and NIC clocks and calculate the timing of the whole path, meaning the time
+spent from the moment the packet was received in the NIC down to being
+flushed into userspace.
+</p>
+
+<p>
+Another interesting experiment for XDP is find a hardware that supports both
+ptp and XDP-Zerocopy (i40e atm). We can then setup a network with 2 machines 
+using that hardware, sync their clocks with gptp, calculate end-to-end 
+latencies and compare them with the default linux network stack.
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

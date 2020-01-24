@@ -1,0 +1,850 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CPUMAP optimizations patchset-V2</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">CPUMAP optimizations patchset-V2</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgb1fc33e">Baseline benchmarks</a>
+<ul>
+<li><a href="#orgf5b9c1f">Baseline: RX-NAPI CPU handle (driver: i40e)</a>
+<ul>
+<li><a href="#org0e726da">baseline: UdpNoPorts: 3,380,531</a></li>
+<li><a href="#org994f18f">baseline: iptables-raw drop: 5,775,937 pps (GRO-enabled)</a></li>
+<li><a href="#org2ae35ec">baseline: iptables-raw drop: 6,783,904 pps (GRO-disabled)</a></li>
+</ul>
+</li>
+<li><a href="#org5b6804f">Baseline: cpumap redirect</a>
+<ul>
+<li><a href="#org06ee0fb">baseline-redirect: UdpNoPorts: 3,180,074</a></li>
+<li><a href="#orgaf12a4b">baseline-redirect: iptables-raw drop: 6,193,534</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#org2096242">Patch descriptions + benchmarks</a>
+<ul>
+<li><a href="#org3eaec0d">Patch1: bpf: cpumap use ptr_ring_consume_batched</a>
+<ul>
+<li><a href="#orga9425e8">redirect: UdpNoPorts: 3,327,729</a></li>
+<li><a href="#org5796c07">redirect: iptables-raw drop: 6,321,540</a></li>
+</ul>
+</li>
+<li><a href="#org5472367">Patch2: net: core: introduce build_skb_around</a>
+<ul>
+<li><a href="#org6d5e270">redirect: UdpNoPorts: 3,221,303</a></li>
+<li><a href="#org5b3b14c">redirect: iptables-raw drop: 6,320,066</a></li>
+</ul>
+</li>
+<li><a href="#org1aafbd5">Patch3: bpf: cpumap do bulk allocation of SKBs</a>
+<ul>
+<li><a href="#org9daa3e2">redirect: UdpNoPorts: 3,290,563</a></li>
+<li><a href="#org4d2f30a">redirect: iptables-raw drop: 6,650,112</a></li>
+</ul>
+</li>
+<li><a href="#org5e2d0b1">Patch4: bpf: cpumap memory prefetchw optimizations for struct page</a>
+<ul>
+<li><a href="#org0203208">redirect: UdpNoPorts: 3,520,250</a></li>
+<li><a href="#orgbac2c3e">redirect: iptables-raw drop: 7,649,604</a></li>
+<li><a href="#org68f7bc9">cpumap-qsize:64: redirect: UdpNoPorts: 3,930,379</a></li>
+<li><a href="#orgd8eb40e">cpumap-qsize:64: redirect: iptables-raw drop: 7,329,574</a></li>
+</ul>
+</li>
+<li><a href="#org8d03c3d">Patch5: bpf: cpumap use netif_receive_skb_list</a>
+<ul>
+<li><a href="#org876dccb">redirect: UdpNoPorts: 3,303,269</a></li>
+<li><a href="#org31b6824">redirect: iptables-raw drop: 7,160,297</a></li>
+<li><a href="#org3748c9f">cpumap-qsize:64: redirect: UdpNoPorts: 4,089,778</a></li>
+<li><a href="#org774205d">cpumap-qsize:64: redirect: iptables-raw drop: 6,869,895</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgb1fc33e" class="outline-2">
+<h2 id="orgb1fc33e">Baseline benchmarks</h2>
+<div class="outline-text-2" id="text-orgb1fc33e">
+<p>
+Rebased patchset on: 8af9f7291e22 ("Merge branch 'sctp-skb-list'").
+</p>
+
+<p>
+Kernel: 5.1.0-rc4-bpf-next-cpumap-baseline+
+</p>
+<pre class="example">
+Linux broadwell 5.1.0-rc4-bpf-next-cpumap-baseline+ #134 SMP PREEMPT Fri Apr 12 13:53:43 CEST 2019 x86_64 x86_64 x86_64 GNU/Linux
+</pre>
+</div>
+
+<div id="outline-container-orgf5b9c1f" class="outline-3">
+<h3 id="orgf5b9c1f">Baseline: RX-NAPI CPU handle (driver: i40e)</h3>
+<div class="outline-text-3" id="text-orgf5b9c1f">
+<p>
+The processing and (deliberate) packet drops happens on same CPU as packet
+was RX-ed on, which have many cache advantages.
+</p>
+</div>
+
+<div id="outline-container-org0e726da" class="outline-4">
+<h4 id="org0e726da">baseline: UdpNoPorts: 3,380,531</h4>
+<div class="outline-text-4" id="text-org0e726da">
+<p>
+No listing UDP service.
+No iptables.
+</p>
+
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    3380531            0.0
+IpInDelivers                    3380530            0.0
+IpOutRequests                   1                  0.0
+IcmpOutMsgs                     1                  0.0
+IcmpOutDestUnreachs             1                  0.0
+IcmpMsgOutType3                 1                  0.0
+UdpNoPorts                      3380530            0.0
+IpExtInOctets                   155507600          0.0
+IpExtOutOctets                  74                 0.0
+IpExtInNoECTPkts                3380600            0.0
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org994f18f" class="outline-4">
+<h4 id="org994f18f">baseline: iptables-raw drop: 5,775,937 pps (GRO-enabled)</h4>
+<div class="outline-text-4" id="text-org994f18f">
+<p>
+Command used to drop packets:
+</p>
+<ul class="org-ul">
+<li>iptables -t raw -I PREROUTING -p udp &#x2013;dport 9 -j DROP</li>
+</ul>
+
+<p>
+With (default) GRO enabled:
+</p>
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    5775937            0.0
+IpExtInOctets                   265696138          0.0
+IpExtInNoECTPkts                5776001            0.0
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org2ae35ec" class="outline-4">
+<h4 id="org2ae35ec">baseline: iptables-raw drop: 6,783,904 pps (GRO-disabled)</h4>
+<div class="outline-text-4" id="text-org2ae35ec">
+<p>
+Command to disable GRO:
+</p>
+<ul class="org-ul">
+<li>ethtool -K i40e1 gro off tso off</li>
+</ul>
+
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    6783904            0.0
+IpExtInOctets                   312055214          0.0
+IpExtInNoECTPkts                6783810            0.0
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org5b6804f" class="outline-3">
+<h3 id="org5b6804f">Baseline: cpumap redirect</h3>
+<div class="outline-text-3" id="text-org5b6804f">
+<p>
+What is the baseline CPUMAP redirect performance. This is what we are
+optimizing against. The RX-NAPI CPU numbers is not our performance target,
+as the purpose of cpumap is to free-up resources on RX-CPU of a XDP DDoS
+mitigation program and for doing load-balancing of RX traffic to several
+CPUs.
+</p>
+</div>
+
+<div id="outline-container-org06ee0fb" class="outline-4">
+<h4 id="org06ee0fb">baseline-redirect: UdpNoPorts: 3,180,074</h4>
+<div class="outline-text-4" id="text-org06ee0fb">
+<pre class="example">
+sudo ./xdp_redirect_cpu --dev i40e1 --qsize 128 --cpu 4 --prog xdp_cpu_map0 --sec 3
+[...]
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          3       14,732,711     0           0          
+XDP-RX          total   14,732,712     0          
+cpumap-enqueue    3:4   14,732,686     11,552,609  8.00       bulk-average
+cpumap-enqueue  sum:4   14,732,686     11,552,609  8.00       bulk-average
+cpumap_kthread  4       3,180,074      0           0          
+cpumap_kthread  total   3,180,074      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<p>
+Perf stats info:
+</p>
+<pre class="example">
+$ perf stat -C4 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending -e l1d_pend_miss.pending_cycles  -r3 sleep 1
+
+ Performance counter stats for 'CPU(s) 4' (3 runs):
+
+     3.794.115.355      cycles                                                ( +-  0,00% )  (33,27%)
+     7.398.522.650      instructions              #    1,95  insn per cycle   ( +-  0,15% )  (49,95%)
+        32.326.517      l1d.replacement                                       ( +-  0,32% )  (66,63%)
+                79      l1d_pend_miss.fb_full                                 ( +- 15,72% )  (83,32%)
+       842.775.161      l1d_pend_miss.pending                                 ( +-  0,35% )  (83,38%)
+       697.387.031      l1d_pend_miss.pending_cycles                          ( +-  0,24% )  (16,62%)
+</pre>
+
+<p>
+Perf stats info:
+</p>
+<pre class="example">
+$ perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -e L1-icache-load-misses -r 4 sleep 1
+
+ Performance counter stats for 'CPU(s) 4' (4 runs):
+
+     3.803.840.466      cycles                                                        ( +-  0,00% )
+     7.431.273.060      instructions              #    1,95  insn per cycle           ( +-  0,05% )
+        22.735.593      cache-references                                              ( +-  0,31% )
+             1.106      cache-misses              #    0,005 % of all cache refs      ( +- 54,85% )
+     1.300.998.977      branches:k                                                    ( +-  0,05% )
+         1.456.511      branch-misses:k           #    0,11% of all branches          ( +-  1,22% )
+           231.879      l2_rqsts.all_code_rd                                          ( +-  0,73% )
+           167.866      l2_rqsts.code_rd_hit                                          ( +-  0,86% )
+            63.979      l2_rqsts.code_rd_miss                                         ( +-  1,07% )
+            99.834      L1-icache-load-misses                                         ( +-  0,70% )
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgaf12a4b" class="outline-4">
+<h4 id="orgaf12a4b">baseline-redirect: iptables-raw drop: 6,193,534</h4>
+<div class="outline-text-4" id="text-orgaf12a4b">
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          3       19,397,368     0           0          
+XDP-RX          total   19,397,368     0          
+cpumap-enqueue    3:4   19,397,368     13,203,837  8.00       bulk-average
+cpumap-enqueue  sum:4   19,397,368     13,203,837  8.00       bulk-average
+cpumap_kthread  4       6,193,534      0           0          
+cpumap_kthread  total   6,193,534      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<p>
+Perf stat info
+</p>
+<pre class="example">
+$ perf stat -C4 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending -e l1d_pend_miss.pending_cycles  -r3 sleep 1
+
+ Performance counter stats for 'CPU(s) 4' (3 runs):
+
+     3.795.333.805      cycles                                               ( +-  0,00% )  (33,27%)
+     6.676.371.780      instructions              #    1,76  insn per cycle  ( +-  0,11% )  (49,95%)
+        38.414.598      l1d.replacement                                      ( +-  0,15% )  (66,63%)
+               353      l1d_pend_miss.fb_full                                ( +- 95,32% )  (83,32%)
+     1.373.812.555      l1d_pend_miss.pending                                ( +-  0,24% )  (83,36%)
+     1.086.284.803      l1d_pend_miss.pending_cycles                         ( +-  0,25% )  (16,64%)
+</pre>
+
+<p>
+Perf stat info
+</p>
+<pre class="example">
+$ perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -e L1-icache-load-misses -r 4 sleep 1
+
+ Performance counter stats for 'CPU(s) 4' (4 runs):
+
+     3.803.809.131      cycles                                                        ( +-  0,00% )
+     6.704.833.741      instructions              #    1,76  insn per cycle           ( +-  0,12% )
+        38.235.727      cache-references                                              ( +-  0,40% )
+             1.168      cache-misses              #    0,003 % of all cache refs      ( +- 50,17% )
+     1.146.814.488      branches:k                                                    ( +-  0,11% )
+           834.706      branch-misses:k           #    0,07% of all branches          ( +-  0,11% )
+           205.940      l2_rqsts.all_code_rd                                          ( +-  0,70% )
+           180.336      l2_rqsts.code_rd_hit                                          ( +-  0,50% )
+            25.580      l2_rqsts.code_rd_miss                                         ( +-  2,20% )
+            57.482      L1-icache-load-misses                                         ( +-  0,82% )
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org2096242" class="outline-2">
+<h2 id="org2096242">Patch descriptions + benchmarks</h2>
+<div class="outline-text-2" id="text-org2096242">
+<p>
+5.1.0-rc4-bpf-next-cpumap-SKB-bulk+
+</p>
+</div>
+
+<div id="outline-container-org3eaec0d" class="outline-3">
+<h3 id="org3eaec0d">Patch1: bpf: cpumap use ptr_ring_consume_batched</h3>
+<div class="outline-text-3" id="text-org3eaec0d">
+</div>
+<div id="outline-container-orga9425e8" class="outline-4">
+<h4 id="orga9425e8">redirect: UdpNoPorts: 3,327,729</h4>
+<div class="outline-text-4" id="text-orga9425e8">
+<pre class="example">
+sudo ./xdp_redirect_cpu --dev i40e1 --qsize 128 --cpu 4 --prog xdp_cpu_map0 --sec 3
+Add-new CPU:4 as idx:0 queue_size:128 (total cpus_count:1)
+[...]
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          0       14,197,444     0           0          
+XDP-RX          total   14,197,444     0          
+cpumap-enqueue    0:4   14,197,447     10,869,720  8.00       bulk-average
+cpumap-enqueue  sum:4   14,197,447     10,869,720  8.00       bulk-average
+cpumap_kthread  4       3,327,729      0           0          
+cpumap_kthread  total   3,327,729      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org5796c07" class="outline-4">
+<h4 id="org5796c07">redirect: iptables-raw drop: 6,321,540</h4>
+<div class="outline-text-4" id="text-org5796c07">
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          0       18,487,939     0           0          
+XDP-RX          total   18,487,939     0          
+cpumap-enqueue    0:4   18,487,939     12,166,397  8.00       bulk-average
+cpumap-enqueue  sum:4   18,487,939     12,166,397  8.00       bulk-average
+cpumap_kthread  4       6,321,540      0           0          
+cpumap_kthread  total   6,321,540      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<p>
+Perf stat info:
+</p>
+<pre class="example">
+perf stat -C4 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending -e l1d_pend_miss.pending_cycles  -r3 sleep 1
+
+ Performance counter stats for 'CPU(s) 4' (3 runs):
+
+     3.794.926.426      cycles                                                        ( +-  0,01% )  (33,27%)
+     6.912.342.694      instructions              #    1,82  insn per cycle           ( +-  0,11% )  (49,95%)
+        49.196.067      l1d.replacement                                               ( +-  0,43% )  (66,63%)
+                17      l1d_pend_miss.fb_full                                         ( +- 28,21% )  (83,32%)
+     1.328.618.636      l1d_pend_miss.pending                                         ( +-  0,14% )  (83,36%)
+     1.026.107.329      l1d_pend_miss.pending_cycles                                  ( +-  0,10% )  (16,64%)
+</pre>
+
+<p>
+Perf stat info:
+</p>
+<pre class="example">
+$ perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -e L1-icache-load-misses -r 4 sleep 1
+
+ Performance counter stats for 'CPU(s) 4' (4 runs):
+
+     3.803.226.476      cycles                                                        ( +-  0,01% )
+     6.924.719.264      instructions              #    1,82  insn per cycle           ( +-  0,09% )
+        39.040.218      cache-references                                              ( +-  0,13% )
+             1.393      cache-misses              #    0,004 % of all cache refs      ( +- 37,33% )
+     1.190.290.376      branches:k                                                    ( +-  0,09% )
+         1.359.252      branch-misses:k           #    0,11% of all branches          ( +-  1,22% )
+           145.858      l2_rqsts.all_code_rd                                          ( +-  8,09% )
+           124.648      l2_rqsts.code_rd_hit                                          ( +-  8,99% )
+            21.198      l2_rqsts.code_rd_miss                                         ( +-  3,56% )
+            35.002      L1-icache-load-misses                                         ( +-  1,28% )
+
+        1,00105277 +- 0,00000961 seconds time elapsed  ( +-  0,00% )
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org5472367" class="outline-3">
+<h3 id="org5472367">Patch2: net: core: introduce build_skb_around</h3>
+<div class="outline-text-3" id="text-org5472367">
+</div>
+<div id="outline-container-org6d5e270" class="outline-4">
+<h4 id="org6d5e270">redirect: UdpNoPorts: 3,221,303</h4>
+<div class="outline-text-4" id="text-org6d5e270">
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          1       14,667,249     0           0          
+XDP-RX          total   14,667,249     0          
+cpumap-enqueue    1:4   14,667,245     11,445,944  8.00       bulk-average
+cpumap-enqueue  sum:4   14,667,245     11,445,944  8.00       bulk-average
+cpumap_kthread  4       3,221,303      0           0          
+cpumap_kthread  total   3,221,303      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org5b3b14c" class="outline-4">
+<h4 id="org5b3b14c">redirect: iptables-raw drop: 6,320,066</h4>
+<div class="outline-text-4" id="text-org5b3b14c">
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          1       19,210,396     0           0          
+XDP-RX          total   19,210,396     0          
+cpumap-enqueue    1:4   19,210,396     12,890,329  8.00       bulk-average
+cpumap-enqueue  sum:4   19,210,396     12,890,329  8.00       bulk-average
+cpumap_kthread  4       6,320,066      0           0          
+cpumap_kthread  total   6,320,066      0           0          
+redirect_err    total   0              0          
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org1aafbd5" class="outline-3">
+<h3 id="org1aafbd5">Patch3: bpf: cpumap do bulk allocation of SKBs</h3>
+<div class="outline-text-3" id="text-org1aafbd5">
+</div>
+<div id="outline-container-org9daa3e2" class="outline-4">
+<h4 id="org9daa3e2">redirect: UdpNoPorts: 3,290,563</h4>
+<div class="outline-text-4" id="text-org9daa3e2">
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          1       14,678,204     0           0          
+XDP-RX          total   14,678,204     0          
+cpumap-enqueue    1:4   14,678,198     11,387,635  8.00       bulk-average
+cpumap-enqueue  sum:4   14,678,198     11,387,635  8.00       bulk-average
+cpumap_kthread  4       3,290,563      0           0          
+cpumap_kthread  total   3,290,563      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org4d2f30a" class="outline-4">
+<h4 id="org4d2f30a">redirect: iptables-raw drop: 6,650,112</h4>
+<div class="outline-text-4" id="text-org4d2f30a">
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          1       19,186,197     0           0          
+XDP-RX          total   19,186,197     0          
+cpumap-enqueue    1:4   19,186,198     12,536,088  8.00       bulk-average
+cpumap-enqueue  sum:4   19,186,198     12,536,088  8.00       bulk-average
+cpumap_kthread  4       6,650,112      0           0          
+cpumap_kthread  total   6,650,112      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<pre class="example">
+$ perf stat -C4 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending -e l1d_pend_miss.pending_cycles  -r3 sleep 1
+
+ Performance counter stats for 'CPU(s) 4' (3 runs):
+
+     3.795.280.015      cycles                                                        ( +-  0,00% )  (33,27%)
+     6.833.543.253      instructions              #    1,80  insn per cycle           ( +-  0,22% )  (49,96%)
+        41.746.692      l1d.replacement                                               ( +-  0,24% )  (66,64%)
+                21      l1d_pend_miss.fb_full                                         ( +- 30,77% )  (83,32%)
+     1.294.274.573      l1d_pend_miss.pending                                         ( +-  0,23% )  (83,35%)
+     1.016.396.285      l1d_pend_miss.pending_cycles                                  ( +-  0,10% )  (16,65%)
+</pre>
+
+<pre class="example">
+$ perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -e L1-icache-load-misses -r 4 sleep 1
+
+ Performance counter stats for 'CPU(s) 4' (4 runs):
+
+     3.803.640.301      cycles                                                        ( +-  0,00% )
+     6.847.240.631      instructions              #    1,80  insn per cycle           ( +-  0,05% )
+        40.850.074      cache-references                                              ( +-  0,15% )
+               744      cache-misses              #    0,002 % of all cache refs      ( +- 27,03% )
+     1.193.685.279      branches:k                                                    ( +-  0,05% )
+         1.569.066      branch-misses:k           #    0,13% of all branches          ( +-  2,14% )
+            72.894      l2_rqsts.all_code_rd                                          ( +-  0,29% )
+            57.784      l2_rqsts.code_rd_hit                                          ( +-  0,22% )
+            15.083      l2_rqsts.code_rd_miss                                         ( +-  0,64% )
+            27.017      L1-icache-load-misses
+</pre>
+
+<p>
+pmu-tools toplev
+</p>
+<pre class="example">
+32.007888520 FE         Frontend_Bound.Frontend_Latency.MS_Switches:    2.06 +-     0.00 % Clocks
+32.007888520 RET        Retiring.Microcode_Sequencer:                   5.21 +-     0.00 % Slots  &lt;==
+32.007888520 BE         Backend_Bound:                                 38.44 +-     0.00 % Slots 
+32.007888520 RET        Retiring:                                      49.87 +-     0.00 % Slots 
+32.007888520 BE/Mem     Backend_Bound.Memory_Bound:                    17.78 +-     0.00 % Slots 
+32.007888520 BE/Core    Backend_Bound.Core_Bound:                      20.66 +-     0.00 % Slots 
+32.007888520 BE/Mem     Backend_Bound.Memory_Bound.L3_Bound:           13.36 +-     0.00 % Stalls
+32.007888520 BE/Core    Backend_Bound.Core_Bound.Ports_Utilization:    33.19 +-     0.00 % Clocks
+32.007888520            MUX:                                           14.28 +-     0.00 %       
+Sampling:
+perf record -g -e cycles:pp,cpu/event=0xd1,umask=0x4,name=L3_Bound_MEM_LOAD_UOPS_RETIRED_L3_HIT,period=50021/pp,cpu/event=0x79,umask=0x30,name=Microcode_Sequencer_IDQ_MS_UOPS,period=2000003/,cpu/event=0x79,umask=0x30,edge=1,cmask=1,name=MS_Switches_IDQ_MS_SWITCHES,period=2000003/ -o perf.data --cpu 4 -a
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org5e2d0b1" class="outline-3">
+<h3 id="org5e2d0b1">Patch4: bpf: cpumap memory prefetchw optimizations for struct page</h3>
+<div class="outline-text-3" id="text-org5e2d0b1">
+</div>
+<div id="outline-container-org0203208" class="outline-4">
+<h4 id="org0203208">redirect: UdpNoPorts: 3,520,250</h4>
+<div class="outline-text-4" id="text-org0203208">
+<p>
+(1/3290563-1/3520250)*10^9 = 19.82862950544 ns
+</p>
+
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          3       14,687,070     0           0          
+XDP-RX          total   14,687,070     0          
+cpumap-enqueue    3:4   14,687,070     11,166,819  8.00       bulk-average
+cpumap-enqueue  sum:4   14,687,070     11,166,819  8.00       bulk-average
+cpumap_kthread  4       3,520,250      0           0          
+cpumap_kthread  total   3,520,250      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgbac2c3e" class="outline-4">
+<h4 id="orgbac2c3e">redirect: iptables-raw drop: 7,649,604</h4>
+<div class="outline-text-4" id="text-orgbac2c3e">
+<p>
+(1/6650112-1/7649604)*10^9 = 19.647686018 ns
+</p>
+
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          3       19,399,374     0           0          
+XDP-RX          total   19,399,374     0          
+cpumap-enqueue    3:4   19,399,376     11,749,769  8.00       bulk-average
+cpumap-enqueue  sum:4   19,399,376     11,749,769  8.00       bulk-average
+cpumap_kthread  4       7,649,604      0           0          
+cpumap_kthread  total   7,649,604      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<pre class="example">
+$ perf stat -C4 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending -e l1d_pend_miss.pending_cycles  -r3 sleep 1
+
+ Performance counter stats for 'CPU(s) 4' (3 runs):
+
+     3.795.781.928      cycles                                                        ( +-  0,01% )  (33,28%)
+     8.125.207.353      instructions              #    2,14  insn per cycle           ( +-  0,11% )  (49,96%)
+        42.081.798      l1d.replacement                                               ( +-  0,06% )  (66,64%)
+           960.077      l1d_pend_miss.fb_full                                         ( +-  1,43% )  (83,32%)
+       744.930.797      l1d_pend_miss.pending                                         ( +-  0,24% )  (83,35%)
+       744.729.920      l1d_pend_miss.pending_cycles                                  ( +-  0,19% )  (16,65%)
+</pre>
+
+<pre class="example">
+$ perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -e L1-icache-load-misses -r 4 sleep 1
+
+ Performance counter stats for 'CPU(s) 4' (4 runs):
+
+     3.803.838.336      cycles                                                        ( +-  0,00% )
+     8.061.661.857      instructions              #    2,12  insn per cycle           ( +-  0,46% )
+        40.099.492      cache-references                                              ( +-  0,35% )
+             1.144      cache-misses              #    0,003 % of all cache refs      ( +- 42,88% )
+     1.401.105.834      branches:k                                                    ( +-  0,46% )
+         1.790.412      branch-misses:k           #    0,13% of all branches          ( +-  5,50% )
+            90.620      l2_rqsts.all_code_rd                                          ( +-  1,10% )
+            68.910      l2_rqsts.code_rd_hit                                          ( +-  1,41% )
+            21.692      l2_rqsts.code_rd_miss                                         ( +-  0,35% )
+            28.116      L1-icache-load-misses   
+</pre>
+
+<pre class="example">
+26.014865714                MUX:                                                 14.28 +-     0.00 %       
+26.054928619 FE             Frontend_Bound.Frontend_Latency.MS_Switches:          2.36 +-     0.00 % Clocks
+26.054928619 RET            Retiring.Microcode_Sequencer:                         6.04 +-     0.00 % Slots  &lt;==
+26.054928619 BE             Backend_Bound:                                       27.13 +-     0.00 % Slots 
+26.054928619 RET            Retiring:                                            58.60 +-     0.00 % Slots 
+26.054928619 BE/Mem         Backend_Bound.Memory_Bound:                          10.73 +-     0.00 % Slots 
+26.054928619 BE/Core        Backend_Bound.Core_Bound:                            16.40 +-     0.00 % Slots 
+26.054928619 BE/Mem         Backend_Bound.Memory_Bound.L3_Bound:                  8.73 +-     0.00 % Stalls
+26.054928619 BE/Core        Backend_Bound.Core_Bound.Ports_Utilization:          33.68 +-     0.00 % Clocks
+26.054928619                MUX:                                                 14.29 +-     0.00 %       
+Sampling:
+perf record -g -e cycles:pp,cpu/event=0xd1,umask=0x4,name=L3_Bound_MEM_LOAD_UOPS_RETIRED_L3_HIT,period=50021/pp,cpu/event=0x79,umask=0x30,name=Microcode_Sequencer_IDQ_MS_UOPS,period=2000003/,cpu/event=0x79,umask=0x30,edge=1,cmask=1,name=MS_Switches_IDQ_MS_SWITCHES,period=2000003/ -o perf.data --cpu 4 -a
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org68f7bc9" class="outline-4">
+<h4 id="org68f7bc9">cpumap-qsize:64: redirect: UdpNoPorts: 3,930,379</h4>
+<div class="outline-text-4" id="text-org68f7bc9">
+<pre class="example">
+$ sudo ./xdp_redirect_cpu --dev i40e1 --qsize $((64)) --cpu 4 --prog xdp_cpu_map0 --sec 3
+Add-new CPU:4 as idx:0 queue_size:64 (total cpus_count:1)
+[...]
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          5       18,232,861     0           0          
+XDP-RX          total   18,232,861     0          
+cpumap-enqueue    5:4   18,232,853     14,302,473  8.00       bulk-average
+cpumap-enqueue  sum:4   18,232,853     14,302,473  8.00       bulk-average
+cpumap_kthread  4       3,930,379      0           0          
+cpumap_kthread  total   3,930,379      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgd8eb40e" class="outline-4">
+<h4 id="orgd8eb40e">cpumap-qsize:64: redirect: iptables-raw drop: 7,329,574</h4>
+<div class="outline-text-4" id="text-orgd8eb40e">
+<pre class="example">
+sudo ./xdp_redirect_cpu --dev i40e1 --qsize $((64)) --cpu 4 --prog xdp_cpu_map0 --sec 3
+Add-new CPU:4 as idx:0 queue_size:64 (total cpus_count:1)
+[...]
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          5       18,374,651     0           0          
+XDP-RX          total   18,374,651     0          
+cpumap-enqueue    5:4   18,374,647     11,045,071  8.00       bulk-average
+cpumap-enqueue  sum:4   18,374,647     11,045,071  8.00       bulk-average
+cpumap_kthread  4       7,329,574      0           0          
+cpumap_kthread  total   7,329,574      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org8d03c3d" class="outline-3">
+<h3 id="org8d03c3d">Patch5: bpf: cpumap use netif_receive_skb_list</h3>
+<div class="outline-text-3" id="text-org8d03c3d">
+</div>
+<div id="outline-container-org876dccb" class="outline-4">
+<h4 id="org876dccb">redirect: UdpNoPorts: 3,303,269</h4>
+<div class="outline-text-4" id="text-org876dccb">
+<p>
+(1/3520250-1/3303269)*10^9 = -18.65968283 ns
+</p>
+
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          3       14,434,038     0           0          
+XDP-RX          total   14,434,039     0          
+cpumap-enqueue    3:4   14,434,012     11,130,740  8.00       bulk-average
+cpumap-enqueue  sum:4   14,434,013     11,130,741  8.00       bulk-average
+cpumap_kthread  4       3,303,269      0           0          
+cpumap_kthread  total   3,303,269      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org31b6824" class="outline-4">
+<h4 id="org31b6824">redirect: iptables-raw drop: 7,160,297</h4>
+<div class="outline-text-4" id="text-org31b6824">
+<p>
+(1/7649604-1/7160297)*10^9 = -8.93329012 ns
+</p>
+
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          3       19,479,183     0           0          
+XDP-RX          total   19,479,183     0          
+cpumap-enqueue    3:4   19,479,179     12,318,887  8.00       bulk-average
+cpumap-enqueue  sum:4   19,479,179     12,318,887  8.00       bulk-average
+cpumap_kthread  4       7,160,297      0           0          
+cpumap_kthread  total   7,160,297      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<pre class="example">
+$ perf stat -C4 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending -e l1d_pend_miss.pending_cycles  -r3 sleep 1
+
+ Performance counter stats for 'CPU(s) 4' (3 runs):
+
+     3.795.318.031      cycles                                                        ( +-  0,01% )  (33,27%)
+     8.592.913.132      instructions              #    2,26  insn per cycle           ( +-  0,25% )  (49,96%)
+        60.552.238      l1d.replacement                                               ( +-  0,86% )  (66,64%)
+           174.051      l1d_pend_miss.fb_full                                         ( +-  4,80% )  (83,32%)
+       806.460.573      l1d_pend_miss.pending                                         ( +-  1,13% )  (83,36%)
+       660.923.976      l1d_pend_miss.pending_cycles                                  ( +-  1,22% )  (16,64%)
+</pre>
+
+<pre class="example">
+$ perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -e L1-icache-load-misses -r 4 sleep 1
+
+ Performance counter stats for 'CPU(s) 4' (4 runs):
+
+     3.803.792.337      cycles                                                        ( +-  0,00% )
+     8.630.825.056      instructions              #    2,27  insn per cycle           ( +-  0,06% )
+        39.594.698      cache-references                                              ( +-  0,24% )
+             1.123      cache-misses              #    0,003 % of all cache refs      ( +- 20,00% )
+     1.614.122.541      branches:k                                                    ( +-  0,06% )
+         2.431.951      branch-misses:k           #    0,15% of all branches          ( +-  0,51% )
+           135.333      l2_rqsts.all_code_rd                                          ( +-  1,05% )
+           114.754      l2_rqsts.code_rd_hit                                          ( +-  1,11% )
+            20.546      l2_rqsts.code_rd_miss                                         ( +-  1,04% )
+            41.940      L1-icache-load-misses                                         ( +-  0,73% )
+</pre>
+
+<p>
+Toplev:
+</p>
+<pre class="example">
+34.155505980 FE             Frontend_Bound:                                      20.25 +-     0.00 % Slots     
+34.155505980 BE             Backend_Bound:                                       18.06 +-     0.00 % Slots     
+34.155505980 RET            Retiring:                                            60.23 +-     0.00 % Slots     
+34.155505980 FE             Frontend_Bound.Frontend_Latency.MS_Switches:          2.33 +-     0.00 % Clocks    
+34.155505980 RET            Retiring.Microcode_Sequencer:                         5.60 +-     0.00 % Slots      &lt;==
+34.155505980 FE             Frontend_Bound.Frontend_Bandwidth:                   13.77 +-     0.00 % Slots     
+34.155505980 BE/Core        Backend_Bound.Core_Bound:                            11.55 +-     0.00 % Slots     
+34.155505980 FE             Frontend_Bound.Frontend_Bandwidth.MITE:              26.26 +-     0.00 % CoreClocks
+34.155505980 BE/Core        Backend_Bound.Core_Bound.Ports_Utilization:          33.14 +-     0.00 % Clocks    
+34.155505980                MUX:                                                 14.28 +-     0.00 %           
+Sampling:
+perf record -g -e cycles:pp,cpu/event=0x79,umask=0x30,name=Microcode_Sequencer_IDQ_MS_UOPS,period=2000003/,cpu/event=0x79,umask=0x30,edge=1,cmask=1,name=MS_Switches_IDQ_MS_SWITCHES,period=2000003/ -o perf.data --cpu 4 -a
+</pre>
+
+<p>
+Toplev help:
+</p>
+
+<ul class="org-ul">
+<li>Frontend_Bound.Frontend_Latency.MS_Switches:
+This metric estimates the fraction of cycles when the CPU
+was stalled due to switches of uop delivery to the Microcode
+Sequencer (MS)&#x2026;
+Sampling events:  idq.ms_switches</li>
+
+<li>Retiring.Microcode_Sequencer:
+This metric represents fraction of slots the CPU was
+retiring uops fetched by the Microcode Sequencer (MS) unit&#x2026;
+Sampling events:  idq.ms_uops</li>
+
+<li>Frontend_Bound.Frontend_Bandwidth.MITE:
+This metric represents Core fraction of cycles in which CPU
+was likely limited due to the MITE pipeline (Legacy Decode
+Pipeline)&#x2026;</li>
+
+<li>Backend_Bound.Core_Bound.Ports_Utilization:
+This metric estimates fraction of cycles the CPU performance
+was potentially limited due to Core computation issues (non
+divider-related)&#x2026;</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org3748c9f" class="outline-4">
+<h4 id="org3748c9f">cpumap-qsize:64: redirect: UdpNoPorts: 4,089,778</h4>
+<div class="outline-text-4" id="text-org3748c9f">
+<p>
+The performance is a lot better with smaller qsize (64) in the CPUMAP
+(ptr_ring).  Looking at qsize=128 perf-report I see <code>free_pcppages_bulk</code>
+which indicate i40e recycling scheme is failing.
+</p>
+
+<pre class="example">
+sudo ./xdp_redirect_cpu --dev i40e1 --qsize 64 --cpu 4 --prog xdp_cpu_map0 --sec 3
+Add-new CPU:4 as idx:0 queue_size:64 (total cpus_count:1)
+[...]
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          3       19,168,764     0           0          
+XDP-RX          total   19,168,764     0          
+cpumap-enqueue    3:4   19,168,764     15,078,984  8.00       bulk-average
+cpumap-enqueue  sum:4   19,168,764     15,078,984  8.00       bulk-average
+cpumap_kthread  4       4,089,778      0           0          
+cpumap_kthread  total   4,089,778      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org774205d" class="outline-4">
+<h4 id="org774205d">cpumap-qsize:64: redirect: iptables-raw drop: 6,869,895</h4>
+<div class="outline-text-4" id="text-org774205d">
+<p>
+Strangely reducing qsize=64 didn't help iptables-raw drop case. This is
+rather strange.
+</p>
+
+<pre class="example">
+Running XDP/eBPF prog_num:0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          3       19,084,817     0           0          
+XDP-RX          total   19,084,817     0          
+cpumap-enqueue    3:4   19,084,815     12,214,918  8.00       bulk-average
+cpumap-enqueue  sum:4   19,084,815     12,214,918  8.00       bulk-average
+cpumap_kthread  4       6,869,895      0           0          
+cpumap_kthread  total   6,869,895      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<p>
+toplev:
+</p>
+<pre class="example">
+14.867717540 FE             Frontend_Bound.Frontend_Latency.MS_Switches:          2.24 +-     0.00 % Clocks
+14.867717540 RET            Retiring.Microcode_Sequencer:                         5.38 +-     0.00 % Slots  &lt;==
+14.867717540 BE             Backend_Bound:                                       20.82 +-     0.00 % Slots 
+14.867717540 RET            Retiring:                                            57.96 +-     0.00 % Slots 
+14.867717540 BE/Core        Backend_Bound.Core_Bound:                            12.29 +-     0.00 % Slots 
+14.867717540 BE/Core        Backend_Bound.Core_Bound.Ports_Utilization:          33.42 +-     0.00 % Clocks
+14.867717540                MUX:                                                 14.28 +-     0.00 %       
+Sampling:
+perf record -g -e cycles:pp,cpu/event=0x79,umask=0x30,name=Microcode_Sequencer_IDQ_MS_UOPS,period=2000003/,cpu/event=0x79,umask=0x30,edge=1,cmask=1,name=MS_Switches_IDQ_MS_SWITCHES,period=2000003/ -o perf.data --cpu 4 -a
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

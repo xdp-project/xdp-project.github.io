@@ -1,0 +1,692 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Design: Having XDP programs per RX-queue</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Design: Having XDP programs per RX-queue</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgbfdc1c8">Background for XDP per RX-queue</a>
+<ul>
+<li><a href="#orgddffc87">Original idea</a></li>
+<li><a href="#org19bf209">Small step the direction: xdp_rxq_info</a></li>
+<li><a href="#orgd03ca1d">Bottleneck in single/global netdev XDP program</a></li>
+<li><a href="#orgca6a28b">Depending on NIC hardware filter setup</a></li>
+</ul>
+</li>
+<li><a href="#orgc9d8496">Interface semantics</a>
+<ul>
+<li><a href="#org3f08d6c">Proposal: RXQ-prog takes precedence</a></li>
+<li><a href="#org66f541c">Covering future semantics</a></li>
+<li><a href="#orgc1a337f">Introspection tools</a></li>
+</ul>
+</li>
+<li><a href="#org7104a21">iproute2</a></li>
+<li><a href="#org84b73ad">bpftool</a></li>
+<li><a href="#org73d3c44">Code assesment</a>
+<ul>
+<li><a href="#org76eb1aa">Initial code assesment</a></li>
+<li><a href="#org88b4f16">Extending XDP-setup NDO commands</a></li>
+<li><a href="#org9a62a8d">Refactor idea: move xdp_rxq_info to net_device/netdev_rx_queue</a></li>
+<li><a href="#org1ede951">Refactor idea: xdp/bpf_prog into netdev_rx_queue/net_device</a></li>
+<li><a href="#org4c400c1">Code gotchas: driver runtime changing num queues</a></li>
+</ul>
+</li>
+<li><a href="#org44a93f5">Code notes for AF_XDP sockets</a>
+<ul>
+<li><a href="#orgb074b90">AF_XDP bind</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+From the very beginning of the XDP design it was envisoned (by Jesper) that
+it should be possible to assign an <b>XDP program per NIC hardware RX-queue</b>
+number.  This idea was rejected by upstream, due to usability concerns.
+</p>
+
+<p>
+From 2016 up until July 2018 the model was "a single XDP program per
+netdev", when Jakub Kicinski added support
+<a href="https://git.kernel.org/torvalds/c/a25717d2b6043">XDP_ATTACHED_MULTI</a> for
+multiple XDP programs simultaneously. In this mode, the kernel allows for
+attaching XDP programs in the driver/generic and hardware at the same time,
+given that the hardware has BPF offloading support.
+</p>
+
+<p>
+In this document the idea of a per-RX-queue XDP program is re-visited, and
+the rationale, design and semantics for this feature is outlined.
+</p>
+
+<div id="outline-container-orgbfdc1c8" class="outline-2">
+<h2 id="orgbfdc1c8">Background for XDP per RX-queue</h2>
+<div class="outline-text-2" id="text-orgbfdc1c8">
+<p>
+This section explains the background and the need for supporting XDP
+programs attached to individual RX-queue of the NIC, and some of the steps
+already taken towards this goal.
+</p>
+</div>
+
+<div id="outline-container-orgddffc87" class="outline-3">
+<h3 id="orgddffc87">Original idea</h3>
+<div class="outline-text-3" id="text-orgddffc87">
+<p>
+Original idea behind per RX-queue handling comes from Van Jacobson's
+NetChannels
+(<a href="http://www.lemis.com/grog/Documentation/vj/lca06vj.pdf">PDF</a>), as this
+is the building block for creating a Single Producer Single Consumer (SPSC)
+channel into a socket or user-application.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org19bf209" class="outline-3">
+<h3 id="org19bf209">Small step the direction: xdp_rxq_info</h3>
+<div class="outline-text-3" id="text-org19bf209">
+<p>
+In kernel <a href="https://git.kernel.org/torvalds/c/aecd67b60722d">v4.16</a> <code>struct
+xdp_rxq_info</code> was introduced, which contains information specific to each
+RX-queue in the driver.  E.g. this struct contains the RX <code>queue_index</code>
+number.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">xdp_rxq_info</span> {
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">net_device</span> *<span style="font-weight: bold; font-style: italic;">dev</span>;
+        <span style="font-weight: bold; text-decoration: underline;">u32</span> <span style="font-weight: bold; font-style: italic;">queue_index</span>;
+        <span style="font-weight: bold; text-decoration: underline;">u32</span> <span style="font-weight: bold; font-style: italic;">reg_state</span>;
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">xdp_mem_info</span> <span style="font-weight: bold; font-style: italic;">mem</span>;
+};
+</pre>
+</div>
+
+<p>
+In kernel <a href="https://git.kernel.org/torvalds/c/5ab073ffd3264">v4.18</a> both
+<code>xdp_mem_type</code> was introduced and type
+<a href="https://git.kernel.org/torvalds/c/02b55e5657c3a">MEM_TYPE_ZERO_COPY</a> was
+added.
+</p>
+
+<p>
+The <code>xdp_rxq_info</code> is associated to the <code>struct xdp_buff</code> via the struct
+member <code>rxq</code>. The kernel code and the XDP program can use the <code>struct
+xdp_rxq_info</code> traits in diffrent ways, e.g. AF_XDP uses the <code>xdp_mem_type</code>
+to determine how the packet was allocated. If the packet has mem type
+<code>MEM_TYPE_ZERO_COPY</code>, this means that the packet was allocated using a
+"zero-copy allocator/buffer provided by userspace" and the kernel to user
+copy can be elided.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">enum</span> <span style="font-weight: bold; text-decoration: underline;">xdp_mem_type</span> {
+        <span style="font-weight: bold; font-style: italic;">MEM_TYPE_PAGE_SHARED</span> = 0, <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">Split-page refcnt based model </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">MEM_TYPE_PAGE_ORDER0</span>,     <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">Orig XDP full page model </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">MEM_TYPE_PAGE_POOL</span>,
+        <span style="font-weight: bold; font-style: italic;">MEM_TYPE_ZERO_COPY</span>,
+        <span style="font-weight: bold; font-style: italic;">MEM_TYPE_MAX</span>,
+};
+
+<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">xdp_mem_info</span> {
+        <span style="font-weight: bold; text-decoration: underline;">u16</span> <span style="font-weight: bold; font-style: italic;">type</span>; <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">enum xdp_mem_type </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">u16</span> <span style="font-weight: bold; font-style: italic;">id</span>;
+};
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgd03ca1d" class="outline-3">
+<h3 id="orgd03ca1d">Bottleneck in single/global netdev XDP program</h3>
+<div class="outline-text-3" id="text-orgd03ca1d">
+<p>
+For XDP program that use AF_XDP the <code>queue_index</code> trait, which let the XDP
+program know what RX-queue the packet originated from, is especially
+important.
+</p>
+
+<p>
+AF_XDP sockets communicates to/from user-space/kernel-space via SPSC
+queues. An XDP socket is accociated to a certain netdev RX-queue, which
+means that the (global/per-netdev) XDP program needs to track on which
+RX-queue the packet was received, and if there is a socket associated to
+that RX-queue, the packet is redirected to that socket. The XDP developer
+must make sure that correct <code>ctx-&gt;rx_queue_index</code> is XDP_REDIRECT'ed into
+the corresponding XSKMAP index (else frame is dropped in
+<code>__xsk_map_redirect()</code> by dev and queue_id check in <code>xsk_rcv()</code>).
+</p>
+
+<p>
+Further, an XDP program that directs certain flows to an XDP socket
+typically use hardware flow-steering to make sure that the flow(s) end up on
+dedicated RX-queues. The non-AF_XDP RX-queue typically use the regular
+kernel stack. This means that the model of a global/per-netdev XDP program
+will then penalize the non-AF_XDP aimed flows, since a "dummy"/trivial
+program is executed for the flows that are headed for the kernel.
+</p>
+
+<p>
+As XDP grows, and more use-cases are added, then I fear that the single XDP
+program per netdev is going to be a performance bottleneck.  As the single
+XDP program, will have to perform a lot of common checks before it knows
+what use-case this packet match. E.g. as described above AF_XDP redirect
+requires reading <code>ctx-&gt;rx_queue_index</code> and core <code>xsk_rcv()</code> function also
+need to (re)check this is correct.
+</p>
+
+<p>
+With an XDP program per RX-queue, we can instead leverage the hardware to
+pre-filter/sort packets, and thus simplify the XDP programs. For AF_XDP
+zero-copy we already depend on NIC hardware filters being setup.  The
+optimization for AF_XDP is, that the checks of rx_queue_index (and dev) can
+instead be moved to setup time, instead of runtime fast-path.
+</p>
+
+<p>
+The second level optimization is to store extra info per RX-queue that
+allows us do take a more direct action.  E.g. in case of AF_XDP storing the
+<code>xsk_sock</code> allows to basically call <code>xsk_rcv()</code> directly, which in-return
+allow us to skip part of the XDP redirect-core code. (p.s. do remeber to
+handle the flush at NAPI-end).
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgca6a28b" class="outline-3">
+<h3 id="orgca6a28b">Depending on NIC hardware filter setup</h3>
+<div class="outline-text-3" id="text-orgca6a28b">
+<p>
+For XDP progs per RX-queue to make sense, we do need to setup NIC hardware
+filters to steer trafic to specific RX-queues.  AF_XDP zero-copy already
+have this dependency.
+</p>
+
+<p>
+There are several ways to configure NIC hardware filter, e.g. ethtool or TC
+hardware offloads.  It is generally out of scope for XDP to do this setup
+itself.  It is a setup dependency that need to be handled (outside and)
+before attaching the XDP program.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgc9d8496" class="outline-2">
+<h2 id="orgc9d8496">Interface semantics</h2>
+<div class="outline-text-2" id="text-orgc9d8496">
+<p>
+The initial reason XDP programs per RX-queue was rejected was usability
+concerns.  Thus, it is important that we define and agree on the behavior
+and semantic meaning of the user-interface.
+</p>
+</div>
+
+<div id="outline-container-org3f08d6c" class="outline-3">
+<h3 id="org3f08d6c">Proposal: RXQ-prog takes precedence</h3>
+<div class="outline-text-3" id="text-org3f08d6c">
+<p>
+Proposal#1: The RX-queue xdp_prog (RXQ-prog) takes precedence over the global
+xdp_prog (global-prog) installed on the netdev.  More specifically:
+</p>
+<ul class="org-ul">
+<li>If global-prog is already loaded, RXQ-prog takes-over/replaces for this
+specific/single RXQ.</li>
+<li>When RXQ-prog is unloaded, global-prog takes-over (if installed). If no
+global-prog is installed, the RXQ-prog will simply be removed.</li>
+</ul>
+
+<p>
+Details: What happens, if someone unloads the global-prog?
+</p>
+<ul class="org-ul">
+<li>Proposal#1.1 (Jesper): Unload global-prog keeps RXQ-prog's intact. The
+global-prog only impacts the behavior when then RXQ-prog is removed.</li>
+<li>Argument: There is a reason some application installed this specific
+RXQ-prog, it will be unexpected for all these application if a global
+unload (installing NULL xdp_prog) ignore/clear their specific setup.</li>
+</ul>
+
+<p>
+For completeness: What happens, if someone load a global-prog, while
+existing RXQ-prog's exist:
+</p>
+<ul class="org-ul">
+<li>Then the RXQ-prog still take precedence.</li>
+<li>The global-prog is only install on the RXQs that doesn't have an RXQ-prog
+associated.</li>
+</ul>
+
+<p>
+TODO: What about XDP_ATTACHED_MULTI and XDP_ATTACHED_HW? Any implications?
+XDP_ATTACHED_SKB? Can netdevs reject RXQ-prog support?
+</p>
+
+<p>
+Summary: There is a 2-level hierarchy of XDP programs. One global,
+global-prog, and one per-RX-queue program, RXQ-prog. global-prog and
+RXQ-prog can be set. If RXQ-prog is set, it has precedence over
+global-prog. When/if RXQ-prog is removed, global-prog is re-attached if set.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org66f541c" class="outline-3">
+<h3 id="org66f541c">Covering future semantics</h3>
+<div class="outline-text-3" id="text-org66f541c">
+<p>
+NOTE: (Björn) Is this section valid? Do we really want to relax the
+BPF-program part? Yes, I'd like to get rid of the retpoline, but <b>not</b> the
+BPF program. What kind of builtins, other than trivial programs (e.g. always
+XDP_PASS or always XDP_DIRECT) are there?
+</p>
+
+<p>
+It is part of the future optimization plans to change the RXQ-prog, such
+that it isn't an actual BPF-prog any-longer.  E.g. in case of AF_XDP
+sockets, where all frames from a specific RXQ need to be redirected into a
+single <code>xsk_sock</code>, then we can avoid invoking BPF (which is a retpoline
+indirect call) and instead call <code>xsk_rcv()</code> directly.
+</p>
+
+<p>
+How do we keep the userspace tools and semantics the same?
+</p>
+
+<p>
+E.g. when listing the RXQ-prog's we should/must still display that an XDP
+program/hook is running on the RXQ ?  (if we are really nice, we can display
+that this is a "builtin" type X)
+</p>
+
+<p>
+E.g. when sysadm force-fully unload/remove the RXQ-prog from a queue, but
+this is a "builtin" type, then we should likely maintain the semantics and
+allow the sysadm to unload/remove this XDP-"hook".
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgc1a337f" class="outline-3">
+<h3 id="orgc1a337f">Introspection tools</h3>
+<div class="outline-text-3" id="text-orgc1a337f">
+<p>
+For the user/sysadm it is also very important that the existing tools for
+listing XDP program are extended with support for listing the RXQ-prog's.
+</p>
+
+<p>
+In proposal#1.1: Clearing the global-prog does not clear the RXQ-prog's, but
+we can extend the tools with a new option to force-fully unload all XDP
+programs, although this is disruptive to the applications.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org7104a21" class="outline-2">
+<h2 id="org7104a21">iproute2</h2>
+<div class="outline-text-2" id="text-org7104a21">
+<p>
+The iproute2 suite (ip link) has support to query a device for XDP programs
+and also attaching XDP programs. This would need to be extended for
+per-RX-queue programs (RXQ-prog).
+</p>
+
+<p>
+For the query, the json output could be extended with an "qid" item. In the
+example below, RX-queue 7 has an attached RXQ-prog, and the program without
+the qid is the global-prog.
+</p>
+
+<pre class="example">
+"xdp": {
+    "mode": 4,
+    "attached": [ {
+	    "mode": 1,
+	    "prog": {
+		"id": 7,
+		"tag": "b3b16d7ef8ea98e4",
+		"jited": 1
+	    }
+	},{
+	    "mode": 1,
+	    "qid": 7,
+	    "prog": {
+		"id": 11,
+		"tag": "a0e2f2463514a59c"
+		"jited": 1
+	    }
+	} ]
+},
+</pre>
+
+<p>
+and one example without a global-prog:
+</p>
+
+<pre class="example">
+"xdp": {
+    "mode": 1,
+    "qid": 7,
+    "prog": {
+	"id": 11,
+	"tag": "a0e2f2463514a59c",
+	"jited": 1
+    },
+    "attached": [ {
+	    "mode": 1,
+	    "qid": 7,
+	    "prog": {
+		"id": 11,
+		"tag": "a0e2f2463514a59c",
+		"jited": 1
+	    }
+	} ]
+},
+</pre>
+
+<p>
+In order to attach an RXQ-prog, the "qid" argument would need to be added to
+the "xdp" subcommand of ip-link.
+</p>
+
+<p>
+TODO: Would it make sense to expose the number of available RX-queues via
+iproute2? Currently a user need to query that via "ethtool &#x2013;show-channels".
+</p>
+</div>
+</div>
+
+<div id="outline-container-org84b73ad" class="outline-2">
+<h2 id="org84b73ad">bpftool</h2>
+<div class="outline-text-2" id="text-org84b73ad">
+<p>
+The bpftool utility has, similar to iproute2, support to query a device for
+XDP programs, and require RXQ-prog support as well. Query would be analogous
+to iproute2.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org73d3c44" class="outline-2">
+<h2 id="org73d3c44">Code assesment</h2>
+<div class="outline-text-2" id="text-org73d3c44">
+</div>
+<div id="outline-container-org76eb1aa" class="outline-3">
+<h3 id="org76eb1aa">Initial code assesment</h3>
+<div class="outline-text-3" id="text-org76eb1aa">
+<p>
+Most of the XDP drivers already have an xdp_prog pointer stored in some per
+RX-queue data-structure.  Thus, part of the driver code should be ready to
+handle per RX-queue xdp_prog.
+</p>
+
+<p>
+The general code idea is that the driver simply fetch and run xdp_prog
+assigned to its RX-queue data-structure.  <b>Runtime</b> the driver doesn't
+really care if this is a global or RX-queue specific program. (Setup-time
+the driver or preferably core can add extra constraints checks for RX-queue
+specific programs for optimization reasons).
+</p>
+
+<p>
+The general question is with two types of xdp_prog's a global and RX-queue
+specific, where do we store these?  As these are going to be a need to
+reapply e.g. the global xdp_prog in case a RX-queue xdp_prog is removed.
+</p>
+
+<p>
+And it is possible/good to to keep this info centrally in e.g. net_device,
+to simplify the driver interface?
+</p>
+</div>
+</div>
+
+<div id="outline-container-org88b4f16" class="outline-3">
+<h3 id="org88b4f16">Extending XDP-setup NDO commands</h3>
+<div class="outline-text-3" id="text-org88b4f16">
+<p>
+We (obviously) need to extend <code>enum bpf_netdev_command</code> with a new command,
+and extend <code>struct netdev_bpf</code> with a new union-struct to carry our info.
+</p>
+
+<p>
+Questions:
+</p>
+<ul class="org-ul">
+<li>Q1: What new commands do we need?</li>
+<li>Q2: What should this new union-struct contain?
+<ul class="org-ul">
+<li>Should we think ahead and add a builtin-type member already?</li>
+</ul></li>
+</ul>
+
+<p>
+The simplest way is adding an "qid" to the query/setup
+commands. XDP_QUERY_PROG with an qid present, would query for the RXQ-prog
+on a certain queue. Analogous for setup. The logic for fallback when
+RXQ-prog is removed and such would be in the <code>dev_xdp_{un,}install</code> similar
+to how it is done today.
+</p>
+
+<p>
+Downsides?
+</p>
+
+<p>
+Code diff pointer:
+</p>
+<div class="org-src-container">
+<pre class="src src-diff">diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index 1377d085ef99..02feb990119c 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/include/linux/netdevice.h</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/include/linux/netdevice.h</span>
+<span style="font-weight: bold;">@@ -881,6 +881,7 @@</span><span style="font-weight: bold;"> struct netdev_bpf {</span>
+                /* XDP_SETUP_PROG */
+                struct {
+                        u32 flags;
++                       u16 queue_id; /* -1 is global */
+                        struct bpf_prog *prog;
+                        struct netlink_ext_ack *extack;
+                };
+<span style="font-weight: bold;">@@ -889,6 +890,7 @@</span><span style="font-weight: bold;"> struct netdev_bpf {</span>
+                        u32 prog_id;
+                        /* flags with which program was installed */
+                        u32 prog_flags;
++                       u16 queue_id; /* -1 is global */
+                };
+                /* BPF_OFFLOAD_MAP_ALLOC, BPF_OFFLOAD_MAP_FREE */
+                struct {
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org9a62a8d" class="outline-3">
+<h3 id="org9a62a8d">Refactor idea: move xdp_rxq_info to net_device/netdev_rx_queue</h3>
+<div class="outline-text-3" id="text-org9a62a8d">
+<p>
+Should we move <code>xdp_rxq_info</code> into net_device-&gt;_rx[] which is <code>struct
+netdev_rx_queue</code>.  (Saeed actually proposed this originally).
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">This structure contains an instance of an RX queue. </span><span style="font-weight: bold; font-style: italic;">*/</span>
+<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">netdev_rx_queue</span> {
+<span style="font-weight: bold;">#ifdef</span> CONFIG_RPS
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">rps_map</span> <span style="font-weight: bold; text-decoration: underline;">__rcu</span>            *<span style="font-weight: bold; font-style: italic;">rps_map</span>;
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">rps_dev_flow_table</span> <span style="font-weight: bold; text-decoration: underline;">__rcu</span> *<span style="font-weight: bold; font-style: italic;">rps_flow_table</span>;
+<span style="font-weight: bold;">#endif</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">kobject</span>                  <span style="font-weight: bold; font-style: italic;">kobj</span>;
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">net_device</span>               *<span style="font-weight: bold; font-style: italic;">dev</span>;
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">xdp_rxq_info</span>             <span style="font-weight: bold; font-style: italic;">xdp_rxq</span>;
+<span style="font-weight: bold;">#ifdef</span> CONFIG_XDP_SOCKETS
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">xdp_umem</span>                 *<span style="font-weight: bold; font-style: italic;">umem</span>;
+<span style="font-weight: bold;">#endif</span>
+} <span style="font-weight: bold; font-style: italic;">____cacheline_aligned_in_smp</span>;
+</pre>
+</div>
+
+<p>
+As can be seen it already contains an <code>xdp_rxq_info</code> member <code>xdp_rxq</code>, which
+is used by generic XDP.  But given (Daniel was wise enough) to add a
+restriction that XDP-native and XDP-generic cannot co-exist on the same
+net_device, thus this member could also be used by native-XDP.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org1ede951" class="outline-3">
+<h3 id="org1ede951">Refactor idea: xdp/bpf_prog into netdev_rx_queue/net_device</h3>
+<div class="outline-text-3" id="text-org1ede951">
+<p>
+The "global" bpf_prog in generic-XDP is stored in <code>net_device</code> member
+<code>xdp_prog</code>.  For generic-XDP to gain XDP-prog per RX-queue support, we could
+extend <code>netdev_rx_queue</code> with a <code>xdp_prog</code> member (type struct <code>bpf_prog</code>).
+</p>
+
+<p>
+It would be interesting to investigate if it is possible to make drivers
+(native-XDP) also use <code>net_device-&gt;xdp_prog</code> or <code>netdev_rx_queue-&gt;xdp_prog</code>
+instead of storing this in driver local data structures. (As XDP-native and
+XDP-generic cannot co-exist, this should be possible).
+</p>
+
+<p>
+This would also remove the need for passing the XDP program in the ndo_bpf
+implementation for the XDP-case, but not for the XDP HW-case.
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-org4c400c1" class="outline-3">
+<h3 id="org4c400c1">Code gotchas: driver runtime changing num queues</h3>
+<div class="outline-text-3" id="text-org4c400c1">
+<p>
+We need to check what happens when the driver change the number of queues
+runtime.  This can happen via ethtool:
+</p>
+
+<pre class="example">
+ethtool --help | grep Channels
+        ethtool -l|--show-channels DEVNAME	Query Channels
+        ethtool -L|--set-channels DEVNAME	Set Channels
+</pre>
+
+<p>
+Drivers already need to handle this, and last-time I checked this was
+handled correctly in drivers.  Still, this is a code area we need to take
+into account.
+</p>
+
+<p>
+AFAIK this also affect <code>net_device-&gt;_rx[]</code> and <code>dev-&gt;real_num_rx_queues</code>,
+which might be relevant according to above refactor-ideas.
+</p>
+
+<p>
+NOTE: (Björn) For AF_XDP zero-copy we restrict/disable the posibility to
+change the number of queues via ethtool when there is a socket bound to a
+queue. This could apply to RXQ-prog as well.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org44a93f5" class="outline-2">
+<h2 id="org44a93f5">Code notes for AF_XDP sockets</h2>
+<div class="outline-text-2" id="text-org44a93f5">
+</div>
+<div id="outline-container-orgb074b90" class="outline-3">
+<h3 id="orgb074b90">AF_XDP bind</h3>
+<div class="outline-text-3" id="text-orgb074b90">
+<p>
+The AF_XDP socket bind call is an interesting hook point, that could be
+leveraged.
+</p>
+
+<p>
+NOTE (Björn): I have some ideas here (RXQ-prog with the same lifetime as a
+socket, and more crazy stuff like relocating sockets into BPF code similar
+to BPF_LD_MAP_FD, but BPF_LD_SOCKET_FD).
+</p>
+
+<p>
+The xdp_umem_assign_dev() call in xsk_bind() call XDP setup-NDO:
+</p>
+<div class="org-src-container">
+<pre class="src src-diff">diff --git a/net/xdp/xsk.c b/net/xdp/xsk.c
+index 07156f43d295..6004634858b3 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/net/xdp/xsk.c</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/net/xdp/xsk.c</span>
+<span style="font-weight: bold;">@@ -473,7 +473,7 @@</span><span style="font-weight: bold;"> static int xsk_bind(struct socket *sock, struct sockaddr *addr, int addr_len)</span>
+                              xs-&gt;umem-&gt;chunk_mask);
+                xskq_set_umem(xs-&gt;umem-&gt;cq, xs-&gt;umem-&gt;size,
+                              xs-&gt;umem-&gt;chunk_mask);
+-
++// Notice: end-up calling into dev-XDP-setup call dev-&gt;netdev_ops-&gt;ndo_bpf()
+                err = xdp_umem_assign_dev(xs-&gt;umem, dev, qid, flags);
+                if (err)
+                        goto out_unlock;
+</pre>
+</div>
+
+<p>
+Inside <code>xdp_umem_assign_dev()</code> it also register <code>umem</code> in <code>netdev-&gt;_rx[]</code>
+(and <code>_tx[]</code>):
+</p>
+
+<div class="org-src-container">
+<pre class="src src-diff">diff --git a/net/xdp/xdp_umem.c b/net/xdp/xdp_umem.c
+index a264cf2accd0..8424368f834e 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/net/xdp/xdp_umem.c</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/net/xdp/xdp_umem.c</span>
+<span style="font-weight: bold;">@@ -87,7 +87,7 @@</span><span style="font-weight: bold;"> int xdp_umem_assign_dev(struct xdp_umem *umem, struct net_device *dev,</span>
+                err = -EBUSY;
+                goto out_rtnl_unlock;
+        }
+-
++       // Registers itself in netdev-&gt;_rx[] and _tx[]
+        xdp_reg_umem_at_qid(dev, umem, queue_id);
+        umem-&gt;dev = dev;
+        umem-&gt;queue_id = queue_id;
+<span style="font-weight: bold;">@@ -104,7 +104,7 @@</span><span style="font-weight: bold;"> int xdp_umem_assign_dev(struct xdp_umem *umem, struct net_device *dev,</span>
+        bpf.command = XDP_SETUP_XSK_UMEM;
+        bpf.xsk.umem = umem;
+        bpf.xsk.queue_id = queue_id;
+-
++       // Calling XDP setup-NDO:
+        err = dev-&gt;netdev_ops-&gt;ndo_bpf(dev, &amp;bpf);
+        if (err)
+                goto err_unreg_umem;
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

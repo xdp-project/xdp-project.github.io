@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>XDP multi buffer design</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">XDP multi buffer design</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org4edf014">Why XDP don't have multi-buffer support</a></li>
+<li><a href="#org5e3bc98">Use-cases for multi-buffer</a></li>
+<li><a href="#org9de23d9">Proposal#1: XDP only access first-buffer</a></li>
+<li><a href="#org2eeb2bd">XDP multi-buffer extensions and complications</a>
+<ul>
+<li><a href="#orgc53fda5">XDP tail adjust</a>
+<ul>
+<li><a href="#orgf2e01e8">Use-cases for adjust tail</a></li>
+</ul>
+</li>
+<li><a href="#orgec505e4">XDP access to full packet length?</a></li>
+<li><a href="#org0a59147">Storage space for multi-buffer references/segments</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+This document is a serious attempt to find a way to support multi-buffer
+packets with XDP. With the important criteria of not hurting performance of
+the single-buffer per packet design.
+</p>
+
+<p>
+Keywords: xdp vs. jumbo-frame, TSO/LRO, packet header split
+</p>
+
+<div id="outline-container-org4edf014" class="outline-2">
+<h2 id="org4edf014">Why XDP don't have multi-buffer support</h2>
+<div class="outline-text-2" id="text-org4edf014">
+<p>
+XDP is designed for maximum performance, which is why certain driver-level
+use-cases were not supported, like multi-buffer packets (like jumbo-frames).
+As it e.g. complicated the driver RX-loop and memory model handling.
+</p>
+
+<p>
+The single buffer per packet design, is also tied into eBPF Direct-Access
+(DA) to packet data, which can only be allowed if the packet memory is in
+contiguous memory.  This DA feature is essential for XDP performance.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org5e3bc98" class="outline-2">
+<h2 id="org5e3bc98">Use-cases for multi-buffer</h2>
+<div class="outline-text-2" id="text-org5e3bc98">
+<p>
+What are the use-cases for multi-buffer packets:
+</p>
+<ul class="org-ul">
+<li>Jumbo-frames</li>
+<li>Packet header split</li>
+<li>TSO/LRO</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org9de23d9" class="outline-2">
+<h2 id="org9de23d9">Proposal#1: XDP only access first-buffer</h2>
+<div class="outline-text-2" id="text-org9de23d9">
+<p>
+The eBPF Direct-Access (DA) feature is essential for performance. Thus, we
+don't want to add an abstraction layer, that transparently gives XDP
+BPF-prog access to payload across multiple buffers.
+</p>
+
+<p>
+One way forward is to define that XDP only get access to the first packet
+buffer, and it cannot see subsequent buffers.
+</p>
+
+<p>
+We likely need to extend xdp_buff or xdp_md (the XDP bpf context) with some
+indication that this is a multi-buffer packets, as this is needed by
+internal helpers (see later) and might be useful for XDP-developer (e.g.
+return XDP_PASS for these kind of frames).
+</p>
+</div>
+</div>
+
+<div id="outline-container-org2eeb2bd" class="outline-2">
+<h2 id="org2eeb2bd">XDP multi-buffer extensions and complications</h2>
+<div class="outline-text-2" id="text-org2eeb2bd">
+<p>
+How and what do we need to extend the XDP data structured with to handle
+multi-buffer packets?
+</p>
+</div>
+
+<div id="outline-container-orgc53fda5" class="outline-3">
+<h3 id="orgc53fda5">XDP tail adjust</h3>
+<div class="outline-text-3" id="text-orgc53fda5">
+<p>
+The BPF XDP helper named: <code>bpf_xdp_adjust_tail</code> change length of the packet.
+Currently it can only shrink the packet (but we need to extended it to allow
+extending the tail, as e.g IPSEC and DNS-cache needs this).
+</p>
+
+<p>
+With multi-buffer XDP packets (and proposal#1) then this adjust tail helper
+becomes problematic.
+</p>
+
+<p>
+Wouldn't it be easier to disallow a BPF-prog with this helper, when
+driver have configured multi-buffer?  Or will it be too restrictive,
+if jumbo-frame is very uncommon and only enabled because switch infra
+could not be changed.
+</p>
+
+<p>
+Perhaps it is better to let bpf_xdp_adjust_tail() fail runtime?
+</p>
+</div>
+
+<div id="outline-container-orgf2e01e8" class="outline-4">
+<h4 id="orgf2e01e8">Use-cases for adjust tail</h4>
+<div class="outline-text-4" id="text-orgf2e01e8">
+<p>
+Use-cases that need to adjust tail of packet:
+</p>
+
+<ul class="org-ul">
+<li>ICMP replies directly from XDP need to shorten packet tail, but
+this use-case doesn't use fragments. See <a href="https://github.com/torvalds/linux/blob/master/samples/bpf/xdp_adjust_tail_kern.c">bpf-sample</a>.</li>
+
+<li>IPsec need to add/extend packet tail for <a href="http://vger.kernel.org/netconf2019_files/xfrm_xdp.pdf">IPset-trailer</a>, again
+unlikely that this needs fragments(?). (This use-case convinced me
+that we need to add extend-tail support to bpf_xdp_adjust_tail)</li>
+
+<li>DNS or memcached replies directly from XDP, need to extend packet
+tail, to have room for reply. (It would be interesting to allow larger
+replies, but I'm not sure we should ever support that).</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgec505e4" class="outline-3">
+<h3 id="orgec505e4">XDP access to full packet length?</h3>
+<div class="outline-text-3" id="text-orgec505e4">
+<p>
+We likely need to provide the full packet length to XDP core and also
+XDP-developer. The use-case for XDP-developers is validating the length of
+the packet against what packet headers claim.
+</p>
+
+<p>
+But if we need to know the full length, when the first-buffer is processed.
+Then realize that this affect the drivers RX-loop, because then we need to
+"collect" all the buffers before we can know the length (although some HW
+provide this in first descriptor).
+</p>
+
+<p>
+We likely have to change drivers RX-loop anyhow, as XDP_TX and XDP_REDIRECT
+will also need to "collect" all buffers before the packet can be forwarded.
+(Although this could potentially happen later in driver loop when it
+meet/find the End-Of-Packet descriptor bit).
+</p>
+</div>
+</div>
+
+<div id="outline-container-org0a59147" class="outline-3">
+<h3 id="org0a59147">Storage space for multi-buffer references/segments</h3>
+<div class="outline-text-3" id="text-org0a59147">
+<p>
+A multi-buffer packet consist of several frame segments. The data structure
+used for holding these packet buffers/segments also needs to be discussed.
+</p>
+
+<p>
+To describe each segment we need a pointer (to the page or data start),
+offset and length. There are (at-least) two existing kernel data structures
+that have such a layout, <code>bio_vec</code> and <code>skb_frag_t</code> (aka <code>skb_frag_struct</code>).
+</p>
+
+<p>
+Layout of <code>skb_frag_struct</code>:
+</p>
+<div class="org-src-container">
+<pre class="src src-C">$ pahole -C skb_frag_struct vmlinux
+<span style="font-weight: bold;">struct</span> skb_frag_struct {
+        <span style="font-weight: bold;">struct</span> {
+                <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">page</span> * <span style="font-weight: bold; font-style: italic;">p</span>;                         <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">0     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        } <span style="font-weight: bold; font-style: italic;">page</span>;                                          <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">0     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">__u32</span>                      <span style="font-weight: bold; font-style: italic;">page_offset</span>;          <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">8     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">__u32</span>                      <span style="font-weight: bold; font-style: italic;">size</span>;                 <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">12     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">size: 16, cachelines: 1, members: 3 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">last cacheline: 16 bytes </span><span style="font-weight: bold; font-style: italic;">*/</span>
+};
+</pre>
+</div>
+
+<p>
+Layout of <code>bio_vec</code>:
+</p>
+<div class="org-src-container">
+<pre class="src src-C">$ pahole -C bio_vec vmlinux
+<span style="font-weight: bold;">struct</span> bio_vec {
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">page</span>              * <span style="font-weight: bold; font-style: italic;">bv_page</span>;              <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">0     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>               <span style="font-weight: bold; font-style: italic;">bv_len</span>;               <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">8     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>               <span style="font-weight: bold; font-style: italic;">bv_offset</span>;            <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">12     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">size: 16, cachelines: 1, members: 3 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">last cacheline: 16 bytes </span><span style="font-weight: bold; font-style: italic;">*/</span>
+};
+</pre>
+</div>
+
+<p>
+The skb_frag_t would be most obvious, as we already have to write this when
+creating an SKB, in <code>skb_shared_info</code> area. Which layout looks like this:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C">$ pahole -C skb_shared_info vmlinux
+<span style="font-weight: bold;">struct</span> skb_shared_info {
+        <span style="font-weight: bold; text-decoration: underline;">__u8</span>                       <span style="font-weight: bold; font-style: italic;">__unused</span>;             <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">0     1 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">__u8</span>                       <span style="font-weight: bold; font-style: italic;">meta_len</span>;             <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">1     1 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">__u8</span>                       <span style="font-weight: bold; font-style: italic;">nr_frags</span>;             <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">2     1 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">__u8</span>                       <span style="font-weight: bold; font-style: italic;">tx_flags</span>;             <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">3     1 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">short</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>         <span style="font-weight: bold; font-style: italic;">gso_size</span>;             <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">4     2 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">short</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>         <span style="font-weight: bold; font-style: italic;">gso_segs</span>;             <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">6     2 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">sk_buff</span>     * <span style="font-weight: bold; font-style: italic;">frag_list</span>;                  <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">8     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">skb_shared_hwtstamps</span> <span style="font-weight: bold; font-style: italic;">hwtstamps</span>;           <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">16     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>               <span style="font-weight: bold; font-style: italic;">gso_type</span>;             <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">24     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">u32</span>                        <span style="font-weight: bold; font-style: italic;">tskey</span>;                <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">28     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">atomic_t</span>                   <span style="font-weight: bold; font-style: italic;">dataref</span>;              <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">32     0 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">XXX 8 bytes hole, try to pack </span><span style="font-weight: bold; font-style: italic;">*/</span>
+
+        <span style="font-weight: bold; text-decoration: underline;">void</span> *                     <span style="font-weight: bold; font-style: italic;">destructor_arg</span>;       <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">40     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">skb_frag_t</span>                 <span style="font-weight: bold; font-style: italic;">frags</span>[17];            <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">48   272 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">size: 320, cachelines: 5, members: 13 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">sum members: 312, holes: 1, sum holes: 8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+};
+</pre>
+</div>
+
+<p>
+The problem is also that size of these structs (16 bytes) per
+buffer/segment, and we likely need to support 17 segments, as this need to
+be compatible with SKBs, which result in a size of 272 bytes.
+</p>
+
+<p>
+One idea: is that we simply use the same memory area, that we have to store
+skb_shared_info into. As this allow us to get the SKB setup for free, when
+doing XDP_PASS or when doing SKB alloc after XDP_REDIRECT.
+</p>
+
+<p>
+Side-note: There have been suggestion before, to unify <code>bio_vec</code> and
+<code>skb_frag_t</code> (see <a href="https://lore.kernel.org/netdev/20190501041757.8647-1-willy@infradead.org/">here</a>)
+Update: This unification has already been done (see <a href="https://lore.kernel.org/netdev/1d34658b-a807-44ae-756a-d55dead27f94@fb.com/">here</a>)
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

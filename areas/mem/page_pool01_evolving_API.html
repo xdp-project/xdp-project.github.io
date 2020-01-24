@@ -1,0 +1,684 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Evolving the page_pool API</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Evolving the page_pool API</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org182f9c6">The page_pool is NOT finished</a></li>
+<li><a href="#org657a258">Overall goals of page_pool</a>
+<ul>
+<li><a href="#org2b7fcdd">mlx5 today</a></li>
+</ul>
+</li>
+<li><a href="#org36da2ef">History</a></li>
+<li><a href="#org28cb20b">The XDP dream scenario</a></li>
+<li><a href="#org58b4801">Status today: lost reliable return hook</a></li>
+<li><a href="#org532ec55">Regaining the return hook or tracking pages</a>
+<ul>
+<li><a href="#org0291ca1">Return-hook: put_page</a></li>
+<li><a href="#orgb9845d0">Return-hook: via SKB</a></li>
+<li><a href="#orgc3fb6df">Keep track of pages</a></li>
+</ul>
+</li>
+<li><a href="#orgc56658d">Understanding page_pool details</a>
+<ul>
+<li><a href="#org65b133a">Extremely fast alloc page</a></li>
+<li><a href="#org8ae7dcb">Extremely fast recycle direct</a></li>
+<li><a href="#orgbc97b1d">Fast rhashtable lookup in __xdp_return</a></li>
+</ul>
+</li>
+<li><a href="#org3291e8d">Warning: missing pieces in page_pool</a>
+<ul>
+<li><a href="#org3bcb8a9">Currently: fully-locked page-recycle call</a></li>
+</ul>
+</li>
+<li><a href="#org9ef18ed">Benchmark based development</a>
+<ul>
+<li><a href="#org139ee26">What is the overhead of "fully-locked page-recycle call"</a></li>
+<li><a href="#orgc4ada76">What is the overhead of page order-0 allocations</a></li>
+</ul>
+</li>
+<li><a href="#org66f194a">XDP optimization for ndo_xdp_xmit</a></li>
+</ul>
+</div>
+</div>
+<p>
+The page_pool API was accepted into kernel 4.18, and only used by one driver
+mlx5.  This doc is about evolving the page_pool API.
+</p>
+
+<p>
+Generally kernel 4.18 introduced the ability for XDP to have knowledge about
+what memory allocator type the driver (per) RX-queue is using, via xdp_rxq_info
+and info in xdp_frame.  This opens up for innovation in this area.
+</p>
+
+<div id="outline-container-org182f9c6" class="outline-2">
+<h2 id="org182f9c6">The page_pool is NOT finished</h2>
+<div class="outline-text-2" id="text-org182f9c6">
+<p>
+Lets be clear upfront: <b>The page_pool API is not finished</b>
+(As of this writing <span class="timestamp-wrapper"><span class="timestamp">&lt;2018-11-28 Wed&gt; </span></span> and kernel release v4.19).
+</p>
+
+<p>
+It is not ready to be used by all drivers, in the current state.
+The mlx5 driver is <span class="underline">also</span> not using the API optimally.
+</p>
+
+<p>
+We both need to evolve the API, but also need to take some fundamental design
+choices for the direction of the page_pool API.
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-org657a258" class="outline-2">
+<h2 id="org657a258">Overall goals of page_pool</h2>
+<div class="outline-text-2" id="text-org657a258">
+<p>
+The overall goals of the page_pool is:
+</p>
+
+<p>
+(1) Keep pages DMA-mapped (driver only use DMA-sync where needed).
+(2) Faster recycle API than page-allocator (see <a href="#orgd90c01f">No description for this link</a>)
+(3) Common allocator API for simplifying NIC drivers.
+(4) Better integration with network stack, not just XDP usage.
+</p>
+</div>
+
+<div id="outline-container-org2b7fcdd" class="outline-3">
+<h3 id="org2b7fcdd">mlx5 today</h3>
+<div class="outline-text-3" id="text-org2b7fcdd">
+<p>
+Today mlx5 is not using the DMA-mapping part and is basically using page_pool
+as a fast alloc-side cache (see later why it is fast), and a return point for
+XDP-redirect. Packets send towards netstack still have a refcnt based recycle
+scheme, as a driver-layer on-top of page_pool.
+</p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org36da2ef" class="outline-2">
+<h2 id="org36da2ef">History</h2>
+<div class="outline-text-2" id="text-org36da2ef">
+<p>
+The page_pool was adapted from Jesper's proposals at MM-summit 2016+2017:
+</p>
+
+<p>
+<a href="http://people.netfilter.org/hawk/presentations/MM-summit2016/generic_page_pool_mm_summit2016.pdf">http://people.netfilter.org/hawk/presentations/MM-summit2016/generic_page_pool_mm_summit2016.pdf</a>
+<a href="http://people.netfilter.org/hawk/presentations/MM-summit2017/MM-summit2017-JesperBrouer.pdf">http://people.netfilter.org/hawk/presentations/MM-summit2017/MM-summit2017-JesperBrouer.pdf</a>
+</p>
+
+<p>
+Jesper posted some RFC page_pool patches around that time.  That code was
+adapted and is now part of the network stack, under <code>net/core/page_pool.c</code> and
+<code>include/net/page_pool.h</code>.
+</p>
+
+<p>
+The original code was designed to be part of kernel the MM-layer.  It hooked
+into the <code>put_page()</code> call, and also used parts of struct-page for storing info
+that allows for returning the page back to the originating device (to allow
+keeping the page DMA mapped for the device).
+</p>
+
+<p>
+Basic idea:
+</p>
+<ul class="org-ul">
+<li>Pages stays DMA mapped as long as they are in the pool.</li>
+<li>Driver use DMA-sync API to control when data is writable by CPU.</li>
+<li>No need to keep track of pages traveling system, they are returned by
+<code>put_page</code> API.</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org28cb20b" class="outline-2">
+<h2 id="org28cb20b">The XDP dream scenario</h2>
+<div class="outline-text-2" id="text-org28cb20b">
+<p>
+The XDP dream scenario is about returning frame-pages, with no refcnt changes
+to the struct-page.  The optimal XDP case is 1-page per frame/packet with page
+refcnt==1, and a put_page() call that catch refcnt==1, and recycle the page for
+reuse.
+</p>
+
+<p>
+This is basically what happens, today in mlx5, when XDP-redirect activate
+ndo_xdp_xmit() out another device, and at other-device DMA-TX completion the
+pages are returned via xdp_return_frame, what call page_pool_put_page.
+</p>
+
+<p>
+The goal of zero-atomic operations is very hard to achieve, as some kind of
+sync operation is needed when recycling pages, back to originating device, but
+that can be amortized through bulking (see later).
+</p>
+
+<p>
+When no XDP program is configured on the device, it might be better for memory
+usage to split the page into two packets, and use a refcnt based model, as the
+overhead of other part of network stack might not dwarf the benefit of this
+memory vs speed optimization.
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-org58b4801" class="outline-2">
+<h2 id="org58b4801">Status today: lost reliable return hook</h2>
+<div class="outline-text-2" id="text-org58b4801">
+<p>
+The big difference today is the page_pool is not hooked into <code>put_page</code> and the
+MM-layer.  This means we <b>lost the reliable return hook point</b>, which made it
+easy to keep the page DMA mapped.
+</p>
+
+<p>
+When XDP redirecting (XDP_REDIRECT) as an xdp_frame, the XDP return API gives
+us a reliable return hook. (We don't do it today, but it should be fairly easy
+to keep the frame DMA mapped for redirect+return path).
+</p>
+
+<p>
+When the frame travel as an SKB into the network stack, then we lost the
+reliable return hook, as the netstack returns the pages based refcnt.
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-org532ec55" class="outline-2">
+<h2 id="org532ec55">Regaining the return hook or tracking pages</h2>
+<div class="outline-text-2" id="text-org532ec55">
+<p>
+When wanting to keep pages DMA mapped, how to make sure:
+ (1) that DMA mapped frames are not leaked, but
+ (2) all appropriately DMA unmapped eventually, and
+ (3) where to store the DMA-addr (for use in DMA-sync and eventual unmap)
+</p>
+
+<p>
+There are three options, two options for creating a return hook or instead
+keeping track of outstanding frames traveling the system.
+</p>
+
+<p>
+What are the options for reestablishing a return hook point?
+The two return hooks are:
+</p>
+<ul class="org-ul">
+<li>Page alloactor layer via put_page.</li>
+<li>Network stack layer via __kfree_skb().</li>
+</ul>
+
+<p>
+The alternative is to keep track of outstanding frames at the driver layer via
+elevating refcnt.
+</p>
+
+<p>
+An advantage of a guaranteed return hook, which page_pool doesn't depend on, is
+that the device driver can use memory pages that are special, e.g. device HW
+memory area, or pages already mapped into userspace.
+</p>
+</div>
+
+<div id="outline-container-org0291ca1" class="outline-3">
+<h3 id="org0291ca1">Return-hook: put_page</h3>
+<div class="outline-text-3" id="text-org0291ca1">
+<p>
+The original idea was to modify put_page() to catch pages with refcnt==1 and
+recycle those.  This was rejected upstream, but meanwhile a hook have been
+created at the exact spot we need.
+</p>
+
+<p>
+The function calls used is called: put_devmap_managed_page().
+</p>
+
+<p>
+It is used by HMM (Heterogeneous Memory Management), which is used by device
+memory like GPU on board memory.  The DAX system also leverage this via type
+MEMORY_DEVICE_FS_DAX.
+</p>
+
+<p>
+The question is
+ (1) can page_pool also leverage this,
+ (2) is the performance good enough.
+</p>
+
+<p>
+TODO investigate: The page "zonenum" must be ZONE_DEVICE, which semantic is
+unclear, more info needed.  Can this type of page be used for "normal" network
+stack delivery?
+</p>
+
+<p>
+The code that end-up being called is: __put_devmap_managed_page(page); The
+callback in __put_devmap_managed_page(), is implemented by calling:
+page-&gt;pgmap-&gt;page_free(page, page-&gt;pgmap-&gt;data);
+</p>
+
+<p>
+From struct-page the part containing this area looks like:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">struct</span> {        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">ZONE_DEVICE pages </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">/** </span><span style="font-weight: bold; font-style: italic;">@pgmap: Points to the hosting device page map. </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">dev_pagemap</span> *<span style="font-weight: bold; font-style: italic;">pgmap</span>;
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">long</span> <span style="font-weight: bold; font-style: italic;">hmm_data</span>;
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">long</span> <span style="font-weight: bold; font-style: italic;">_zd_pad_1</span>;        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">uses mapping </span><span style="font-weight: bold; font-style: italic;">*/</span>
+};
+</pre>
+</div>
+
+<p>
+TODO: Read <code>include/linux/memremap.h</code> and figure out, (a) that struct
+dev_pagemap is used for, and (b) what it means and what requirements are
+associated with being a MEMORY_DEVICE_PRIVATE type using ZONE_DEVICE.
+</p>
+
+<p>
+For storing the DMA-addr (dma_addr_t), we could use the <code>hmm_data</code> area.
+</p>
+
+<p>
+In <code>mm/hmm.c</code> the callback pgmap-&gt;page_free is assigned to <code>hmm_devmem_free</code>,
+and <code>pagemap-&gt;data</code> is the instance of the <code>devmap</code> itself.  This could fairly
+easily be adapted for calling page_pool_put_page(), where the <code>pagemap-&gt;data</code>
+will be the instance of the <code>page_pool</code>.
+</p>
+
+<p>
+The level and use of indirect calls (e.g. page-&gt;pgmap-&gt;page_free) is slightly
+concerning (in a spectre-v2 context).
+</p>
+
+<p>
+Feasibility: (not needed for page_pool as is) Investigate if pages can be VMA
+mapped into userspace.  There are indications that this is not possible, given
+the ZONE_DEVICE and page-&gt;pgmap share page-&gt;mapping area.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgb9845d0" class="outline-3">
+<h3 id="orgb9845d0">Return-hook: via SKB</h3>
+<div class="outline-text-3" id="text-orgb9845d0">
+<p>
+Another possible return hook is when the SKB (sk_buff) is freed.
+</p>
+
+<p>
+SKB freeing basically all goes through <code>__kfree_skb()</code>, and following the code
+path expanding code-inside for reaching freeing the page addr:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold; text-decoration: underline;">void</span> <span style="font-weight: bold;">__kfree_skb</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">sk_buff</span> *<span style="font-weight: bold; font-style: italic;">skb</span>)
+{
+        skb_release_all(skb) {
+                <span style="font-weight: bold;">if</span> (likely(skb-&gt;head)) {
+                        skb_release_data(skb) {
+                                skb_free_head(skb) {
+                                        <span style="font-weight: bold;">if</span> (skb-&gt;head_frag) {
+                                                skb_free_frag(skb-&gt;head) {
+                                                        page_frag_free(addr);
+                                                }
+                                        }
+                                }
+                        }
+                }
+        }
+}
+</pre>
+</div>
+
+<p>
+Here the skb-&gt;head_frag bit is used for saying that the packet data is
+allocated from a page (both covering page fragments and order-0 pages).
+</p>
+
+<p>
+We need some extra info at <code>__kfree_skb()</code> time, in-order to know what
+page_pool the data-page need to be returned to, and this info can only be
+derived from the SKB.  Extending struct sk_buff (SKB) is a very sensitive
+topic, and is in-general not allowed. Thus, we have to reduce the info needed
+in the SKB to the absolute minimum.
+</p>
+
+<p>
+The DMA-addr (8-bytes) could be stored in the struct-page at page-&gt;private.
+</p>
+
+<p>
+The XDP-redirect system, uses <code>struct xdp_mem_info</code> for storing the necessary
+info in the (struct) xdp_frame.  The xdp_mem_info is 8 bytes, and could be
+reduced further, (1) 'type' can easily be made smaller (given enum xdp_mem_type
+is smaller), and (2) is artificially capped at MEM_ID_MAX=0xFFFE.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">xdp_mem_info</span> {
+        <span style="font-weight: bold; text-decoration: underline;">u32</span>                        <span style="font-weight: bold; font-style: italic;">type</span>;                 <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">0     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">u32</span>                        <span style="font-weight: bold; font-style: italic;">id</span>;                   <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">4     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">size: 8, cachelines: 1, members: 2 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">last cacheline: 8 bytes </span><span style="font-weight: bold; font-style: italic;">*/</span>
+};
+</pre>
+</div>
+
+<p>
+Reusing xdp_mem_info for storing the info, would allow us to reuse the
+xdp_return_frame() API more or less directly.
+</p>
+
+<p>
+<b>Crazy idea</b>: Use one bit in SKB, saying this originates from an xdp_frame, and
+via skb-&gt;head pointer, find offset to start of xdp_frame, and then use the
+struct xdp_mem_info, and return frame like/via xdp_return_frame() API.
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-orgc3fb6df" class="outline-3">
+<h3 id="orgc3fb6df">Keep track of pages</h3>
+<div class="outline-text-3" id="text-orgc3fb6df">
+<p>
+The network stack current handling of packet-data pages is refcnt based.
+</p>
+
+<p>
+So, what is the trick used by drivers that want to (1) keep the page DMA-mapped
+and (2) do faster recycle (than going through page-allocator)?.  It obviously
+need to leverage a refcnt based scheme on the page.
+</p>
+
+<p>
+The general idea is to elevate the refcnt on the page, before sending it
+through the network stack, and keep the page pointer on a tracking
+waiting-queue/list (often a queue).  Thus, this waiting-queue contains pages
+that are in-flight, and there is no signal or callback when they are "done".
+To figure-out when a page is available for reuse, the driver must poll or
+revisit this waiting-queue and by observing the page refcnt know if the page
+can be reused now.
+</p>
+
+<p>
+Most drivers poll or revisit the waiting-queue, when doing other work, like
+when needing to refill the RX-ring with fresh frames/pages.  There are
+different strategies when head of the waiting-queue contains a page that is
+still in-flight, as it could mean several things. (1) could indicate too fast
+recycling and next pages are likely also not-ready for reuse, or (2) could be
+this page is being held by e.g. TCP stack for retransmit while the next page
+could be ready for reuse.  Thus, there is a choice to either (a) keep the page
+for next round (hoping it will be reusable soon) or (b) release the page by
+DMA-unmapping and returning the page to the page-allocator.
+</p>
+
+<p>
+When the page_pool interacts with XDP, it gets pages returned from XDP via the
+xdp_return_frame API hook/callback.  Given network stack doesn't provide such
+hook, the mlx5 driver used its existing refcnt based recycle queue, on-top of
+page_pool.  And page_pool was modified to fall-through to put_page() if refcnt
+is not equal 1.  This double layer result in the page_pool cannot be
+responsible for the DMA-mapping.
+</p>
+
+<p>
+An alternative to introducing a return-hook for the network stack, is to
+integrate a refcnt based waiting-queue inside page_pool, that is only used when
+frames/pages travel through the network stack.  This is a hybrid approach, but
+integrating this would allow page_pool to keep the DMA-mapping.
+</p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orgc56658d" class="outline-2">
+<h2 id="orgc56658d">Understanding page_pool details</h2>
+<div class="outline-text-2" id="text-orgc56658d">
+<p>
+Some details about the page_pool API that might not be obvious.
+</p>
+</div>
+
+<div id="outline-container-org65b133a" class="outline-3">
+<h3 id="org65b133a">Extremely fast alloc page</h3>
+<div class="outline-text-3" id="text-org65b133a">
+<p>
+The page_pool leverage the knowledge/requirement, that allocations MUST happen
+from NAPI context. (During driver init of RX ring, not in NAPI context, it is
+known that no concurrent users of this page_pool exist, thus it is still safe).
+</p>
+
+<p>
+A NIC driver creates a page_pool per RX-queue.  Combined with the protection
+provide by NAPI context (per RX-queue), allow page_pool to get pages from a
+completely unlocked array-style stack-queue (see struct pp_alloc_cache).  It is
+difficult to get any faster than this.
+</p>
+
+<p>
+Code from: __page_pool_get_cached()
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">if</span> (likely(pool-&gt;alloc.count)) {
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">Fast-path </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        page = pool-&gt;alloc.cache[--pool-&gt;alloc.count];
+        <span style="font-weight: bold;">return</span> page;
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org8ae7dcb" class="outline-3">
+<h3 id="org8ae7dcb">Extremely fast recycle direct</h3>
+<div class="outline-text-3" id="text-org8ae7dcb">
+<p>
+Another optimization leveraged by page_pool is that, for frames that needs to
+be dropped while still running under the RX NAPI context, either for error
+cases or explicit drop due to XDP_DROP action.  The API call
+page_pool_recycle_direct() can be used, which as described above, simply
+returns the page to an array stack (code in __page_pool_recycle_direct()).
+</p>
+
+<p>
+One advantage is that even with XDP_REDIRECT, the redirect core-code can choose
+to drop frames and see almost the same drop performance as driver level code
+(via calling xdp_return_frame_rx_napi).
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-orgbc97b1d" class="outline-3">
+<h3 id="orgbc97b1d">Fast rhashtable lookup in __xdp_return</h3>
+<div class="outline-text-3" id="text-orgbc97b1d">
+<p>
+In __xdp_return there is a rhashtable_lookup() call on the xdp_mem_info-&gt;id,
+which looks like a performance issue, but it isn't. While we would like to
+amortized this via an explicit bulk return API, the lookup is surprisingly
+fast.
+</p>
+
+<p>
+The reason behind this being fast, is that the hash function defined
+(xdp_mem_id_hashfn) is not really a hash function, as it simply returns the id
+as a key.  Given we use a cyclic increasing ID, the key/id is unique and
+"hash-distributed" enough already.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org3291e8d" class="outline-2">
+<h2 id="org3291e8d">Warning: missing pieces in page_pool</h2>
+<div class="outline-text-2" id="text-org3291e8d">
+</div>
+<div id="outline-container-org3bcb8a9" class="outline-3">
+<h3 id="org3bcb8a9">Currently: fully-locked page-recycle call</h3>
+<div class="outline-text-3" id="text-org3bcb8a9">
+<p>
+When the RFC page_pool got ripped out and converted it to be used in network
+stack, the ALF (Array-based Lock Free) queue was dropped.  Instead the ptr_ring
+was used and replaced the internal page_pool queue. The ptr_ring actually do
+have some performance advantages over ALF-queue, e.g.  reduces the cross-CPU
+cache-coherency talk, and is faster cross CPU.
+</p>
+
+<p>
+One disadvantage is that ptr_ring_produce (or ptr_ring_produce_bh) call takes a
+lock.  And it is currently called per returned page, see
+__page_pool_recycle_into_ring(). This obviously is a scalability issue waiting
+to happen, when/if multiple CPUs want to return packet originating from the
+same RX-queue.
+</p>
+
+<p>
+See <a href="#orgd90c01f">No description for this link</a> for benchmarks showing this is still very fast, in the non-lock
+congested case.
+</p>
+
+<p>
+Thus, this need to be fixed/improved. The basic idea to address this is through
+bulking.  But there are two ways to introduce (1) expose an explicit bulk
+return API, or (2) hide it in the page_pool API via clever lockless per CPU
+store (that return pages in a bulk).
+</p>
+
+<p>
+Jesper have a lot of details for option (2), as a significant performance gain
+can be achieved by having knowledge about (and separating) what context the
+kernel is running in (softirq/bh, hardirq, process-context).
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org9ef18ed" class="outline-2">
+<h2 id="org9ef18ed">Benchmark based development</h2>
+<div class="outline-text-2" id="text-org9ef18ed">
+<p>
+<a id="orgd90c01f"></a>
+</p>
+
+<p>
+In-order to live-up to the performance requirements of XDP, it is important
+that we use a benchmark driven development model.  Thus, it is encouraged doing
+Proof-of-Concept (PoC) implementations and modifications to the kernel and
+evaluate the performance, for every step.
+</p>
+</div>
+
+<div id="outline-container-org139ee26" class="outline-3">
+<h3 id="org139ee26">What is the overhead of "fully-locked page-recycle call"</h3>
+<div class="outline-text-3" id="text-org139ee26">
+<p>
+Benchmark based development notes: Proof-of-Concept (PoC) modified mlx5 driver
+and bq_xmit_all (devmap.c) to call xdp_return_frame (vs normally calling
+xdp_return_frame_rx_napi), xdp_redirect_map frame out a driver with
+ndo_xdp_xmit, but manually unload XDP from egress driver, causing driver
+ndo_xdp_xmit to return error, causing all xdp_frame to be freed/returned.
+Diff (1/14340444-1/12728465)*10^9 = -8.83 ns difference.
+</p>
+<ul class="org-ul">
+<li>The performance with xdp_return_frame  was: 12,728,465 pps.</li>
+<li>The perf with xdp_return_frame_rx_napi was: 14,340,444 pps</li>
+</ul>
+<p>
+Thus, in a non-lock congested case, the performance is still very good.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgc4ada76" class="outline-3">
+<h3 id="orgc4ada76">What is the overhead of page order-0 allocations</h3>
+<div class="outline-text-3" id="text-orgc4ada76">
+<p>
+The base overhead of allocating and freeing an order-0 page in a tight loop,
+always hitting the PCP fast-path, measured with prototype kernel module
+<a href="https://github.com/netoptimizer/prototype-kernel/blob/master/kernel/mm/bench/page_bench01.c#L54-L57">page_bench01</a>.
+</p>
+
+<pre class="example">
+dmesg output
+[ 1315.759541] page_bench01: alloc_pages order:0(4096B/x1) 223 cycles per-4096B 223 cycles
+[ 1315.768139] time_bench: Type:alloc_pages_order_step Per elem: 223 cycles(tsc) 62.096 ns (step:0)
+ - (measurement period time:0.062096443 sec time_interval:62096443)
+ - (invoke count:1000000 tsc_interval:223548984)
+</pre>
+
+<p>
+Show alloc+free order-0 page cost: 223 cycles or 62.096 ns.  This almost
+consume the entire budget for 10Gbit/s wirespeed which is 67.2 ns.  Converting,
+62.096 ns to packets per sec equal (1/62.096*10^9) 16,104,097 pps, which
+doesn't represent any real pps (just to relate this to pps numbers).
+</p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org66f194a" class="outline-2">
+<h2 id="org66f194a">XDP optimization for ndo_xdp_xmit</h2>
+<div class="outline-text-2" id="text-org66f194a">
+<p>
+When xdp_frames are redirected and send out a remote-device via ndo_xdp_xmit,
+then TX frame is again DMA-mapped for transmit on this remote-device, and at
+XDP-TXQ completion time the frame/page is DMA-unmapped again.
+</p>
+
+<p>
+On many systems, the underlying DMA-engine/device is the same.  Thus, the
+DMA-addr of the page that we keep DMA-mapped for RX, is actually the same and
+valid for the TX net_device.  It would be an optimization to avoid this
+DMA-map/unmap and replace it with a DMA-sync, if this condition is satisfied.
+</p>
+
+<p>
+Thus, we would need an API (accessible by XDP in ndo_xdp_xmit), that can (1)
+tell us if the condition is satisfied, and (2) that can return the DMA-addr to
+be used for TX.
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

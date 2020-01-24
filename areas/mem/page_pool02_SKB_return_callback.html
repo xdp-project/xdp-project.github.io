@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Implementing page_pool return-hook via SKB</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Implementing page_pool return-hook via SKB</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org7fec708">Basic idea</a></li>
+<li><a href="#org8b2d435">(pre-RFC) Wrong recycle on two branches</a></li>
+<li><a href="#org62e4da5">RFC-patchset</a>
+<ul>
+<li><a href="#org6350307">RFC-feedback</a>
+<ul>
+<li><a href="#org3474f61">Case: skb_try_coalesce()</a></li>
+<li><a href="#org0558356">Case: skb_gro_receive()</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#org995eb82">Patchset: DMA addr in struct page</a>
+<ul>
+<li><a href="#org87b6d5d">Cover-letter</a></li>
+<li><a href="#orgfa517ea">Stgit mail command</a></li>
+<li><a href="#orgf089686">Using DMA_ATTR_SKIP_CPU_SYNC</a></li>
+</ul>
+</li>
+<li><a href="#orga44c3fc">Testing procedures</a>
+<ul>
+<li><a href="#org72f0cc4">Multicast traffic</a></li>
+<li><a href="#orge3d9d02">TCP traffic</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+This document is the development notes, while implementing page_pool
+return-hook via SKB (See section "Return-hook: via SKB" in
+<a href="page_pool01_evolving_API.html">page_pool01_evolving_API.html</a>)
+</p>
+
+<div id="outline-container-org7fec708" class="outline-2">
+<h2 id="org7fec708">Basic idea</h2>
+<div class="outline-text-2" id="text-org7fec708">
+<p>
+SKB freeing basically all goes through <code>__kfree_skb()</code>, and following
+the code path expanding relevant code-inside (see below), then is it
+fairly clear that skb_free_head() is a candidate for a page_pool
+return hook.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold; text-decoration: underline;">void</span> <span style="font-weight: bold;">__kfree_skb</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">sk_buff</span> *<span style="font-weight: bold; font-style: italic;">skb</span>)
+{
+        skb_release_all(skb) {
+                <span style="font-weight: bold;">if</span> (likely(skb-&gt;head)) {
+                        skb_release_data(skb) {
+                                skb_free_head(skb) {
+                                        <span style="font-weight: bold; font-style: italic;">// </span><span style="font-weight: bold; font-style: italic;">Catch page_pool pages here via xdp_return_skb_page</span>
+                                        <span style="font-weight: bold;">if</span> (skb-&gt;head_frag) {
+                                                skb_free_frag(skb-&gt;head) {
+                                                        page_frag_free(addr);
+                                                }
+                                        }
+                                }
+                        }
+                }
+        }
+}
+</pre>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org8b2d435" class="outline-2">
+<h2 id="org8b2d435">(pre-RFC) Wrong recycle on two branches</h2>
+<div class="outline-text-2" id="text-org8b2d435">
+<p>
+Git tree: <a href="https://github.com/apalos/bpf-next">https://github.com/apalos/bpf-next</a>
+Branches:
+</p>
+<ul class="org-ul">
+<li>mvneta_03_page_pool_recycle</li>
+<li>mvneta_04_page_pool_recycle_xdp</li>
+</ul>
+
+<p>
+The issue is wrong placement of xdp_mem_info in struct sk_buff, as it
+is placed in between headers_start and headers_end.
+</p>
+
+<p>
+The issue arise when either using skb_copy() or pskb_copy(), which
+allocates a new data-area and copy over contents.  But
+__copy_skb_header() memcpy, old SKB area between headers_start to
+headers_end, which also include xdp_mem_info.  Thus, on kfree_skb the
+hook for page_pool return is invoked, for this mem-area that didn't
+originate from page_pool.
+</p>
+
+<p>
+Move xdp_mem_info, just after members (flags) head_frag and
+pfmemalloc. As a future plan, we could move introduce a __u8 flags
+member to xdp_mem_info and move flags head_frag and pfmemalloc into
+this area.
+</p>
+
+<p>
+Fixed in <a href="https://github.com/apalos/bpf-next/commit/dd84df8d72f792ac9bbfa9fb9e424b4ae9d0ebad">this commit</a> that will be squashed before upstreaming.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org62e4da5" class="outline-2">
+<h2 id="org62e4da5">RFC-patchset</h2>
+<div class="outline-text-2" id="text-org62e4da5">
+<p>
+Upstream RFC patchset was send <span class="timestamp-wrapper"><span class="timestamp">&lt;2018-12-07 Fri&gt;</span></span>.
+</p>
+<ul class="org-ul">
+<li>Subject: [net-next PATCH RFC 0/8] page_pool DMA handling and allow to  recycles frames via SKB</li>
+<li>Message-ID: &lt;154413868810.21735.572808840657728172.stgit@firesoul&gt;</li>
+<li><a href="https://patchwork.ozlabs.org/project/netdev/list/?series=80284&amp;state=%2a">https://patchwork.ozlabs.org/project/netdev/list/?series=80284&amp;state=%2a</a></li>
+</ul>
+
+<p>
+This patchset corresponds to:
+</p>
+<ul class="org-ul">
+<li>Git tree: <a href="https://github.com/apalos/bpf-next">https://github.com/apalos/bpf-next</a></li>
+<li>Branch: <a href="https://github.com/apalos/bpf-next/commits/mvneta_07_page_pool_recycle">mvneta_07_page_pool_recycle</a></li>
+</ul>
+</div>
+
+<div id="outline-container-org6350307" class="outline-3">
+<h3 id="org6350307">RFC-feedback</h3>
+<div class="outline-text-3" id="text-org6350307">
+<p>
+DaveM didn't reject the 4 bytes extra in SKB (<a href="https://patchwork.ozlabs.org/patch/1009121/#2048112">link</a>)
+</p>
+
+<p>
+DaveM pointed out that page-&gt;private is only 32-bit on 32-bit Architectures AND
+use-cases exists where hardware need 64-bit DMA addresses.  Thus, the
+page-&gt;private member isn't large enough in those use-cases.
+</p>
+
+<p>
+Eric Dumazet pointed out that we might be missing some case, that manipulates
+the pages directly:
+</p>
+<ul class="org-ul">
+<li>skb_try_coalesce</li>
+<li>splice() stuff</li>
+<li>GRO</li>
+<li>skb cloning</li>
+<li>tcp_zerocopy_receive() (TCP RX zero copy)</li>
+<li>more generally all paths that can grab pages from skbs.</li>
+</ul>
+
+<p>
+One design choice that solves many of Eric's concerns is that page_pool pages
+(that still contain DMA state) MUST NOT be used as part of SKB "frags".
+Only the skb-&gt;head that points to the data "page", can belong to a page_pool.
+After our changes to mvneta driver, we use build_skb() that uses
+the page_pool data-pointer as skb-&gt;head.  The driver (mvneta) still have
+jumbo-frame support which uses SKB "frags", to handle that case, we "release"
+the page_pool state by calling page_pool_unmap_page() in driver, when assigning
+(the payload beyond PAGE_SIZE) it as "frags" (via skb_add_rx_frag() call).
+</p>
+
+<p>
+An page_pool page, can actually be "appended"/merged into another SKB as a
+skb-&gt;frag_list.  This might be the least intrusive thing, to detect
+mem_info-&gt;type is set, and not reject e.g. coalesce but instead fall-over to
+skb-&gt;flag_list coalescing.
+</p>
+
+<p>
+TODO: go through each case Eric pointed out and check constraints.
+</p>
+</div>
+
+<div id="outline-container-org3474f61" class="outline-4">
+<h4 id="org3474f61">Case: skb_try_coalesce()</h4>
+<div class="outline-text-4" id="text-org3474f61">
+<p>
+skb_try_coalesce() was broken, as it converts the skb-&gt;head into a skb "frags"
+of another SKB.
+</p>
+
+<p>
+Look into code solutions, in prioritized order:
+</p>
+<ol class="org-ol">
+<li>"release" page_pool state, via calling page_pool_unmap_page()</li>
+<li>use skb-&gt;frag_list coalesce instead</li>
+<li>simply reject coalesce action if mem_info-&gt;type is set (last-resort)</li>
+</ol>
+</div>
+</div>
+
+
+<div id="outline-container-org0558356" class="outline-4">
+<h4 id="org0558356">Case: skb_gro_receive()</h4>
+</div>
+</div>
+</div>
+
+
+
+<div id="outline-container-org995eb82" class="outline-2">
+<h2 id="org995eb82">Patchset: DMA addr in struct page</h2>
+<div class="outline-text-2" id="text-org995eb82">
+</div>
+<div id="outline-container-org87b6d5d" class="outline-3">
+<h3 id="org87b6d5d">Cover-letter</h3>
+<div class="outline-text-3" id="text-org87b6d5d">
+<p>
+Subject: Fix page_pool API and dma address storage
+</p>
+
+<p>
+As pointed out by David Miller in [1] the current page_pool implementation
+stores dma_addr_t in page-&gt;private. This won't work on 32-bit platforms with
+64-bit DMA addresses since the page-&gt;private is an unsigned long and the
+dma_addr_t a u64.
+</p>
+
+<p>
+Since no driver is yet using the DMA mapping capabilities of the API let's
+fix this by storing the information in 'struct page' and use that to store
+and retrieve DMA addresses from network drivers.
+</p>
+
+<p>
+As long as the addresses returned from dma_map_page() are aligned the first
+bit, used by the compound pages code should not be set.
+</p>
+
+<p>
+Ilias tested the first two patches on Espressobin driver mvneta, for which
+we have patches for using the DMA API of page_pool.
+</p>
+
+<p>
+[1]: <a href="https://lore.kernel.org/netdev/20181207.230655.1261252486319967024.davem@davemloft.net/">https://lore.kernel.org/netdev/20181207.230655.1261252486319967024.davem@davemloft.net/</a>
+</p>
+
+<p>
+Signed-off-by: Jesper Dangaard Brouer &lt;brouer@redhat.com&gt;
+Signed-off-by: Ilias Apalodimas &lt;ilias.apalodimas@linaro.org&gt;
+</p>
+
+<p>
+&#x2014;
+Question: Who of the maintainers MM or netdev will take these changes?
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgfa517ea" class="outline-3">
+<h3 id="orgfa517ea">Stgit mail command</h3>
+<div class="outline-text-3" id="text-orgfa517ea">
+<pre class="example">
+stg mail --prefix=net-next --version="V3" --edit-cover  --cc meup \
+ --to netdev --to linux-mm@kvack.org \
+ --cc willy@infradead.org --cc davem \
+ --cc mgorman@techsingularity.net --cc akpm \
+ --cc toke --cc ilias \
+ --cc tariq --cc saeed \
+ --cc alex \
+ mm-dma_addr_to-struct-page..dma_attr
+</pre>
+</div>
+</div>
+
+
+<div id="outline-container-orgf089686" class="outline-3">
+<h3 id="orgf089686">Using DMA_ATTR_SKIP_CPU_SYNC</h3>
+<div class="outline-text-3" id="text-orgf089686">
+<p>
+page_pool: use DMA_ATTR_SKIP_CPU_SYNC for DMA mappings
+</p>
+
+<p>
+As pointed out by Alexander Duyck, the DMA mapping done in page_pool needs
+to use the DMA attribute DMA_ATTR_SKIP_CPU_SYNC.
+</p>
+
+<p>
+As the principle behind page_pool keeping the pages mapped is that the
+driver takes over the DMA-sync steps.
+</p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orga44c3fc" class="outline-2">
+<h2 id="orga44c3fc">Testing procedures</h2>
+<div class="outline-text-2" id="text-orga44c3fc">
+</div>
+<div id="outline-container-org72f0cc4" class="outline-3">
+<h3 id="org72f0cc4">Multicast traffic</h3>
+<div class="outline-text-3" id="text-org72f0cc4">
+<p>
+Multicast traffic requires skb_clone'ing, so here is a test case with
+multicast:
+</p>
+
+<p>
+I setup:
+</p>
+<ul class="org-ul">
+<li>IP 192.168.200.1 is configured on the espressobin board.</li>
+<li>IP 192.168.200.2 is configured on client/PC</li>
+</ul>
+
+<p>
+On espressobin start iperf server:
+</p>
+
+<pre class="example">
+ifconfig eth0 192.168.200.1
+route add -net 224.0.0.0 netmask 240.0.0.0 eth0
+iperf -s -u -B 226.94.1.1 -i 1
+</pre>
+
+<p>
+On client/PC start iperf client::
+</p>
+
+<pre class="example">
+iperf -c 226.94.1.1 -u -T 32 -t 30 -i 1 -B 192.168.200.2 -b1000Mbit
+</pre>
+
+<p>
+With iperf multicast the server joins the mcast stream and starts
+receiving packets.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orge3d9d02" class="outline-3">
+<h3 id="orge3d9d02">TCP traffic</h3>
+<div class="outline-text-3" id="text-orge3d9d02">
+<p>
+Both scp and iperf seem to trigger skb_try_coalesce()
+</p>
+
+<p>
+On espressobin start iperf server:
+</p>
+<pre class="example">
+ifconfig eth0 192.168.200.1
+iperf -s
+</pre>
+
+<pre class="example">
+iperf -c 192.168.200.1
+</pre>
+
+<p>
+or from a host send a file to espressobin via scp
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

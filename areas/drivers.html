@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Project management for XDP driver support</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Project management for XDP driver support</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org9811946">Important medium-term tasks</a>
+<ul>
+<li><a href="#org3e34610"><span class="todo TODO">TODO</span> Expanding XDP_REDIRECT support to more drivers</a>
+<ul>
+<li><a href="#org2e442cf"><span class="todo NEXT">NEXT</span> Map out redirect support in drivers and make a plan</a></li>
+<li><a href="#org8946f16"><span class="todo TODO">TODO</span> What to do about failing REDIRECT</a></li>
+<li><a href="#org85903b2"><span class="todo TODO">TODO</span> Queueing</a></li>
+</ul>
+</li>
+<li><a href="#org3313050"><span class="todo WAIT">WAIT</span> Adding XDP support to new drivers</a>
+<ul>
+<li><a href="#org38da00f"><span class="todo TODO">TODO</span> Driver support for sfc driver</a></li>
+<li><a href="#orga0609a1"><span class="todo TODO">TODO</span> Driver support for Marvell mvpp2</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+Top-level headings indicate category, as explained in <a href="../xdp-project.html">../xdp-project.html</a>.
+</p>
+
+<div id="outline-container-org9811946" class="outline-2">
+<h2 id="org9811946">Important medium-term tasks</h2>
+<div class="outline-text-2" id="text-org9811946">
+</div>
+<div id="outline-container-org3e34610" class="outline-3">
+<h3 id="org3e34610"><span class="todo TODO">TODO</span> Expanding XDP_REDIRECT support to more drivers</h3>
+<div class="outline-text-3" id="text-org3e34610">
+<p>
+Very few drivers support XDP_REDIRECT.
+</p>
+
+<p>
+HW drivers: ixgbe, i40e, mlx5, netsec
+</p>
+
+<p>
+SW drivers: veth, tun (tuntap), virtio_net
+</p>
+</div>
+
+<div id="outline-container-org2e442cf" class="outline-4">
+<h4 id="org2e442cf"><span class="todo NEXT">NEXT</span> Map out redirect support in drivers and make a plan</h4>
+<div class="outline-text-4" id="text-org2e442cf">
+<p>
+It would be useful with a complete list drivers that are missing some or all
+parts of REDIRECT support. Based on this we can make a plan for what to do about
+each of these.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org8946f16" class="outline-4">
+<h4 id="org8946f16"><span class="todo TODO">TODO</span> What to do about failing REDIRECT</h4>
+<div class="outline-text-4" id="text-org8946f16">
+<p>
+<a href="../xdp-project.html#ID-760b03fc-2a8e-499c-a90c-74dbc4716cbc">Handling XDP_REDIRECT failures</a>
+</p>
+</div>
+</div>
+
+<div id="outline-container-org85903b2" class="outline-4">
+<h4 id="org85903b2"><span class="todo TODO">TODO</span> Queueing</h4>
+</div>
+</div>
+
+<div id="outline-container-org3313050" class="outline-3">
+<h3 id="org3313050"><span class="todo WAIT">WAIT</span> Adding XDP support to new drivers</h3>
+<div class="outline-text-3" id="text-org3313050">
+<p>
+Waiting for page pool work
+</p>
+</div>
+
+<div id="outline-container-org38da00f" class="outline-4">
+<h4 id="org38da00f"><span class="todo TODO">TODO</span> Driver support for sfc driver</h4>
+<div class="outline-text-4" id="text-org38da00f">
+</div>
+<ul class="org-ul">
+<li><a id="org121be17"></a><span class="todo NEXT">NEXT</span> Sync with Edward Cree et al<br /></li>
+</ul>
+</div>
+
+<div id="outline-container-orga0609a1" class="outline-4">
+<h4 id="orga0609a1"><span class="todo TODO">TODO</span> Driver support for Marvell mvpp2</h4>
+<div class="outline-text-4" id="text-orga0609a1">
+<p>
+Matteo
+</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

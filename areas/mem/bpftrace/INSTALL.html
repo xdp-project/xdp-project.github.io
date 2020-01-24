@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2020-01-24 Fri 16:09 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Installing bpftrace and manage with stow</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
+<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Installing bpftrace and manage with stow</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org60e0d30">Guide: Step-by-step</a>
+<ul>
+<li><a href="#orgde58a43">Clone git-repo</a></li>
+<li><a href="#org17b83d3">Compile and install</a></li>
+<li><a href="#org9f88bb9">Use stow</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+The bpftrace official compile from git-tree guide is <a href="https://github.com/iovisor/bpftrace/blob/master/INSTALL.md#generic-build-process">here</a>.
+</p>
+
+<p>
+This document is mostly a guide, howto make <code>cmake</code> install the files under
+<code>/usr/local/stow/</code>, to ease management of different versions via <a href="https://www.gnu.org/software/stow/">GNU stow</a>.
+</p>
+
+<div id="outline-container-org60e0d30" class="outline-2">
+<h2 id="org60e0d30">Guide: Step-by-step</h2>
+<div class="outline-text-2" id="text-org60e0d30">
+</div>
+<div id="outline-container-orgde58a43" class="outline-3">
+<h3 id="orgde58a43">Clone git-repo</h3>
+<div class="outline-text-3" id="text-orgde58a43">
+<div class="org-src-container">
+<pre class="src src-sh">git clone https://github.com/iovisor/bpftrace
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org17b83d3" class="outline-3">
+<h3 id="org17b83d3">Compile and install</h3>
+<div class="outline-text-3" id="text-org17b83d3">
+<p>
+Control the <code>cmake</code> install path via <code>CMAKE_INSTALL_PREFIX</code>.
+</p>
+
+<p>
+Regarding 'stow', consider creating direcory <code>/usr/local/stow/</code> with write
+permissions for your own user (or admin group), and restrict write
+permissions for <code>/usr/local/</code> as this prevents <code>make install</code> to install
+files outside the <code>CMAKE_INSTALL_PREFIX</code> path.
+</p>
+
+<p>
+Start in git repository directory:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">mkdir build ; <span style="font-weight: bold;">cd</span> build ;
+cmake -DCMAKE_INSTALL_PREFIX=/usr/local/stow/bpftrace-git01 ..
+make
+make install
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org9f88bb9" class="outline-3">
+<h3 id="org9f88bb9">Use stow</h3>
+<div class="outline-text-3" id="text-org9f88bb9">
+<p>
+The bpftrace binaries have been installed into direcory
+<code>/usr/local/stow/bpftrace-git01</code> (from above procedure).
+</p>
+
+<p>
+As <code>/usr/local/</code> is a system-wide location, we want to keep track and be
+able to "uninstall" software installed in this location. For this task we
+use the tool called 'stow' (official <a href="https://www.gnu.org/software/stow/">GNU project</a>).
+</p>
+
+<p>
+For symlink "installing" bpftrace this is the procedure:
+</p>
+<div class="org-src-container">
+<pre class="src src-sh"><span style="font-weight: bold;">cd</span> /usr/local/stow/
+sudo stow bpftrace-git01
+</pre>
+</div>
+
+<p>
+For symlink "uninstall":
+</p>
+<div class="org-src-container">
+<pre class="src src-sh"><span style="font-weight: bold;">cd</span> /usr/local/stow/
+sudo stow -D bpftrace-git01
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
