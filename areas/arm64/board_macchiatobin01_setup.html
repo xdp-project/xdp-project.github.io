@@ -3,7 +3,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-01-24 Fri 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Setup notes for board macchiatobin</title>
@@ -22,15 +21,15 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org513257c">Bootable Micro SD card</a></li>
-<li><a href="#org4909f6a">Works with upstream</a></li>
-<li><a href="#orgcde6e7f">Macchiatobin kernel-config</a></li>
-<li><a href="#org0de89c3">Brick by installing wrong kernel</a>
+<li><a href="#Bootable%20Micro%20SD%20card">Bootable Micro SD card</a></li>
+<li><a href="#Works%20with%20upstream">Works with upstream</a></li>
+<li><a href="#Macchiatobin%20kernel-config">Macchiatobin kernel-config</a></li>
+<li><a href="#Brick%20by%20installing%20wrong%20kernel">Brick by installing wrong kernel</a>
 <ul>
-<li><a href="#org5aadf96">Using Marvell kernel: 4.14.22-armada-18.09.3</a></li>
+<li><a href="#Using%20Marvell%20kernel%3A%204.14.22-armada-18.09.3">Using Marvell kernel: 4.14.22-armada-18.09.3</a></li>
 </ul>
 </li>
-<li><a href="#org45e7e3d">Unbrick</a></li>
+<li><a href="#Unbrick">Unbrick</a></li>
 </ul>
 </div>
 </div>
@@ -41,9 +40,9 @@ MacchiatoBIN, wiki docs:
 <li><a href="http://wiki.macchiatobin.net/tiki-index.php?page=Build+from+source+-+Kernel">http://wiki.macchiatobin.net/tiki-index.php?page=Build+from+source+-+Kernel</a></li>
 </ul>
 
-<div id="outline-container-org513257c" class="outline-2">
-<h2 id="org513257c">Bootable Micro SD card</h2>
-<div class="outline-text-2" id="text-org513257c">
+<div id="outline-container-Bootable%20Micro%20SD%20card" class="outline-2">
+<h2 id="Bootable%20Micro%20SD%20card"><a href="#Bootable%20Micro%20SD%20card">Bootable Micro SD card</a></h2>
+<div class="outline-text-2" id="text-Bootable%20Micro%20SD%20card">
 <p>
 Created a bootable Micro SD card via following:
 </p>
@@ -57,9 +56,9 @@ Got at working image booting: 4.4.52-armada-17.10.3-g6adee55.
 </div>
 </div>
 
-<div id="outline-container-org4909f6a" class="outline-2">
-<h2 id="org4909f6a">Works with upstream</h2>
-<div class="outline-text-2" id="text-org4909f6a">
+<div id="outline-container-Works%20with%20upstream" class="outline-2">
+<h2 id="Works%20with%20upstream"><a href="#Works%20with%20upstream">Works with upstream</a></h2>
+<div class="outline-text-2" id="text-Works%20with%20upstream">
 <p>
 Managed to compile an upstream kernel based of bpf-next via script:
 </p>
@@ -84,9 +83,9 @@ This kernel did have a DMA performance issue described in:
 </div>
 
 
-<div id="outline-container-orgcde6e7f" class="outline-2">
-<h2 id="orgcde6e7f">Macchiatobin kernel-config</h2>
-<div class="outline-text-2" id="text-orgcde6e7f">
+<div id="outline-container-Macchiatobin%20kernel-config" class="outline-2">
+<h2 id="Macchiatobin%20kernel-config"><a href="#Macchiatobin%20kernel-config">Macchiatobin kernel-config</a></h2>
+<div class="outline-text-2" id="text-Macchiatobin%20kernel-config">
 <p>
 Need to get their kernel-config, as basis for my upstream kernel compile.
 </p>
@@ -113,18 +112,18 @@ make ARCH=arm64 mvebu_v8_lsp_defconfig
 </div>
 </div>
 
-<div id="outline-container-org0de89c3" class="outline-2">
-<h2 id="org0de89c3">Brick by installing wrong kernel</h2>
-<div class="outline-text-2" id="text-org0de89c3">
+<div id="outline-container-Brick%20by%20installing%20wrong%20kernel" class="outline-2">
+<h2 id="Brick%20by%20installing%20wrong%20kernel"><a href="#Brick%20by%20installing%20wrong%20kernel">Brick by installing wrong kernel</a></h2>
+<div class="outline-text-2" id="text-Brick%20by%20installing%20wrong%20kernel">
 <p>
 Managed to brick the box, by installing another kernel that didn't boot.
 See error below, and next section for how I unbricked the box.
 </p>
 </div>
 
-<div id="outline-container-org5aadf96" class="outline-3">
-<h3 id="org5aadf96">Using Marvell kernel: 4.14.22-armada-18.09.3</h3>
-<div class="outline-text-3" id="text-org5aadf96">
+<div id="outline-container-Using%20Marvell%20kernel%3A%204.14.22-armada-18.09.3" class="outline-3">
+<h3 id="Using%20Marvell%20kernel%3A%204.14.22-armada-18.09.3"><a href="#Using%20Marvell%20kernel%3A%204.14.22-armada-18.09.3">Using Marvell kernel: 4.14.22-armada-18.09.3</a></h3>
+<div class="outline-text-3" id="text-Using%20Marvell%20kernel%3A%204.14.22-armada-18.09.3">
 <p>
 Caused crash:
 </p>
@@ -435,9 +434,9 @@ Starting kernel ...
 </div>
 
 
-<div id="outline-container-org45e7e3d" class="outline-2">
-<h2 id="org45e7e3d">Unbrick</h2>
-<div class="outline-text-2" id="text-org45e7e3d">
+<div id="outline-container-Unbrick" class="outline-2">
+<h2 id="Unbrick"><a href="#Unbrick">Unbrick</a></h2>
+<div class="outline-text-2" id="text-Unbrick">
 <p>
 Read: <a href="http://wiki.macchiatobin.net/tiki-index.php?page=Boot+from+removable+storage+-+Ubuntu">http://wiki.macchiatobin.net/tiki-index.php?page=Boot+from+removable+storage+-+Ubuntu</a>
 </p>
@@ -512,7 +511,7 @@ run bootorig
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="date">Date: 2018-11-29 Thu 00:20</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

@@ -3,7 +3,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-01-24 Fri 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Testing Hellwig "dma-direct-calls" patchset</title>
@@ -22,48 +21,48 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org505d09b">Patchset avail here</a></li>
-<li><a href="#org7140fce">General notes</a></li>
-<li><a href="#org3507d1d">Summary of results</a></li>
-<li><a href="#org2fff02b">Testing Hellwig branch "dma-direct-calls"</a>
+<li><a href="#Patchset%20avail%20here">Patchset avail here</a></li>
+<li><a href="#General%20notes">General notes</a></li>
+<li><a href="#Summary%20of%20results">Summary of results</a></li>
+<li><a href="#Testing%20Hellwig%20branch%20%22dma-direct-calls%22">Testing Hellwig branch "dma-direct-calls"</a>
 <ul>
-<li><a href="#orge81a8ce">Driver ixgbe</a>
+<li><a href="#Driver%20ixgbe">Driver ixgbe</a>
 <ul>
-<li><a href="#org96d953c">ixgbe: XDP_DROP branch "dma-direct-calls"</a></li>
-<li><a href="#orgd2024a0">ixgbe: XDP_REDIRECT devmap</a></li>
+<li><a href="#ixgbe%3A%20XDP_DROP%20branch%20%22dma-direct-calls%22">ixgbe: XDP_DROP branch "dma-direct-calls"</a></li>
+<li><a href="#ixgbe%3A%20XDP_REDIRECT%20devmap">ixgbe: XDP_REDIRECT devmap</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#orgf4ccdd1">Baseline kernel with retpoline</a>
+<li><a href="#Baseline%20kernel%20with%20retpoline">Baseline kernel with retpoline</a>
 <ul>
-<li><a href="#org897ddf6">Driver ixgbe</a>
+<li><a href="#Baseline%20kernel%20with%20retpoline--Driver%20ixgbe">Driver ixgbe</a>
 <ul>
-<li><a href="#org4e853e9">ixgbe: XDP_DROP (baseline-RETPOLINE)</a></li>
-<li><a href="#orgf1794b2">ixgbe: XDP_REDIRECT devmap (baseline-RETPOLINE)</a></li>
+<li><a href="#ixgbe%3A%20XDP_DROP%20%28baseline-RETPOLINE%29">ixgbe: XDP_DROP (baseline-RETPOLINE)</a></li>
+<li><a href="#ixgbe%3A%20XDP_REDIRECT%20devmap%20%28baseline-RETPOLINE%29">ixgbe: XDP_REDIRECT devmap (baseline-RETPOLINE)</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#orge52544f">Baseline kernel with no-retpoline</a>
+<li><a href="#Baseline%20kernel%20with%20no-retpoline">Baseline kernel with no-retpoline</a>
 <ul>
-<li><a href="#org2ca09fc">Driver ixgbe</a>
+<li><a href="#Baseline%20kernel%20with%20no-retpoline--Driver%20ixgbe">Driver ixgbe</a>
 <ul>
-<li><a href="#orgbfa72f8">ixgbe: XDP_REDIRECT devmap (baseline-NO-retpoline)</a></li>
+<li><a href="#ixgbe%3A%20XDP_REDIRECT%20devmap%20%28baseline-NO-retpoline%29">ixgbe: XDP_REDIRECT devmap (baseline-NO-retpoline)</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org8e882ec">Kernel new git branch dma-direct-calls.2</a>
+<li><a href="#Kernel%20new%20git%20branch%20dma-direct-calls.2">Kernel new git branch dma-direct-calls.2</a>
 <ul>
-<li><a href="#orga2ae69b">ixgbe: XDP_REDIRECT devmap (branch dma-direct-calls.2)</a></li>
+<li><a href="#ixgbe%3A%20XDP_REDIRECT%20devmap%20%28branch%20dma-direct-calls.2%29">ixgbe: XDP_REDIRECT devmap (branch dma-direct-calls.2)</a></li>
 </ul>
 </li>
-<li><a href="#org0b40c2b">Kernel git branch dma-direct-calls.2 but NO-retpoline</a></li>
-<li><a href="#org0bc219a">Investigate overhead of BPF-indirect retpoline</a>
+<li><a href="#Kernel%20git%20branch%20dma-direct-calls.2%20but%20NO-retpoline">Kernel git branch dma-direct-calls.2 but NO-retpoline</a></li>
+<li><a href="#Investigate%20overhead%20of%20BPF-indirect%20retpoline">Investigate overhead of BPF-indirect retpoline</a>
 <ul>
-<li><a href="#org63ea637">First-attempt: Disable retpoline in bpf_prog_run_xdp</a></li>
-<li><a href="#orgd807f7f">Second attempt: Disable a lot more retpoline function calls</a></li>
+<li><a href="#First-attempt%3A%20Disable%20retpoline%20in%20bpf_prog_run_xdp">First-attempt: Disable retpoline in bpf_prog_run_xdp</a></li>
+<li><a href="#Second%20attempt%3A%20Disable%20a%20lot%20more%20retpoline%20function%20calls">Second attempt: Disable a lot more retpoline function calls</a></li>
 </ul>
 </li>
 </ul>
@@ -74,9 +73,9 @@ Christoph Hellwig &lt;hch@lst.de&gt; is helping out addressing/mitigating the
 RETPOLINE overhead, which XDP suffers under.
 </p>
 
-<div id="outline-container-org505d09b" class="outline-2">
-<h2 id="org505d09b">Patchset avail here</h2>
-<div class="outline-text-2" id="text-org505d09b">
+<div id="outline-container-Patchset%20avail%20here" class="outline-2">
+<h2 id="Patchset%20avail%20here"><a href="#Patchset%20avail%20here">Patchset avail here</a></h2>
+<div class="outline-text-2" id="text-Patchset%20avail%20here">
 <p>
 Gitweb: on branch "dma-direct-calls"
 </p>
@@ -95,9 +94,9 @@ $ git checkout dma-direct-calls
 </div>
 </div>
 
-<div id="outline-container-org7140fce" class="outline-2">
-<h2 id="org7140fce">General notes</h2>
-<div class="outline-text-2" id="text-org7140fce">
+<div id="outline-container-General%20notes" class="outline-2">
+<h2 id="General%20notes"><a href="#General%20notes">General notes</a></h2>
+<div class="outline-text-2" id="text-General%20notes">
 <p>
 Even if removing/mitigating all DMA indirect calls, then there are still some
 indirect calls, that we cannot avoid:
@@ -111,9 +110,9 @@ indirect calls, that we cannot avoid:
 </div>
 
 
-<div id="outline-container-org3507d1d" class="outline-2">
-<h2 id="org3507d1d">Summary of results</h2>
-<div class="outline-text-2" id="text-org3507d1d">
+<div id="outline-container-Summary%20of%20results" class="outline-2">
+<h2 id="Summary%20of%20results"><a href="#Summary%20of%20results">Summary of results</a></h2>
+<div class="outline-text-2" id="text-Summary%20of%20results">
 <p>
 Using XDP_REDIRECT between drivers RX ixgbe(10G) redirect TX i40e(40G),
 via BPF devmap (used samples/bpf/xdp_redirect_map) . (Note choose
@@ -270,9 +269,9 @@ Strangely the Instruction-Cache is also under heavier pressure:
 </div>
 
 
-<div id="outline-container-org2fff02b" class="outline-2">
-<h2 id="org2fff02b">Testing Hellwig branch "dma-direct-calls"</h2>
-<div class="outline-text-2" id="text-org2fff02b">
+<div id="outline-container-Testing%20Hellwig%20branch%20%22dma-direct-calls%22" class="outline-2">
+<h2 id="Testing%20Hellwig%20branch%20%22dma-direct-calls%22"><a href="#Testing%20Hellwig%20branch%20%22dma-direct-calls%22">Testing Hellwig branch "dma-direct-calls"</a></h2>
+<div class="outline-text-2" id="text-Testing%20Hellwig%20branch%20%22dma-direct-calls%22">
 <p>
 Testing with Hellwig's branch "dma-direct-calls"
 </p>
@@ -281,13 +280,13 @@ Testing with Hellwig's branch "dma-direct-calls"
 </ul>
 </div>
 
-<div id="outline-container-orge81a8ce" class="outline-3">
-<h3 id="orge81a8ce">Driver ixgbe</h3>
-<div class="outline-text-3" id="text-orge81a8ce">
+<div id="outline-container-Driver%20ixgbe" class="outline-3">
+<h3 id="Driver%20ixgbe"><a href="#Driver%20ixgbe">Driver ixgbe</a></h3>
+<div class="outline-text-3" id="text-Driver%20ixgbe">
 </div>
-<div id="outline-container-org96d953c" class="outline-4">
-<h4 id="org96d953c">ixgbe: XDP_DROP branch "dma-direct-calls"</h4>
-<div class="outline-text-4" id="text-org96d953c">
+<div id="outline-container-ixgbe%3A%20XDP_DROP%20branch%20%22dma-direct-calls%22" class="outline-4">
+<h4 id="ixgbe%3A%20XDP_DROP%20branch%20%22dma-direct-calls%22"><a href="#ixgbe%3A%20XDP_DROP%20branch%20%22dma-direct-calls%22">ixgbe: XDP_DROP branch "dma-direct-calls"</a></h4>
+<div class="outline-text-4" id="text-ixgbe%3A%20XDP_DROP%20branch%20%22dma-direct-calls%22">
 <p>
 XDP_DROP performance okay, but AFAICR it was also okay before, as it was only
 affected by DMA-sync call.
@@ -306,9 +305,9 @@ rx_queue_index    3:sum 14,435,902
 </div>
 </div>
 
-<div id="outline-container-orgd2024a0" class="outline-4">
-<h4 id="orgd2024a0">ixgbe: XDP_REDIRECT devmap</h4>
-<div class="outline-text-4" id="text-orgd2024a0">
+<div id="outline-container-ixgbe%3A%20XDP_REDIRECT%20devmap" class="outline-4">
+<h4 id="ixgbe%3A%20XDP_REDIRECT%20devmap"><a href="#ixgbe%3A%20XDP_REDIRECT%20devmap">ixgbe: XDP_REDIRECT devmap</a></h4>
+<div class="outline-text-4" id="text-ixgbe%3A%20XDP_REDIRECT%20devmap">
 <p>
 XDP redirect (via devmap) RX:ixgbe2 -&gt; TX:i40e1, this is redirect from RX
 link-speed 10Gbit/s out TXC 40Gbit/s link-speed to make sure TX side is not
@@ -400,9 +399,9 @@ $ sudo ~/perf stat -C3 -e cycles -e  instructions -e cache-references -e cache-m
 </div>
 </div>
 
-<div id="outline-container-orgf4ccdd1" class="outline-2">
-<h2 id="orgf4ccdd1">Baseline kernel with retpoline</h2>
-<div class="outline-text-2" id="text-orgf4ccdd1">
+<div id="outline-container-Baseline%20kernel%20with%20retpoline" class="outline-2">
+<h2 id="Baseline%20kernel%20with%20retpoline"><a href="#Baseline%20kernel%20with%20retpoline">Baseline kernel with retpoline</a></h2>
+<div class="outline-text-2" id="text-Baseline%20kernel%20with%20retpoline">
 <p>
 Need a baseline kernel, just before Hellwigs patches:
 </p>
@@ -415,13 +414,13 @@ git checkout -b hellwig-baseline ef78e5ec9214
 </pre>
 </div>
 
-<div id="outline-container-org897ddf6" class="outline-3">
-<h3 id="org897ddf6">Driver ixgbe</h3>
-<div class="outline-text-3" id="text-org897ddf6">
+<div id="outline-container-Baseline%20kernel%20with%20retpoline--Driver%20ixgbe" class="outline-3">
+<h3 id="Baseline%20kernel%20with%20retpoline--Driver%20ixgbe"><a href="#Baseline%20kernel%20with%20retpoline--Driver%20ixgbe">Driver ixgbe</a></h3>
+<div class="outline-text-3" id="text-Baseline%20kernel%20with%20retpoline--Driver%20ixgbe">
 </div>
-<div id="outline-container-org4e853e9" class="outline-4">
-<h4 id="org4e853e9">ixgbe: XDP_DROP (baseline-RETPOLINE)</h4>
-<div class="outline-text-4" id="text-org4e853e9">
+<div id="outline-container-ixgbe%3A%20XDP_DROP%20%28baseline-RETPOLINE%29" class="outline-4">
+<h4 id="ixgbe%3A%20XDP_DROP%20%28baseline-RETPOLINE%29"><a href="#ixgbe%3A%20XDP_DROP%20%28baseline-RETPOLINE%29">ixgbe: XDP_DROP (baseline-RETPOLINE)</a></h4>
+<div class="outline-text-4" id="text-ixgbe%3A%20XDP_DROP%20%28baseline-RETPOLINE%29">
 <pre class="example">
 sudo ./xdp_rxq_info --dev ixgbe2 --action XDP_DROP
 Running XDP on dev:ixgbe2 (ifindex:7) action:XDP_DROP options:no_touch
@@ -436,9 +435,9 @@ rx_queue_index    4:sum 14,602,528
 </div>
 </div>
 
-<div id="outline-container-orgf1794b2" class="outline-4">
-<h4 id="orgf1794b2">ixgbe: XDP_REDIRECT devmap (baseline-RETPOLINE)</h4>
-<div class="outline-text-4" id="text-orgf1794b2">
+<div id="outline-container-ixgbe%3A%20XDP_REDIRECT%20devmap%20%28baseline-RETPOLINE%29" class="outline-4">
+<h4 id="ixgbe%3A%20XDP_REDIRECT%20devmap%20%28baseline-RETPOLINE%29"><a href="#ixgbe%3A%20XDP_REDIRECT%20devmap%20%28baseline-RETPOLINE%29">ixgbe: XDP_REDIRECT devmap (baseline-RETPOLINE)</a></h4>
+<div class="outline-text-4" id="text-ixgbe%3A%20XDP_REDIRECT%20devmap%20%28baseline-RETPOLINE%29">
 <p>
 XDP redirect (via devmap) RX:ixgbe2 -&gt; TX:i40e1, this is redirect from RX
 link-speed 10Gbit/s out TXC 40Gbit/s link-speed to make sure TX side is not
@@ -505,9 +504,9 @@ $ sudo ~/perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-m
 </div>
 
 
-<div id="outline-container-orge52544f" class="outline-2">
-<h2 id="orge52544f">Baseline kernel with no-retpoline</h2>
-<div class="outline-text-2" id="text-orge52544f">
+<div id="outline-container-Baseline%20kernel%20with%20no-retpoline" class="outline-2">
+<h2 id="Baseline%20kernel%20with%20no-retpoline"><a href="#Baseline%20kernel%20with%20no-retpoline">Baseline kernel with no-retpoline</a></h2>
+<div class="outline-text-2" id="text-Baseline%20kernel%20with%20no-retpoline">
 <p>
 What was performance before RETPOLINE? Testing without CONFIG_RETPOLINE
 </p>
@@ -516,13 +515,13 @@ What was performance before RETPOLINE? Testing without CONFIG_RETPOLINE
 </ul>
 </div>
 
-<div id="outline-container-org2ca09fc" class="outline-3">
-<h3 id="org2ca09fc">Driver ixgbe</h3>
-<div class="outline-text-3" id="text-org2ca09fc">
+<div id="outline-container-Baseline%20kernel%20with%20no-retpoline--Driver%20ixgbe" class="outline-3">
+<h3 id="Baseline%20kernel%20with%20no-retpoline--Driver%20ixgbe"><a href="#Baseline%20kernel%20with%20no-retpoline--Driver%20ixgbe">Driver ixgbe</a></h3>
+<div class="outline-text-3" id="text-Baseline%20kernel%20with%20no-retpoline--Driver%20ixgbe">
 </div>
-<div id="outline-container-orgbfa72f8" class="outline-4">
-<h4 id="orgbfa72f8">ixgbe: XDP_REDIRECT devmap (baseline-NO-retpoline)</h4>
-<div class="outline-text-4" id="text-orgbfa72f8">
+<div id="outline-container-ixgbe%3A%20XDP_REDIRECT%20devmap%20%28baseline-NO-retpoline%29" class="outline-4">
+<h4 id="ixgbe%3A%20XDP_REDIRECT%20devmap%20%28baseline-NO-retpoline%29"><a href="#ixgbe%3A%20XDP_REDIRECT%20devmap%20%28baseline-NO-retpoline%29">ixgbe: XDP_REDIRECT devmap (baseline-NO-retpoline)</a></h4>
+<div class="outline-text-4" id="text-ixgbe%3A%20XDP_REDIRECT%20devmap%20%28baseline-NO-retpoline%29">
 <pre class="example">
 [jbrouer@broadwell kernel-bpf-samples]$ sudo ./xdp_redirect_map  $(&lt;/sys/class/net/ixgbe2/ifindex) $(&lt;/sys/class/net/i40e1/ifindex)
 input: 7 output: 2
@@ -580,9 +579,9 @@ $ sudo ~/perf stat -C2 -e cycles -e  instructions -e cache-references -e cache-m
 </div>
 </div>
 
-<div id="outline-container-org8e882ec" class="outline-2">
-<h2 id="org8e882ec">Kernel new git branch dma-direct-calls.2</h2>
-<div class="outline-text-2" id="text-org8e882ec">
+<div id="outline-container-Kernel%20new%20git%20branch%20dma-direct-calls.2" class="outline-2">
+<h2 id="Kernel%20new%20git%20branch%20dma-direct-calls.2"><a href="#Kernel%20new%20git%20branch%20dma-direct-calls.2">Kernel new git branch dma-direct-calls.2</a></h2>
+<div class="outline-text-2" id="text-Kernel%20new%20git%20branch%20dma-direct-calls.2">
 <p>
 Branch: dma-direct-calls.2
 </p>
@@ -591,9 +590,9 @@ Branch: dma-direct-calls.2
 </ul>
 </div>
 
-<div id="outline-container-orga2ae69b" class="outline-3">
-<h3 id="orga2ae69b">ixgbe: XDP_REDIRECT devmap (branch dma-direct-calls.2)</h3>
-<div class="outline-text-3" id="text-orga2ae69b">
+<div id="outline-container-ixgbe%3A%20XDP_REDIRECT%20devmap%20%28branch%20dma-direct-calls.2%29" class="outline-3">
+<h3 id="ixgbe%3A%20XDP_REDIRECT%20devmap%20%28branch%20dma-direct-calls.2%29"><a href="#ixgbe%3A%20XDP_REDIRECT%20devmap%20%28branch%20dma-direct-calls.2%29">ixgbe: XDP_REDIRECT devmap (branch dma-direct-calls.2)</a></h3>
+<div class="outline-text-3" id="text-ixgbe%3A%20XDP_REDIRECT%20devmap%20%28branch%20dma-direct-calls.2%29">
 <p>
 Redirect via:
 </p>
@@ -649,9 +648,9 @@ $ sudo ~/perf stat -C5 -e cycles -e  instructions -e cache-references -e cache-m
 </div>
 </div>
 
-<div id="outline-container-org0b40c2b" class="outline-2">
-<h2 id="org0b40c2b">Kernel git branch dma-direct-calls.2 but NO-retpoline</h2>
-<div class="outline-text-2" id="text-org0b40c2b">
+<div id="outline-container-Kernel%20git%20branch%20dma-direct-calls.2%20but%20NO-retpoline" class="outline-2">
+<h2 id="Kernel%20git%20branch%20dma-direct-calls.2%20but%20NO-retpoline"><a href="#Kernel%20git%20branch%20dma-direct-calls.2%20but%20NO-retpoline">Kernel git branch dma-direct-calls.2 but NO-retpoline</a></h2>
+<div class="outline-text-2" id="text-Kernel%20git%20branch%20dma-direct-calls.2%20but%20NO-retpoline">
 <p>
 What is the effect of the DMA API changes (branch dma-direct-calls.2),
 when NOT compiled with RETPOLINE, that is an intersting question?  As
@@ -702,9 +701,9 @@ $ sudo ~/perf stat -C0 -e cycles -e  instructions -e cache-references -e cache-m
 </div>
 </div>
 
-<div id="outline-container-org0bc219a" class="outline-2">
-<h2 id="org0bc219a">Investigate overhead of BPF-indirect retpoline</h2>
-<div class="outline-text-2" id="text-org0bc219a">
+<div id="outline-container-Investigate%20overhead%20of%20BPF-indirect%20retpoline" class="outline-2">
+<h2 id="Investigate%20overhead%20of%20BPF-indirect%20retpoline"><a href="#Investigate%20overhead%20of%20BPF-indirect%20retpoline">Investigate overhead of BPF-indirect retpoline</a></h2>
+<div class="outline-text-2" id="text-Investigate%20overhead%20of%20BPF-indirect%20retpoline">
 <p>
 Find way to disable retpoline for BPF XDP indirect call to test DMA
 patches. As described earlier:
@@ -738,9 +737,9 @@ For an entire C-file RETPOLINE can be  <b>disabled</b> via <a href="https://gcc.
 </p>
 </div>
 
-<div id="outline-container-org63ea637" class="outline-3">
-<h3 id="org63ea637">First-attempt: Disable retpoline in bpf_prog_run_xdp</h3>
-<div class="outline-text-3" id="text-org63ea637">
+<div id="outline-container-First-attempt%3A%20Disable%20retpoline%20in%20bpf_prog_run_xdp" class="outline-3">
+<h3 id="First-attempt%3A%20Disable%20retpoline%20in%20bpf_prog_run_xdp"><a href="#First-attempt%3A%20Disable%20retpoline%20in%20bpf_prog_run_xdp">First-attempt: Disable retpoline in bpf_prog_run_xdp</a></h3>
+<div class="outline-text-3" id="text-First-attempt%3A%20Disable%20retpoline%20in%20bpf_prog_run_xdp">
 <div class="org-src-container">
 <pre class="src src-diff">diff --git a/include/linux/filter.h b/include/linux/filter.h
 index de629b706d1d..ed0a5153e2a0 100644
@@ -800,9 +799,9 @@ $ sudo ~/perf stat -C1 -e cycles -e  instructions -e cache-references -e cache-m
 </div>
 </div>
 
-<div id="outline-container-orgd807f7f" class="outline-3">
-<h3 id="orgd807f7f">Second attempt: Disable a lot more retpoline function calls</h3>
-<div class="outline-text-3" id="text-orgd807f7f">
+<div id="outline-container-Second%20attempt%3A%20Disable%20a%20lot%20more%20retpoline%20function%20calls" class="outline-3">
+<h3 id="Second%20attempt%3A%20Disable%20a%20lot%20more%20retpoline%20function%20calls"><a href="#Second%20attempt%3A%20Disable%20a%20lot%20more%20retpoline%20function%20calls">Second attempt: Disable a lot more retpoline function calls</a></h3>
+<div class="outline-text-3" id="text-Second%20attempt%3A%20Disable%20a%20lot%20more%20retpoline%20function%20calls">
 <p>
 Wonder it is the dev-&gt;ndo_xdp_xmit call?
 Or napi-&gt;poll call?
@@ -948,7 +947,7 @@ $ sudo ~/perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-m
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="date">Date: 2019-01-22 Tue 12:17</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

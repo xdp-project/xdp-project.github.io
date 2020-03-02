@@ -3,7 +3,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-01-24 Fri 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Implementing page_pool return-hook via SKB</title>
@@ -22,29 +21,29 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org7fec708">Basic idea</a></li>
-<li><a href="#org8b2d435">(pre-RFC) Wrong recycle on two branches</a></li>
-<li><a href="#org62e4da5">RFC-patchset</a>
+<li><a href="#Basic%20idea">Basic idea</a></li>
+<li><a href="#%28pre-RFC%29%20Wrong%20recycle%20on%20two%20branches">(pre-RFC) Wrong recycle on two branches</a></li>
+<li><a href="#RFC-patchset">RFC-patchset</a>
 <ul>
-<li><a href="#org6350307">RFC-feedback</a>
+<li><a href="#RFC-feedback">RFC-feedback</a>
 <ul>
-<li><a href="#org3474f61">Case: skb_try_coalesce()</a></li>
-<li><a href="#org0558356">Case: skb_gro_receive()</a></li>
+<li><a href="#Case%3A%20skb_try_coalesce%28%29">Case: skb_try_coalesce()</a></li>
+<li><a href="#Case%3A%20skb_gro_receive%28%29">Case: skb_gro_receive()</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org995eb82">Patchset: DMA addr in struct page</a>
+<li><a href="#Patchset%3A%20DMA%20addr%20in%20struct%20page">Patchset: DMA addr in struct page</a>
 <ul>
-<li><a href="#org87b6d5d">Cover-letter</a></li>
-<li><a href="#orgfa517ea">Stgit mail command</a></li>
-<li><a href="#orgf089686">Using DMA_ATTR_SKIP_CPU_SYNC</a></li>
+<li><a href="#Cover-letter">Cover-letter</a></li>
+<li><a href="#Stgit%20mail%20command">Stgit mail command</a></li>
+<li><a href="#Using%20DMA_ATTR_SKIP_CPU_SYNC">Using DMA_ATTR_SKIP_CPU_SYNC</a></li>
 </ul>
 </li>
-<li><a href="#orga44c3fc">Testing procedures</a>
+<li><a href="#Testing%20procedures">Testing procedures</a>
 <ul>
-<li><a href="#org72f0cc4">Multicast traffic</a></li>
-<li><a href="#orge3d9d02">TCP traffic</a></li>
+<li><a href="#Multicast%20traffic">Multicast traffic</a></li>
+<li><a href="#TCP%20traffic">TCP traffic</a></li>
 </ul>
 </li>
 </ul>
@@ -56,9 +55,9 @@ return-hook via SKB (See section "Return-hook: via SKB" in
 <a href="page_pool01_evolving_API.html">page_pool01_evolving_API.html</a>)
 </p>
 
-<div id="outline-container-org7fec708" class="outline-2">
-<h2 id="org7fec708">Basic idea</h2>
-<div class="outline-text-2" id="text-org7fec708">
+<div id="outline-container-Basic%20idea" class="outline-2">
+<h2 id="Basic%20idea"><a href="#Basic%20idea">Basic idea</a></h2>
+<div class="outline-text-2" id="text-Basic%20idea">
 <p>
 SKB freeing basically all goes through <code>__kfree_skb()</code>, and following
 the code path expanding relevant code-inside (see below), then is it
@@ -90,9 +89,9 @@ return hook.
 </div>
 
 
-<div id="outline-container-org8b2d435" class="outline-2">
-<h2 id="org8b2d435">(pre-RFC) Wrong recycle on two branches</h2>
-<div class="outline-text-2" id="text-org8b2d435">
+<div id="outline-container-%28pre-RFC%29%20Wrong%20recycle%20on%20two%20branches" class="outline-2">
+<h2 id="%28pre-RFC%29%20Wrong%20recycle%20on%20two%20branches"><a href="#%28pre-RFC%29%20Wrong%20recycle%20on%20two%20branches">(pre-RFC) Wrong recycle on two branches</a></h2>
+<div class="outline-text-2" id="text-%28pre-RFC%29%20Wrong%20recycle%20on%20two%20branches">
 <p>
 Git tree: <a href="https://github.com/apalos/bpf-next">https://github.com/apalos/bpf-next</a>
 Branches:
@@ -129,9 +128,9 @@ Fixed in <a href="https://github.com/apalos/bpf-next/commit/dd84df8d72f792ac9bbf
 </div>
 </div>
 
-<div id="outline-container-org62e4da5" class="outline-2">
-<h2 id="org62e4da5">RFC-patchset</h2>
-<div class="outline-text-2" id="text-org62e4da5">
+<div id="outline-container-RFC-patchset" class="outline-2">
+<h2 id="RFC-patchset"><a href="#RFC-patchset">RFC-patchset</a></h2>
+<div class="outline-text-2" id="text-RFC-patchset">
 <p>
 Upstream RFC patchset was send <span class="timestamp-wrapper"><span class="timestamp">&lt;2018-12-07 Fri&gt;</span></span>.
 </p>
@@ -150,9 +149,9 @@ This patchset corresponds to:
 </ul>
 </div>
 
-<div id="outline-container-org6350307" class="outline-3">
-<h3 id="org6350307">RFC-feedback</h3>
-<div class="outline-text-3" id="text-org6350307">
+<div id="outline-container-RFC-feedback" class="outline-3">
+<h3 id="RFC-feedback"><a href="#RFC-feedback">RFC-feedback</a></h3>
+<div class="outline-text-3" id="text-RFC-feedback">
 <p>
 DaveM didn't reject the 4 bytes extra in SKB (<a href="https://patchwork.ozlabs.org/patch/1009121/#2048112">link</a>)
 </p>
@@ -199,9 +198,9 @@ TODO: go through each case Eric pointed out and check constraints.
 </p>
 </div>
 
-<div id="outline-container-org3474f61" class="outline-4">
-<h4 id="org3474f61">Case: skb_try_coalesce()</h4>
-<div class="outline-text-4" id="text-org3474f61">
+<div id="outline-container-Case%3A%20skb_try_coalesce%28%29" class="outline-4">
+<h4 id="Case%3A%20skb_try_coalesce%28%29"><a href="#Case%3A%20skb_try_coalesce%28%29">Case: skb_try_coalesce()</a></h4>
+<div class="outline-text-4" id="text-Case%3A%20skb_try_coalesce%28%29">
 <p>
 skb_try_coalesce() was broken, as it converts the skb-&gt;head into a skb "frags"
 of another SKB.
@@ -219,21 +218,21 @@ Look into code solutions, in prioritized order:
 </div>
 
 
-<div id="outline-container-org0558356" class="outline-4">
-<h4 id="org0558356">Case: skb_gro_receive()</h4>
+<div id="outline-container-Case%3A%20skb_gro_receive%28%29" class="outline-4">
+<h4 id="Case%3A%20skb_gro_receive%28%29"><a href="#Case%3A%20skb_gro_receive%28%29">Case: skb_gro_receive()</a></h4>
 </div>
 </div>
 </div>
 
 
 
-<div id="outline-container-org995eb82" class="outline-2">
-<h2 id="org995eb82">Patchset: DMA addr in struct page</h2>
-<div class="outline-text-2" id="text-org995eb82">
+<div id="outline-container-Patchset%3A%20DMA%20addr%20in%20struct%20page" class="outline-2">
+<h2 id="Patchset%3A%20DMA%20addr%20in%20struct%20page"><a href="#Patchset%3A%20DMA%20addr%20in%20struct%20page">Patchset: DMA addr in struct page</a></h2>
+<div class="outline-text-2" id="text-Patchset%3A%20DMA%20addr%20in%20struct%20page">
 </div>
-<div id="outline-container-org87b6d5d" class="outline-3">
-<h3 id="org87b6d5d">Cover-letter</h3>
-<div class="outline-text-3" id="text-org87b6d5d">
+<div id="outline-container-Cover-letter" class="outline-3">
+<h3 id="Cover-letter"><a href="#Cover-letter">Cover-letter</a></h3>
+<div class="outline-text-3" id="text-Cover-letter">
 <p>
 Subject: Fix page_pool API and dma address storage
 </p>
@@ -277,9 +276,9 @@ Question: Who of the maintainers MM or netdev will take these changes?
 </div>
 </div>
 
-<div id="outline-container-orgfa517ea" class="outline-3">
-<h3 id="orgfa517ea">Stgit mail command</h3>
-<div class="outline-text-3" id="text-orgfa517ea">
+<div id="outline-container-Stgit%20mail%20command" class="outline-3">
+<h3 id="Stgit%20mail%20command"><a href="#Stgit%20mail%20command">Stgit mail command</a></h3>
+<div class="outline-text-3" id="text-Stgit%20mail%20command">
 <pre class="example">
 stg mail --prefix=net-next --version="V3" --edit-cover  --cc meup \
  --to netdev --to linux-mm@kvack.org \
@@ -294,9 +293,9 @@ stg mail --prefix=net-next --version="V3" --edit-cover  --cc meup \
 </div>
 
 
-<div id="outline-container-orgf089686" class="outline-3">
-<h3 id="orgf089686">Using DMA_ATTR_SKIP_CPU_SYNC</h3>
-<div class="outline-text-3" id="text-orgf089686">
+<div id="outline-container-Using%20DMA_ATTR_SKIP_CPU_SYNC" class="outline-3">
+<h3 id="Using%20DMA_ATTR_SKIP_CPU_SYNC"><a href="#Using%20DMA_ATTR_SKIP_CPU_SYNC">Using DMA_ATTR_SKIP_CPU_SYNC</a></h3>
+<div class="outline-text-3" id="text-Using%20DMA_ATTR_SKIP_CPU_SYNC">
 <p>
 page_pool: use DMA_ATTR_SKIP_CPU_SYNC for DMA mappings
 </p>
@@ -315,13 +314,13 @@ driver takes over the DMA-sync steps.
 </div>
 
 
-<div id="outline-container-orga44c3fc" class="outline-2">
-<h2 id="orga44c3fc">Testing procedures</h2>
-<div class="outline-text-2" id="text-orga44c3fc">
+<div id="outline-container-Testing%20procedures" class="outline-2">
+<h2 id="Testing%20procedures"><a href="#Testing%20procedures">Testing procedures</a></h2>
+<div class="outline-text-2" id="text-Testing%20procedures">
 </div>
-<div id="outline-container-org72f0cc4" class="outline-3">
-<h3 id="org72f0cc4">Multicast traffic</h3>
-<div class="outline-text-3" id="text-org72f0cc4">
+<div id="outline-container-Multicast%20traffic" class="outline-3">
+<h3 id="Multicast%20traffic"><a href="#Multicast%20traffic">Multicast traffic</a></h3>
+<div class="outline-text-3" id="text-Multicast%20traffic">
 <p>
 Multicast traffic requires skb_clone'ing, so here is a test case with
 multicast:
@@ -360,9 +359,9 @@ receiving packets.
 </div>
 </div>
 
-<div id="outline-container-orge3d9d02" class="outline-3">
-<h3 id="orge3d9d02">TCP traffic</h3>
-<div class="outline-text-3" id="text-orge3d9d02">
+<div id="outline-container-TCP%20traffic" class="outline-3">
+<h3 id="TCP%20traffic"><a href="#TCP%20traffic">TCP traffic</a></h3>
+<div class="outline-text-3" id="text-TCP%20traffic">
 <p>
 Both scp and iperf seem to trigger skb_try_coalesce()
 </p>
@@ -387,7 +386,7 @@ or from a host send a file to espressobin via scp
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="date">Date: 2019-05-21 Tue 17:31</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

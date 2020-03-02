@@ -3,7 +3,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-01-24 Fri 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>CPUMAP optimizations patchset-V2</title>
@@ -22,57 +21,57 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgb1fc33e">Baseline benchmarks</a>
+<li><a href="#Baseline%20benchmarks">Baseline benchmarks</a>
 <ul>
-<li><a href="#orgf5b9c1f">Baseline: RX-NAPI CPU handle (driver: i40e)</a>
+<li><a href="#Baseline%3A%20RX-NAPI%20CPU%20handle%20%28driver%3A%20i40e%29">Baseline: RX-NAPI CPU handle (driver: i40e)</a>
 <ul>
-<li><a href="#org0e726da">baseline: UdpNoPorts: 3,380,531</a></li>
-<li><a href="#org994f18f">baseline: iptables-raw drop: 5,775,937 pps (GRO-enabled)</a></li>
-<li><a href="#org2ae35ec">baseline: iptables-raw drop: 6,783,904 pps (GRO-disabled)</a></li>
+<li><a href="#baseline%3A%20UdpNoPorts%3A%203%2C380%2C531">baseline: UdpNoPorts: 3,380,531</a></li>
+<li><a href="#baseline%3A%20iptables-raw%20drop%3A%205%2C775%2C937%20pps%20%28GRO-enabled%29">baseline: iptables-raw drop: 5,775,937 pps (GRO-enabled)</a></li>
+<li><a href="#baseline%3A%20iptables-raw%20drop%3A%206%2C783%2C904%20pps%20%28GRO-disabled%29">baseline: iptables-raw drop: 6,783,904 pps (GRO-disabled)</a></li>
 </ul>
 </li>
-<li><a href="#org5b6804f">Baseline: cpumap redirect</a>
+<li><a href="#Baseline%3A%20cpumap%20redirect">Baseline: cpumap redirect</a>
 <ul>
-<li><a href="#org06ee0fb">baseline-redirect: UdpNoPorts: 3,180,074</a></li>
-<li><a href="#orgaf12a4b">baseline-redirect: iptables-raw drop: 6,193,534</a></li>
+<li><a href="#baseline-redirect%3A%20UdpNoPorts%3A%203%2C180%2C074">baseline-redirect: UdpNoPorts: 3,180,074</a></li>
+<li><a href="#baseline-redirect%3A%20iptables-raw%20drop%3A%206%2C193%2C534">baseline-redirect: iptables-raw drop: 6,193,534</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org2096242">Patch descriptions + benchmarks</a>
+<li><a href="#Patch%20descriptions%20%2B%20benchmarks">Patch descriptions + benchmarks</a>
 <ul>
-<li><a href="#org3eaec0d">Patch1: bpf: cpumap use ptr_ring_consume_batched</a>
+<li><a href="#Patch1%3A%20bpf%3A%20cpumap%20use%20ptr_ring_consume_batched">Patch1: bpf: cpumap use ptr_ring_consume_batched</a>
 <ul>
-<li><a href="#orga9425e8">redirect: UdpNoPorts: 3,327,729</a></li>
-<li><a href="#org5796c07">redirect: iptables-raw drop: 6,321,540</a></li>
+<li><a href="#redirect%3A%20UdpNoPorts%3A%203%2C327%2C729">redirect: UdpNoPorts: 3,327,729</a></li>
+<li><a href="#redirect%3A%20iptables-raw%20drop%3A%206%2C321%2C540">redirect: iptables-raw drop: 6,321,540</a></li>
 </ul>
 </li>
-<li><a href="#org5472367">Patch2: net: core: introduce build_skb_around</a>
+<li><a href="#Patch2%3A%20net%3A%20core%3A%20introduce%20build_skb_around">Patch2: net: core: introduce build_skb_around</a>
 <ul>
-<li><a href="#org6d5e270">redirect: UdpNoPorts: 3,221,303</a></li>
-<li><a href="#org5b3b14c">redirect: iptables-raw drop: 6,320,066</a></li>
+<li><a href="#redirect%3A%20UdpNoPorts%3A%203%2C221%2C303">redirect: UdpNoPorts: 3,221,303</a></li>
+<li><a href="#redirect%3A%20iptables-raw%20drop%3A%206%2C320%2C066">redirect: iptables-raw drop: 6,320,066</a></li>
 </ul>
 </li>
-<li><a href="#org1aafbd5">Patch3: bpf: cpumap do bulk allocation of SKBs</a>
+<li><a href="#Patch3%3A%20bpf%3A%20cpumap%20do%20bulk%20allocation%20of%20SKBs">Patch3: bpf: cpumap do bulk allocation of SKBs</a>
 <ul>
-<li><a href="#org9daa3e2">redirect: UdpNoPorts: 3,290,563</a></li>
-<li><a href="#org4d2f30a">redirect: iptables-raw drop: 6,650,112</a></li>
+<li><a href="#redirect%3A%20UdpNoPorts%3A%203%2C290%2C563">redirect: UdpNoPorts: 3,290,563</a></li>
+<li><a href="#redirect%3A%20iptables-raw%20drop%3A%206%2C650%2C112">redirect: iptables-raw drop: 6,650,112</a></li>
 </ul>
 </li>
-<li><a href="#org5e2d0b1">Patch4: bpf: cpumap memory prefetchw optimizations for struct page</a>
+<li><a href="#Patch4%3A%20bpf%3A%20cpumap%20memory%20prefetchw%20optimizations%20for%20struct%20page">Patch4: bpf: cpumap memory prefetchw optimizations for struct page</a>
 <ul>
-<li><a href="#org0203208">redirect: UdpNoPorts: 3,520,250</a></li>
-<li><a href="#orgbac2c3e">redirect: iptables-raw drop: 7,649,604</a></li>
-<li><a href="#org68f7bc9">cpumap-qsize:64: redirect: UdpNoPorts: 3,930,379</a></li>
-<li><a href="#orgd8eb40e">cpumap-qsize:64: redirect: iptables-raw drop: 7,329,574</a></li>
+<li><a href="#redirect%3A%20UdpNoPorts%3A%203%2C520%2C250">redirect: UdpNoPorts: 3,520,250</a></li>
+<li><a href="#redirect%3A%20iptables-raw%20drop%3A%207%2C649%2C604">redirect: iptables-raw drop: 7,649,604</a></li>
+<li><a href="#cpumap-qsize%3A64%3A%20redirect%3A%20UdpNoPorts%3A%203%2C930%2C379">cpumap-qsize:64: redirect: UdpNoPorts: 3,930,379</a></li>
+<li><a href="#cpumap-qsize%3A64%3A%20redirect%3A%20iptables-raw%20drop%3A%207%2C329%2C574">cpumap-qsize:64: redirect: iptables-raw drop: 7,329,574</a></li>
 </ul>
 </li>
-<li><a href="#org8d03c3d">Patch5: bpf: cpumap use netif_receive_skb_list</a>
+<li><a href="#Patch5%3A%20bpf%3A%20cpumap%20use%20netif_receive_skb_list">Patch5: bpf: cpumap use netif_receive_skb_list</a>
 <ul>
-<li><a href="#org876dccb">redirect: UdpNoPorts: 3,303,269</a></li>
-<li><a href="#org31b6824">redirect: iptables-raw drop: 7,160,297</a></li>
-<li><a href="#org3748c9f">cpumap-qsize:64: redirect: UdpNoPorts: 4,089,778</a></li>
-<li><a href="#org774205d">cpumap-qsize:64: redirect: iptables-raw drop: 6,869,895</a></li>
+<li><a href="#redirect%3A%20UdpNoPorts%3A%203%2C303%2C269">redirect: UdpNoPorts: 3,303,269</a></li>
+<li><a href="#redirect%3A%20iptables-raw%20drop%3A%207%2C160%2C297">redirect: iptables-raw drop: 7,160,297</a></li>
+<li><a href="#cpumap-qsize%3A64%3A%20redirect%3A%20UdpNoPorts%3A%204%2C089%2C778">cpumap-qsize:64: redirect: UdpNoPorts: 4,089,778</a></li>
+<li><a href="#cpumap-qsize%3A64%3A%20redirect%3A%20iptables-raw%20drop%3A%206%2C869%2C895">cpumap-qsize:64: redirect: iptables-raw drop: 6,869,895</a></li>
 </ul>
 </li>
 </ul>
@@ -81,9 +80,9 @@
 </div>
 </div>
 
-<div id="outline-container-orgb1fc33e" class="outline-2">
-<h2 id="orgb1fc33e">Baseline benchmarks</h2>
-<div class="outline-text-2" id="text-orgb1fc33e">
+<div id="outline-container-Baseline%20benchmarks" class="outline-2">
+<h2 id="Baseline%20benchmarks"><a href="#Baseline%20benchmarks">Baseline benchmarks</a></h2>
+<div class="outline-text-2" id="text-Baseline%20benchmarks">
 <p>
 Rebased patchset on: 8af9f7291e22 ("Merge branch 'sctp-skb-list'").
 </p>
@@ -96,18 +95,18 @@ Linux broadwell 5.1.0-rc4-bpf-next-cpumap-baseline+ #134 SMP PREEMPT Fri Apr 12 
 </pre>
 </div>
 
-<div id="outline-container-orgf5b9c1f" class="outline-3">
-<h3 id="orgf5b9c1f">Baseline: RX-NAPI CPU handle (driver: i40e)</h3>
-<div class="outline-text-3" id="text-orgf5b9c1f">
+<div id="outline-container-Baseline%3A%20RX-NAPI%20CPU%20handle%20%28driver%3A%20i40e%29" class="outline-3">
+<h3 id="Baseline%3A%20RX-NAPI%20CPU%20handle%20%28driver%3A%20i40e%29"><a href="#Baseline%3A%20RX-NAPI%20CPU%20handle%20%28driver%3A%20i40e%29">Baseline: RX-NAPI CPU handle (driver: i40e)</a></h3>
+<div class="outline-text-3" id="text-Baseline%3A%20RX-NAPI%20CPU%20handle%20%28driver%3A%20i40e%29">
 <p>
 The processing and (deliberate) packet drops happens on same CPU as packet
 was RX-ed on, which have many cache advantages.
 </p>
 </div>
 
-<div id="outline-container-org0e726da" class="outline-4">
-<h4 id="org0e726da">baseline: UdpNoPorts: 3,380,531</h4>
-<div class="outline-text-4" id="text-org0e726da">
+<div id="outline-container-baseline%3A%20UdpNoPorts%3A%203%2C380%2C531" class="outline-4">
+<h4 id="baseline%3A%20UdpNoPorts%3A%203%2C380%2C531"><a href="#baseline%3A%20UdpNoPorts%3A%203%2C380%2C531">baseline: UdpNoPorts: 3,380,531</a></h4>
+<div class="outline-text-4" id="text-baseline%3A%20UdpNoPorts%3A%203%2C380%2C531">
 <p>
 No listing UDP service.
 No iptables.
@@ -130,9 +129,9 @@ IpExtInNoECTPkts                3380600            0.0
 </div>
 </div>
 
-<div id="outline-container-org994f18f" class="outline-4">
-<h4 id="org994f18f">baseline: iptables-raw drop: 5,775,937 pps (GRO-enabled)</h4>
-<div class="outline-text-4" id="text-org994f18f">
+<div id="outline-container-baseline%3A%20iptables-raw%20drop%3A%205%2C775%2C937%20pps%20%28GRO-enabled%29" class="outline-4">
+<h4 id="baseline%3A%20iptables-raw%20drop%3A%205%2C775%2C937%20pps%20%28GRO-enabled%29"><a href="#baseline%3A%20iptables-raw%20drop%3A%205%2C775%2C937%20pps%20%28GRO-enabled%29">baseline: iptables-raw drop: 5,775,937 pps (GRO-enabled)</a></h4>
+<div class="outline-text-4" id="text-baseline%3A%20iptables-raw%20drop%3A%205%2C775%2C937%20pps%20%28GRO-enabled%29">
 <p>
 Command used to drop packets:
 </p>
@@ -153,9 +152,9 @@ IpExtInNoECTPkts                5776001            0.0
 </div>
 </div>
 
-<div id="outline-container-org2ae35ec" class="outline-4">
-<h4 id="org2ae35ec">baseline: iptables-raw drop: 6,783,904 pps (GRO-disabled)</h4>
-<div class="outline-text-4" id="text-org2ae35ec">
+<div id="outline-container-baseline%3A%20iptables-raw%20drop%3A%206%2C783%2C904%20pps%20%28GRO-disabled%29" class="outline-4">
+<h4 id="baseline%3A%20iptables-raw%20drop%3A%206%2C783%2C904%20pps%20%28GRO-disabled%29"><a href="#baseline%3A%20iptables-raw%20drop%3A%206%2C783%2C904%20pps%20%28GRO-disabled%29">baseline: iptables-raw drop: 6,783,904 pps (GRO-disabled)</a></h4>
+<div class="outline-text-4" id="text-baseline%3A%20iptables-raw%20drop%3A%206%2C783%2C904%20pps%20%28GRO-disabled%29">
 <p>
 Command to disable GRO:
 </p>
@@ -174,9 +173,9 @@ IpExtInNoECTPkts                6783810            0.0
 </div>
 </div>
 
-<div id="outline-container-org5b6804f" class="outline-3">
-<h3 id="org5b6804f">Baseline: cpumap redirect</h3>
-<div class="outline-text-3" id="text-org5b6804f">
+<div id="outline-container-Baseline%3A%20cpumap%20redirect" class="outline-3">
+<h3 id="Baseline%3A%20cpumap%20redirect"><a href="#Baseline%3A%20cpumap%20redirect">Baseline: cpumap redirect</a></h3>
+<div class="outline-text-3" id="text-Baseline%3A%20cpumap%20redirect">
 <p>
 What is the baseline CPUMAP redirect performance. This is what we are
 optimizing against. The RX-NAPI CPU numbers is not our performance target,
@@ -186,9 +185,9 @@ CPUs.
 </p>
 </div>
 
-<div id="outline-container-org06ee0fb" class="outline-4">
-<h4 id="org06ee0fb">baseline-redirect: UdpNoPorts: 3,180,074</h4>
-<div class="outline-text-4" id="text-org06ee0fb">
+<div id="outline-container-baseline-redirect%3A%20UdpNoPorts%3A%203%2C180%2C074" class="outline-4">
+<h4 id="baseline-redirect%3A%20UdpNoPorts%3A%203%2C180%2C074"><a href="#baseline-redirect%3A%20UdpNoPorts%3A%203%2C180%2C074">baseline-redirect: UdpNoPorts: 3,180,074</a></h4>
+<div class="outline-text-4" id="text-baseline-redirect%3A%20UdpNoPorts%3A%203%2C180%2C074">
 <pre class="example">
 sudo ./xdp_redirect_cpu --dev i40e1 --qsize 128 --cpu 4 --prog xdp_cpu_map0 --sec 3
 [...]
@@ -242,9 +241,9 @@ $ perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-misses -
 </div>
 </div>
 
-<div id="outline-container-orgaf12a4b" class="outline-4">
-<h4 id="orgaf12a4b">baseline-redirect: iptables-raw drop: 6,193,534</h4>
-<div class="outline-text-4" id="text-orgaf12a4b">
+<div id="outline-container-baseline-redirect%3A%20iptables-raw%20drop%3A%206%2C193%2C534" class="outline-4">
+<h4 id="baseline-redirect%3A%20iptables-raw%20drop%3A%206%2C193%2C534"><a href="#baseline-redirect%3A%20iptables-raw%20drop%3A%206%2C193%2C534">baseline-redirect: iptables-raw drop: 6,193,534</a></h4>
+<div class="outline-text-4" id="text-baseline-redirect%3A%20iptables-raw%20drop%3A%206%2C193%2C534">
 <pre class="example">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -298,21 +297,21 @@ $ perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-misses -
 </div>
 </div>
 
-<div id="outline-container-org2096242" class="outline-2">
-<h2 id="org2096242">Patch descriptions + benchmarks</h2>
-<div class="outline-text-2" id="text-org2096242">
+<div id="outline-container-Patch%20descriptions%20%2B%20benchmarks" class="outline-2">
+<h2 id="Patch%20descriptions%20%2B%20benchmarks"><a href="#Patch%20descriptions%20%2B%20benchmarks">Patch descriptions + benchmarks</a></h2>
+<div class="outline-text-2" id="text-Patch%20descriptions%20%2B%20benchmarks">
 <p>
 5.1.0-rc4-bpf-next-cpumap-SKB-bulk+
 </p>
 </div>
 
-<div id="outline-container-org3eaec0d" class="outline-3">
-<h3 id="org3eaec0d">Patch1: bpf: cpumap use ptr_ring_consume_batched</h3>
-<div class="outline-text-3" id="text-org3eaec0d">
+<div id="outline-container-Patch1%3A%20bpf%3A%20cpumap%20use%20ptr_ring_consume_batched" class="outline-3">
+<h3 id="Patch1%3A%20bpf%3A%20cpumap%20use%20ptr_ring_consume_batched"><a href="#Patch1%3A%20bpf%3A%20cpumap%20use%20ptr_ring_consume_batched">Patch1: bpf: cpumap use ptr_ring_consume_batched</a></h3>
+<div class="outline-text-3" id="text-Patch1%3A%20bpf%3A%20cpumap%20use%20ptr_ring_consume_batched">
 </div>
-<div id="outline-container-orga9425e8" class="outline-4">
-<h4 id="orga9425e8">redirect: UdpNoPorts: 3,327,729</h4>
-<div class="outline-text-4" id="text-orga9425e8">
+<div id="outline-container-redirect%3A%20UdpNoPorts%3A%203%2C327%2C729" class="outline-4">
+<h4 id="redirect%3A%20UdpNoPorts%3A%203%2C327%2C729"><a href="#redirect%3A%20UdpNoPorts%3A%203%2C327%2C729">redirect: UdpNoPorts: 3,327,729</a></h4>
+<div class="outline-text-4" id="text-redirect%3A%20UdpNoPorts%3A%203%2C327%2C729">
 <pre class="example">
 sudo ./xdp_redirect_cpu --dev i40e1 --qsize 128 --cpu 4 --prog xdp_cpu_map0 --sec 3
 Add-new CPU:4 as idx:0 queue_size:128 (total cpus_count:1)
@@ -331,9 +330,9 @@ xdp_exception   total   0              0
 </div>
 </div>
 
-<div id="outline-container-org5796c07" class="outline-4">
-<h4 id="org5796c07">redirect: iptables-raw drop: 6,321,540</h4>
-<div class="outline-text-4" id="text-org5796c07">
+<div id="outline-container-redirect%3A%20iptables-raw%20drop%3A%206%2C321%2C540" class="outline-4">
+<h4 id="redirect%3A%20iptables-raw%20drop%3A%206%2C321%2C540"><a href="#redirect%3A%20iptables-raw%20drop%3A%206%2C321%2C540">redirect: iptables-raw drop: 6,321,540</a></h4>
+<div class="outline-text-4" id="text-redirect%3A%20iptables-raw%20drop%3A%206%2C321%2C540">
 <pre class="example">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -388,13 +387,13 @@ $ perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-misses -
 </div>
 </div>
 
-<div id="outline-container-org5472367" class="outline-3">
-<h3 id="org5472367">Patch2: net: core: introduce build_skb_around</h3>
-<div class="outline-text-3" id="text-org5472367">
+<div id="outline-container-Patch2%3A%20net%3A%20core%3A%20introduce%20build_skb_around" class="outline-3">
+<h3 id="Patch2%3A%20net%3A%20core%3A%20introduce%20build_skb_around"><a href="#Patch2%3A%20net%3A%20core%3A%20introduce%20build_skb_around">Patch2: net: core: introduce build_skb_around</a></h3>
+<div class="outline-text-3" id="text-Patch2%3A%20net%3A%20core%3A%20introduce%20build_skb_around">
 </div>
-<div id="outline-container-org6d5e270" class="outline-4">
-<h4 id="org6d5e270">redirect: UdpNoPorts: 3,221,303</h4>
-<div class="outline-text-4" id="text-org6d5e270">
+<div id="outline-container-redirect%3A%20UdpNoPorts%3A%203%2C221%2C303" class="outline-4">
+<h4 id="redirect%3A%20UdpNoPorts%3A%203%2C221%2C303"><a href="#redirect%3A%20UdpNoPorts%3A%203%2C221%2C303">redirect: UdpNoPorts: 3,221,303</a></h4>
+<div class="outline-text-4" id="text-redirect%3A%20UdpNoPorts%3A%203%2C221%2C303">
 <pre class="example">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -410,9 +409,9 @@ xdp_exception   total   0              0
 </div>
 </div>
 
-<div id="outline-container-org5b3b14c" class="outline-4">
-<h4 id="org5b3b14c">redirect: iptables-raw drop: 6,320,066</h4>
-<div class="outline-text-4" id="text-org5b3b14c">
+<div id="outline-container-redirect%3A%20iptables-raw%20drop%3A%206%2C320%2C066" class="outline-4">
+<h4 id="redirect%3A%20iptables-raw%20drop%3A%206%2C320%2C066"><a href="#redirect%3A%20iptables-raw%20drop%3A%206%2C320%2C066">redirect: iptables-raw drop: 6,320,066</a></h4>
+<div class="outline-text-4" id="text-redirect%3A%20iptables-raw%20drop%3A%206%2C320%2C066">
 <pre class="example">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -428,13 +427,13 @@ redirect_err    total   0              0
 </div>
 </div>
 
-<div id="outline-container-org1aafbd5" class="outline-3">
-<h3 id="org1aafbd5">Patch3: bpf: cpumap do bulk allocation of SKBs</h3>
-<div class="outline-text-3" id="text-org1aafbd5">
+<div id="outline-container-Patch3%3A%20bpf%3A%20cpumap%20do%20bulk%20allocation%20of%20SKBs" class="outline-3">
+<h3 id="Patch3%3A%20bpf%3A%20cpumap%20do%20bulk%20allocation%20of%20SKBs"><a href="#Patch3%3A%20bpf%3A%20cpumap%20do%20bulk%20allocation%20of%20SKBs">Patch3: bpf: cpumap do bulk allocation of SKBs</a></h3>
+<div class="outline-text-3" id="text-Patch3%3A%20bpf%3A%20cpumap%20do%20bulk%20allocation%20of%20SKBs">
 </div>
-<div id="outline-container-org9daa3e2" class="outline-4">
-<h4 id="org9daa3e2">redirect: UdpNoPorts: 3,290,563</h4>
-<div class="outline-text-4" id="text-org9daa3e2">
+<div id="outline-container-redirect%3A%20UdpNoPorts%3A%203%2C290%2C563" class="outline-4">
+<h4 id="redirect%3A%20UdpNoPorts%3A%203%2C290%2C563"><a href="#redirect%3A%20UdpNoPorts%3A%203%2C290%2C563">redirect: UdpNoPorts: 3,290,563</a></h4>
+<div class="outline-text-4" id="text-redirect%3A%20UdpNoPorts%3A%203%2C290%2C563">
 <pre class="example">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -450,9 +449,9 @@ xdp_exception   total   0              0
 </div>
 </div>
 
-<div id="outline-container-org4d2f30a" class="outline-4">
-<h4 id="org4d2f30a">redirect: iptables-raw drop: 6,650,112</h4>
-<div class="outline-text-4" id="text-org4d2f30a">
+<div id="outline-container-redirect%3A%20iptables-raw%20drop%3A%206%2C650%2C112" class="outline-4">
+<h4 id="redirect%3A%20iptables-raw%20drop%3A%206%2C650%2C112"><a href="#redirect%3A%20iptables-raw%20drop%3A%206%2C650%2C112">redirect: iptables-raw drop: 6,650,112</a></h4>
+<div class="outline-text-4" id="text-redirect%3A%20iptables-raw%20drop%3A%206%2C650%2C112">
 <pre class="example">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -516,13 +515,13 @@ perf record -g -e cycles:pp,cpu/event=0xd1,umask=0x4,name=L3_Bound_MEM_LOAD_UOPS
 </div>
 </div>
 
-<div id="outline-container-org5e2d0b1" class="outline-3">
-<h3 id="org5e2d0b1">Patch4: bpf: cpumap memory prefetchw optimizations for struct page</h3>
-<div class="outline-text-3" id="text-org5e2d0b1">
+<div id="outline-container-Patch4%3A%20bpf%3A%20cpumap%20memory%20prefetchw%20optimizations%20for%20struct%20page" class="outline-3">
+<h3 id="Patch4%3A%20bpf%3A%20cpumap%20memory%20prefetchw%20optimizations%20for%20struct%20page"><a href="#Patch4%3A%20bpf%3A%20cpumap%20memory%20prefetchw%20optimizations%20for%20struct%20page">Patch4: bpf: cpumap memory prefetchw optimizations for struct page</a></h3>
+<div class="outline-text-3" id="text-Patch4%3A%20bpf%3A%20cpumap%20memory%20prefetchw%20optimizations%20for%20struct%20page">
 </div>
-<div id="outline-container-org0203208" class="outline-4">
-<h4 id="org0203208">redirect: UdpNoPorts: 3,520,250</h4>
-<div class="outline-text-4" id="text-org0203208">
+<div id="outline-container-redirect%3A%20UdpNoPorts%3A%203%2C520%2C250" class="outline-4">
+<h4 id="redirect%3A%20UdpNoPorts%3A%203%2C520%2C250"><a href="#redirect%3A%20UdpNoPorts%3A%203%2C520%2C250">redirect: UdpNoPorts: 3,520,250</a></h4>
+<div class="outline-text-4" id="text-redirect%3A%20UdpNoPorts%3A%203%2C520%2C250">
 <p>
 (1/3290563-1/3520250)*10^9 = 19.82862950544 ns
 </p>
@@ -542,9 +541,9 @@ xdp_exception   total   0              0
 </div>
 </div>
 
-<div id="outline-container-orgbac2c3e" class="outline-4">
-<h4 id="orgbac2c3e">redirect: iptables-raw drop: 7,649,604</h4>
-<div class="outline-text-4" id="text-orgbac2c3e">
+<div id="outline-container-redirect%3A%20iptables-raw%20drop%3A%207%2C649%2C604" class="outline-4">
+<h4 id="redirect%3A%20iptables-raw%20drop%3A%207%2C649%2C604"><a href="#redirect%3A%20iptables-raw%20drop%3A%207%2C649%2C604">redirect: iptables-raw drop: 7,649,604</a></h4>
+<div class="outline-text-4" id="text-redirect%3A%20iptables-raw%20drop%3A%207%2C649%2C604">
 <p>
 (1/6650112-1/7649604)*10^9 = 19.647686018 ns
 </p>
@@ -609,9 +608,9 @@ perf record -g -e cycles:pp,cpu/event=0xd1,umask=0x4,name=L3_Bound_MEM_LOAD_UOPS
 </div>
 </div>
 
-<div id="outline-container-org68f7bc9" class="outline-4">
-<h4 id="org68f7bc9">cpumap-qsize:64: redirect: UdpNoPorts: 3,930,379</h4>
-<div class="outline-text-4" id="text-org68f7bc9">
+<div id="outline-container-cpumap-qsize%3A64%3A%20redirect%3A%20UdpNoPorts%3A%203%2C930%2C379" class="outline-4">
+<h4 id="cpumap-qsize%3A64%3A%20redirect%3A%20UdpNoPorts%3A%203%2C930%2C379"><a href="#cpumap-qsize%3A64%3A%20redirect%3A%20UdpNoPorts%3A%203%2C930%2C379">cpumap-qsize:64: redirect: UdpNoPorts: 3,930,379</a></h4>
+<div class="outline-text-4" id="text-cpumap-qsize%3A64%3A%20redirect%3A%20UdpNoPorts%3A%203%2C930%2C379">
 <pre class="example">
 $ sudo ./xdp_redirect_cpu --dev i40e1 --qsize $((64)) --cpu 4 --prog xdp_cpu_map0 --sec 3
 Add-new CPU:4 as idx:0 queue_size:64 (total cpus_count:1)
@@ -630,9 +629,9 @@ xdp_exception   total   0              0
 </div>
 </div>
 
-<div id="outline-container-orgd8eb40e" class="outline-4">
-<h4 id="orgd8eb40e">cpumap-qsize:64: redirect: iptables-raw drop: 7,329,574</h4>
-<div class="outline-text-4" id="text-orgd8eb40e">
+<div id="outline-container-cpumap-qsize%3A64%3A%20redirect%3A%20iptables-raw%20drop%3A%207%2C329%2C574" class="outline-4">
+<h4 id="cpumap-qsize%3A64%3A%20redirect%3A%20iptables-raw%20drop%3A%207%2C329%2C574"><a href="#cpumap-qsize%3A64%3A%20redirect%3A%20iptables-raw%20drop%3A%207%2C329%2C574">cpumap-qsize:64: redirect: iptables-raw drop: 7,329,574</a></h4>
+<div class="outline-text-4" id="text-cpumap-qsize%3A64%3A%20redirect%3A%20iptables-raw%20drop%3A%207%2C329%2C574">
 <pre class="example">
 sudo ./xdp_redirect_cpu --dev i40e1 --qsize $((64)) --cpu 4 --prog xdp_cpu_map0 --sec 3
 Add-new CPU:4 as idx:0 queue_size:64 (total cpus_count:1)
@@ -652,13 +651,13 @@ xdp_exception   total   0              0
 </div>
 </div>
 
-<div id="outline-container-org8d03c3d" class="outline-3">
-<h3 id="org8d03c3d">Patch5: bpf: cpumap use netif_receive_skb_list</h3>
-<div class="outline-text-3" id="text-org8d03c3d">
+<div id="outline-container-Patch5%3A%20bpf%3A%20cpumap%20use%20netif_receive_skb_list" class="outline-3">
+<h3 id="Patch5%3A%20bpf%3A%20cpumap%20use%20netif_receive_skb_list"><a href="#Patch5%3A%20bpf%3A%20cpumap%20use%20netif_receive_skb_list">Patch5: bpf: cpumap use netif_receive_skb_list</a></h3>
+<div class="outline-text-3" id="text-Patch5%3A%20bpf%3A%20cpumap%20use%20netif_receive_skb_list">
 </div>
-<div id="outline-container-org876dccb" class="outline-4">
-<h4 id="org876dccb">redirect: UdpNoPorts: 3,303,269</h4>
-<div class="outline-text-4" id="text-org876dccb">
+<div id="outline-container-redirect%3A%20UdpNoPorts%3A%203%2C303%2C269" class="outline-4">
+<h4 id="redirect%3A%20UdpNoPorts%3A%203%2C303%2C269"><a href="#redirect%3A%20UdpNoPorts%3A%203%2C303%2C269">redirect: UdpNoPorts: 3,303,269</a></h4>
+<div class="outline-text-4" id="text-redirect%3A%20UdpNoPorts%3A%203%2C303%2C269">
 <p>
 (1/3520250-1/3303269)*10^9 = -18.65968283 ns
 </p>
@@ -678,9 +677,9 @@ xdp_exception   total   0              0
 </div>
 </div>
 
-<div id="outline-container-org31b6824" class="outline-4">
-<h4 id="org31b6824">redirect: iptables-raw drop: 7,160,297</h4>
-<div class="outline-text-4" id="text-org31b6824">
+<div id="outline-container-redirect%3A%20iptables-raw%20drop%3A%207%2C160%2C297" class="outline-4">
+<h4 id="redirect%3A%20iptables-raw%20drop%3A%207%2C160%2C297"><a href="#redirect%3A%20iptables-raw%20drop%3A%207%2C160%2C297">redirect: iptables-raw drop: 7,160,297</a></h4>
+<div class="outline-text-4" id="text-redirect%3A%20iptables-raw%20drop%3A%207%2C160%2C297">
 <p>
 (1/7649604-1/7160297)*10^9 = -8.93329012 ns
 </p>
@@ -775,9 +774,9 @@ divider-related)&#x2026;</li>
 </div>
 </div>
 
-<div id="outline-container-org3748c9f" class="outline-4">
-<h4 id="org3748c9f">cpumap-qsize:64: redirect: UdpNoPorts: 4,089,778</h4>
-<div class="outline-text-4" id="text-org3748c9f">
+<div id="outline-container-cpumap-qsize%3A64%3A%20redirect%3A%20UdpNoPorts%3A%204%2C089%2C778" class="outline-4">
+<h4 id="cpumap-qsize%3A64%3A%20redirect%3A%20UdpNoPorts%3A%204%2C089%2C778"><a href="#cpumap-qsize%3A64%3A%20redirect%3A%20UdpNoPorts%3A%204%2C089%2C778">cpumap-qsize:64: redirect: UdpNoPorts: 4,089,778</a></h4>
+<div class="outline-text-4" id="text-cpumap-qsize%3A64%3A%20redirect%3A%20UdpNoPorts%3A%204%2C089%2C778">
 <p>
 The performance is a lot better with smaller qsize (64) in the CPUMAP
 (ptr_ring).  Looking at qsize=128 perf-report I see <code>free_pcppages_bulk</code>
@@ -802,9 +801,9 @@ xdp_exception   total   0              0
 </div>
 </div>
 
-<div id="outline-container-org774205d" class="outline-4">
-<h4 id="org774205d">cpumap-qsize:64: redirect: iptables-raw drop: 6,869,895</h4>
-<div class="outline-text-4" id="text-org774205d">
+<div id="outline-container-cpumap-qsize%3A64%3A%20redirect%3A%20iptables-raw%20drop%3A%206%2C869%2C895" class="outline-4">
+<h4 id="cpumap-qsize%3A64%3A%20redirect%3A%20iptables-raw%20drop%3A%206%2C869%2C895"><a href="#cpumap-qsize%3A64%3A%20redirect%3A%20iptables-raw%20drop%3A%206%2C869%2C895">cpumap-qsize:64: redirect: iptables-raw drop: 6,869,895</a></h4>
+<div class="outline-text-4" id="text-cpumap-qsize%3A64%3A%20redirect%3A%20iptables-raw%20drop%3A%206%2C869%2C895">
 <p>
 Strangely reducing qsize=64 didn't help iptables-raw drop case. This is
 rather strange.
@@ -843,7 +842,7 @@ perf record -g -e cycles:pp,cpu/event=0x79,umask=0x30,name=Microcode_Sequencer_I
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="date">Date: 2020-01-23 Thu 16:38</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

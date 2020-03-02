@@ -3,7 +3,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-01-24 Fri 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Espressobin initial benchmarks</title>
@@ -22,26 +21,26 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgeb7a47e">Hardware</a>
+<li><a href="#Hardware">Hardware</a>
 <ul>
-<li><a href="#org0065236">More info on hardware</a></li>
+<li><a href="#More%20info%20on%20hardware">More info on hardware</a></li>
 </ul>
 </li>
-<li><a href="#org34e108c">Baseline benchmark HW</a></li>
-<li><a href="#org6ebf2c5">Performance gotcha with PTP-timestamping</a></li>
-<li><a href="#orgaa71bdc">Random benchmark notes</a>
+<li><a href="#Baseline%20benchmark%20HW">Baseline benchmark HW</a></li>
+<li><a href="#Performance%20gotcha%20with%20PTP-timestamping">Performance gotcha with PTP-timestamping</a></li>
+<li><a href="#Random%20benchmark%20notes">Random benchmark notes</a>
 <ul>
-<li><a href="#org3323855">branch-miss optimize#1</a></li>
+<li><a href="#branch-miss%20optimize%231">branch-miss optimize#1</a></li>
 </ul>
 </li>
-<li><a href="#orgf9479db">Debugging hints</a></li>
+<li><a href="#Debugging%20hints">Debugging hints</a></li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-orgeb7a47e" class="outline-2">
-<h2 id="orgeb7a47e">Hardware</h2>
-<div class="outline-text-2" id="text-orgeb7a47e">
+<div id="outline-container-Hardware" class="outline-2">
+<h2 id="Hardware"><a href="#Hardware">Hardware</a></h2>
+<div class="outline-text-2" id="text-Hardware">
 <pre class="example">
 root@espressobin:~# lscpu
 Architecture:        aarch64
@@ -64,9 +63,9 @@ Flags:               fp asimd evtstrm aes pmull sha1 sha2 crc32 cpuid
 </pre>
 </div>
 
-<div id="outline-container-org0065236" class="outline-3">
-<h3 id="org0065236">More info on hardware</h3>
-<div class="outline-text-3" id="text-org0065236">
+<div id="outline-container-More%20info%20on%20hardware" class="outline-3">
+<h3 id="More%20info%20on%20hardware"><a href="#More%20info%20on%20hardware">More info on hardware</a></h3>
+<div class="outline-text-3" id="text-More%20info%20on%20hardware">
 <p>
 The Cortex-A53 MPCore instruction cache is 2-way set associative
 </p>
@@ -94,9 +93,9 @@ found this via <a href="https://www.marvell.com/documents/qc8hltbjybmpjhx36ckw/"
 </div>
 
 
-<div id="outline-container-org34e108c" class="outline-2">
-<h2 id="org34e108c">Baseline benchmark HW</h2>
-<div class="outline-text-2" id="text-org34e108c">
+<div id="outline-container-Baseline%20benchmark%20HW" class="outline-2">
+<h2 id="Baseline%20benchmark%20HW"><a href="#Baseline%20benchmark%20HW">Baseline benchmark HW</a></h2>
+<div class="outline-text-2" id="text-Baseline%20benchmark%20HW">
 <p>
 Performance baseline when dropping packets as early as possible with
 in iptables raw table:
@@ -119,9 +118,9 @@ Ethtool(wan     ) stat:       211261 (        211,261) &lt;= rx_packets /sec
 </div>
 </div>
 
-<div id="outline-container-org6ebf2c5" class="outline-2">
-<h2 id="org6ebf2c5">Performance gotcha with PTP-timestamping</h2>
-<div class="outline-text-2" id="text-org6ebf2c5">
+<div id="outline-container-Performance%20gotcha%20with%20PTP-timestamping" class="outline-2">
+<h2 id="Performance%20gotcha%20with%20PTP-timestamping"><a href="#Performance%20gotcha%20with%20PTP-timestamping">Performance gotcha with PTP-timestamping</a></h2>
+<div class="outline-text-2" id="text-Performance%20gotcha%20with%20PTP-timestamping">
 <p>
 The config CONFIG_NET_PTP_CLASSIFY caused a funny issue.
 </p>
@@ -189,13 +188,13 @@ IpExtInNoECTPkts                275804             0.0
 </div>
 </div>
 
-<div id="outline-container-orgaa71bdc" class="outline-2">
-<h2 id="orgaa71bdc">Random benchmark notes</h2>
-<div class="outline-text-2" id="text-orgaa71bdc">
+<div id="outline-container-Random%20benchmark%20notes" class="outline-2">
+<h2 id="Random%20benchmark%20notes"><a href="#Random%20benchmark%20notes">Random benchmark notes</a></h2>
+<div class="outline-text-2" id="text-Random%20benchmark%20notes">
 </div>
-<div id="outline-container-org3323855" class="outline-3">
-<h3 id="org3323855">branch-miss optimize#1</h3>
-<div class="outline-text-3" id="text-org3323855">
+<div id="outline-container-branch-miss%20optimize%231" class="outline-3">
+<h3 id="branch-miss%20optimize%231"><a href="#branch-miss%20optimize%231">branch-miss optimize#1</a></h3>
+<div class="outline-text-3" id="text-branch-miss%20optimize%231">
 <p>
 Tried different branch-miss optimizations, not much performance gain
 seen in PPS numbers.
@@ -311,9 +310,9 @@ Ethtool(wan     ) stat:       258104 (        258,104) &lt;= rx_packets /sec
 </div>
 
 
-<div id="outline-container-orgf9479db" class="outline-2">
-<h2 id="orgf9479db">Debugging hints</h2>
-<div class="outline-text-2" id="text-orgf9479db">
+<div id="outline-container-Debugging%20hints" class="outline-2">
+<h2 id="Debugging%20hints"><a href="#Debugging%20hints">Debugging hints</a></h2>
+<div class="outline-text-2" id="text-Debugging%20hints">
 <p>
 ./scripts/faddr2line net/core/xdp.o __xdp_return+0x140
 </p>
@@ -330,7 +329,7 @@ __read_once_size at /home/jbrouer/git/kernel/apalos-bpf-next/./include/linux/com
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="date">Date: 2018-12-05 Wed 00:20</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

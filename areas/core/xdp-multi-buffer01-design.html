@@ -3,7 +3,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-01-24 Fri 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>XDP multi buffer design</title>
@@ -22,18 +21,18 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org4edf014">Why XDP don't have multi-buffer support</a></li>
-<li><a href="#org5e3bc98">Use-cases for multi-buffer</a></li>
-<li><a href="#org9de23d9">Proposal#1: XDP only access first-buffer</a></li>
-<li><a href="#org2eeb2bd">XDP multi-buffer extensions and complications</a>
+<li><a href="#Why%20XDP%20don%27t%20have%20multi-buffer%20support">Why XDP don't have multi-buffer support</a></li>
+<li><a href="#Use-cases%20for%20multi-buffer">Use-cases for multi-buffer</a></li>
+<li><a href="#Proposal%231%3A%20XDP%20only%20access%20first-buffer">Proposal#1: XDP only access first-buffer</a></li>
+<li><a href="#XDP%20multi-buffer%20extensions%20and%20complications">XDP multi-buffer extensions and complications</a>
 <ul>
-<li><a href="#orgc53fda5">XDP tail adjust</a>
+<li><a href="#XDP%20tail%20adjust">XDP tail adjust</a>
 <ul>
-<li><a href="#orgf2e01e8">Use-cases for adjust tail</a></li>
+<li><a href="#Use-cases%20for%20adjust%20tail">Use-cases for adjust tail</a></li>
 </ul>
 </li>
-<li><a href="#orgec505e4">XDP access to full packet length?</a></li>
-<li><a href="#org0a59147">Storage space for multi-buffer references/segments</a></li>
+<li><a href="#XDP%20access%20to%20full%20packet%20length%3F">XDP access to full packet length?</a></li>
+<li><a href="#Storage%20space%20for%20multi-buffer%20references%2Fsegments">Storage space for multi-buffer references/segments</a></li>
 </ul>
 </li>
 </ul>
@@ -49,9 +48,9 @@ the single-buffer per packet design.
 Keywords: xdp vs. jumbo-frame, TSO/LRO, packet header split
 </p>
 
-<div id="outline-container-org4edf014" class="outline-2">
-<h2 id="org4edf014">Why XDP don't have multi-buffer support</h2>
-<div class="outline-text-2" id="text-org4edf014">
+<div id="outline-container-Why%20XDP%20don%27t%20have%20multi-buffer%20support" class="outline-2">
+<h2 id="Why%20XDP%20don%27t%20have%20multi-buffer%20support"><a href="#Why%20XDP%20don%27t%20have%20multi-buffer%20support">Why XDP don't have multi-buffer support</a></h2>
+<div class="outline-text-2" id="text-Why%20XDP%20don%27t%20have%20multi-buffer%20support">
 <p>
 XDP is designed for maximum performance, which is why certain driver-level
 use-cases were not supported, like multi-buffer packets (like jumbo-frames).
@@ -66,9 +65,9 @@ contiguous memory.  This DA feature is essential for XDP performance.
 </div>
 </div>
 
-<div id="outline-container-org5e3bc98" class="outline-2">
-<h2 id="org5e3bc98">Use-cases for multi-buffer</h2>
-<div class="outline-text-2" id="text-org5e3bc98">
+<div id="outline-container-Use-cases%20for%20multi-buffer" class="outline-2">
+<h2 id="Use-cases%20for%20multi-buffer"><a href="#Use-cases%20for%20multi-buffer">Use-cases for multi-buffer</a></h2>
+<div class="outline-text-2" id="text-Use-cases%20for%20multi-buffer">
 <p>
 What are the use-cases for multi-buffer packets:
 </p>
@@ -80,9 +79,9 @@ What are the use-cases for multi-buffer packets:
 </div>
 </div>
 
-<div id="outline-container-org9de23d9" class="outline-2">
-<h2 id="org9de23d9">Proposal#1: XDP only access first-buffer</h2>
-<div class="outline-text-2" id="text-org9de23d9">
+<div id="outline-container-Proposal%231%3A%20XDP%20only%20access%20first-buffer" class="outline-2">
+<h2 id="Proposal%231%3A%20XDP%20only%20access%20first-buffer"><a href="#Proposal%231%3A%20XDP%20only%20access%20first-buffer">Proposal#1: XDP only access first-buffer</a></h2>
+<div class="outline-text-2" id="text-Proposal%231%3A%20XDP%20only%20access%20first-buffer">
 <p>
 The eBPF Direct-Access (DA) feature is essential for performance. Thus, we
 don't want to add an abstraction layer, that transparently gives XDP
@@ -103,18 +102,18 @@ return XDP_PASS for these kind of frames).
 </div>
 </div>
 
-<div id="outline-container-org2eeb2bd" class="outline-2">
-<h2 id="org2eeb2bd">XDP multi-buffer extensions and complications</h2>
-<div class="outline-text-2" id="text-org2eeb2bd">
+<div id="outline-container-XDP%20multi-buffer%20extensions%20and%20complications" class="outline-2">
+<h2 id="XDP%20multi-buffer%20extensions%20and%20complications"><a href="#XDP%20multi-buffer%20extensions%20and%20complications">XDP multi-buffer extensions and complications</a></h2>
+<div class="outline-text-2" id="text-XDP%20multi-buffer%20extensions%20and%20complications">
 <p>
 How and what do we need to extend the XDP data structured with to handle
 multi-buffer packets?
 </p>
 </div>
 
-<div id="outline-container-orgc53fda5" class="outline-3">
-<h3 id="orgc53fda5">XDP tail adjust</h3>
-<div class="outline-text-3" id="text-orgc53fda5">
+<div id="outline-container-XDP%20tail%20adjust" class="outline-3">
+<h3 id="XDP%20tail%20adjust"><a href="#XDP%20tail%20adjust">XDP tail adjust</a></h3>
+<div class="outline-text-3" id="text-XDP%20tail%20adjust">
 <p>
 The BPF XDP helper named: <code>bpf_xdp_adjust_tail</code> change length of the packet.
 Currently it can only shrink the packet (but we need to extended it to allow
@@ -138,9 +137,9 @@ Perhaps it is better to let bpf_xdp_adjust_tail() fail runtime?
 </p>
 </div>
 
-<div id="outline-container-orgf2e01e8" class="outline-4">
-<h4 id="orgf2e01e8">Use-cases for adjust tail</h4>
-<div class="outline-text-4" id="text-orgf2e01e8">
+<div id="outline-container-Use-cases%20for%20adjust%20tail" class="outline-4">
+<h4 id="Use-cases%20for%20adjust%20tail"><a href="#Use-cases%20for%20adjust%20tail">Use-cases for adjust tail</a></h4>
+<div class="outline-text-4" id="text-Use-cases%20for%20adjust%20tail">
 <p>
 Use-cases that need to adjust tail of packet:
 </p>
@@ -161,9 +160,9 @@ replies, but I'm not sure we should ever support that).</li>
 </div>
 </div>
 
-<div id="outline-container-orgec505e4" class="outline-3">
-<h3 id="orgec505e4">XDP access to full packet length?</h3>
-<div class="outline-text-3" id="text-orgec505e4">
+<div id="outline-container-XDP%20access%20to%20full%20packet%20length%3F" class="outline-3">
+<h3 id="XDP%20access%20to%20full%20packet%20length%3F"><a href="#XDP%20access%20to%20full%20packet%20length%3F">XDP access to full packet length?</a></h3>
+<div class="outline-text-3" id="text-XDP%20access%20to%20full%20packet%20length%3F">
 <p>
 We likely need to provide the full packet length to XDP core and also
 XDP-developer. The use-case for XDP-developers is validating the length of
@@ -186,9 +185,9 @@ meet/find the End-Of-Packet descriptor bit).
 </div>
 </div>
 
-<div id="outline-container-org0a59147" class="outline-3">
-<h3 id="org0a59147">Storage space for multi-buffer references/segments</h3>
-<div class="outline-text-3" id="text-org0a59147">
+<div id="outline-container-Storage%20space%20for%20multi-buffer%20references%2Fsegments" class="outline-3">
+<h3 id="Storage%20space%20for%20multi-buffer%20references%2Fsegments"><a href="#Storage%20space%20for%20multi-buffer%20references%2Fsegments">Storage space for multi-buffer references/segments</a></h3>
+<div class="outline-text-3" id="text-Storage%20space%20for%20multi-buffer%20references%2Fsegments">
 <p>
 A multi-buffer packet consist of several frame segments. The data structure
 used for holding these packet buffers/segments also needs to be discussed.
@@ -287,7 +286,7 @@ Update: This unification has already been done (see <a href="https://lore.kernel
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="date">Date: 2019-12-02 Mon 14:35</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

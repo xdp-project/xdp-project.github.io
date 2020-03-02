@@ -3,7 +3,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-01-24 Fri 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Benchmarks for branch mvneta_04_page_pool_xdp</title>
@@ -22,24 +21,24 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org842ed5c">XDP_DROP bench with xdp1</a>
+<li><a href="#XDP_DROP%20bench%20with%20xdp1">XDP_DROP bench with xdp1</a>
 <ul>
-<li><a href="#org2adb65c">XDP_DROP remove prefetch of data</a></li>
+<li><a href="#XDP_DROP%20remove%20prefetch%20of%20data">XDP_DROP remove prefetch of data</a></li>
 </ul>
 </li>
-<li><a href="#orgd33cb6e">Testing some ideas</a>
+<li><a href="#Testing%20some%20ideas">Testing some ideas</a>
 <ul>
-<li><a href="#orgc15b95a">Recompile with out RCU/preempt (CONFIG_PREEMPT_NONE)</a></li>
-<li><a href="#org1b69797">Test: Comment out code in mvneta_rx_swbm</a></li>
-<li><a href="#orgea2f311">Playing with other perf events</a></li>
-<li><a href="#org35fd9ad">New kernel config with tracing</a></li>
+<li><a href="#Recompile%20with%20out%20RCU%2Fpreempt%20%28CONFIG_PREEMPT_NONE%29">Recompile with out RCU/preempt (CONFIG_PREEMPT_NONE)</a></li>
+<li><a href="#Test%3A%20Comment%20out%20code%20in%20mvneta_rx_swbm">Test: Comment out code in mvneta_rx_swbm</a></li>
+<li><a href="#Playing%20with%20other%20perf%20events">Playing with other perf events</a></li>
+<li><a href="#New%20kernel%20config%20with%20tracing">New kernel config with tracing</a></li>
 </ul>
 </li>
-<li><a href="#org5333c33">Fixing XDP_REDIRECT</a>
+<li><a href="#Fixing%20XDP_REDIRECT">Fixing XDP_REDIRECT</a>
 <ul>
-<li><a href="#org0b78e7e">Crash with tcpdump + cpumap-redirect</a>
+<li><a href="#Crash%20with%20tcpdump%20%2B%20cpumap-redirect">Crash with tcpdump + cpumap-redirect</a>
 <ul>
-<li><a href="#org09fc5a5">Test: compile without CONFIG_NET_DSA</a></li>
+<li><a href="#Test%3A%20compile%20without%20CONFIG_NET_DSA">Test: compile without CONFIG_NET_DSA</a></li>
 </ul>
 </li>
 </ul>
@@ -55,9 +54,9 @@ mvneta_04_page_pool_recycle_xdp located here:
 <li><a href="https://github.com/apalos/bpf-next/commits/mvneta_04_page_pool_recycle_xdp">https://github.com/apalos/bpf-next/commits/mvneta_04_page_pool_recycle_xdp</a></li>
 </ul>
 
-<div id="outline-container-org842ed5c" class="outline-2">
-<h2 id="org842ed5c">XDP_DROP bench with xdp1</h2>
-<div class="outline-text-2" id="text-org842ed5c">
+<div id="outline-container-XDP_DROP%20bench%20with%20xdp1" class="outline-2">
+<h2 id="XDP_DROP%20bench%20with%20xdp1"><a href="#XDP_DROP%20bench%20with%20xdp1">XDP_DROP bench with xdp1</a></h2>
+<div class="outline-text-2" id="text-XDP_DROP%20bench%20with%20xdp1">
 <pre class="example">
 root@espressobin:~/samples/bpf# ./xdp1 3 &amp;
 proto 0:     660053 pkt/s
@@ -95,9 +94,9 @@ proto 0:     659691 pkt/s
 </pre>
 </div>
 
-<div id="outline-container-org2adb65c" class="outline-3">
-<h3 id="org2adb65c">XDP_DROP remove prefetch of data</h3>
-<div class="outline-text-3" id="text-org2adb65c">
+<div id="outline-container-XDP_DROP%20remove%20prefetch%20of%20data" class="outline-3">
+<h3 id="XDP_DROP%20remove%20prefetch%20of%20data"><a href="#XDP_DROP%20remove%20prefetch%20of%20data">XDP_DROP remove prefetch of data</a></h3>
+<div class="outline-text-3" id="text-XDP_DROP%20remove%20prefetch%20of%20data">
 <p>
 The amount of cache-misses are too high, remove the prefetch on packet data:
 </p>
@@ -193,13 +192,13 @@ Code size estimate:
 </div>
 
 
-<div id="outline-container-orgd33cb6e" class="outline-2">
-<h2 id="orgd33cb6e">Testing some ideas</h2>
-<div class="outline-text-2" id="text-orgd33cb6e">
+<div id="outline-container-Testing%20some%20ideas" class="outline-2">
+<h2 id="Testing%20some%20ideas"><a href="#Testing%20some%20ideas">Testing some ideas</a></h2>
+<div class="outline-text-2" id="text-Testing%20some%20ideas">
 </div>
-<div id="outline-container-orgc15b95a" class="outline-3">
-<h3 id="orgc15b95a">Recompile with out RCU/preempt (CONFIG_PREEMPT_NONE)</h3>
-<div class="outline-text-3" id="text-orgc15b95a">
+<div id="outline-container-Recompile%20with%20out%20RCU%2Fpreempt%20%28CONFIG_PREEMPT_NONE%29" class="outline-3">
+<h3 id="Recompile%20with%20out%20RCU%2Fpreempt%20%28CONFIG_PREEMPT_NONE%29"><a href="#Recompile%20with%20out%20RCU%2Fpreempt%20%28CONFIG_PREEMPT_NONE%29">Recompile with out RCU/preempt (CONFIG_PREEMPT_NONE)</a></h3>
+<div class="outline-text-3" id="text-Recompile%20with%20out%20RCU%2Fpreempt%20%28CONFIG_PREEMPT_NONE%29">
 <p>
 Kernel .config files used located here:
 </p>
@@ -359,9 +358,9 @@ expected NAPI poll budget of 64.
 </div>
 </div>
 
-<div id="outline-container-org1b69797" class="outline-3">
-<h3 id="org1b69797">Test: Comment out code in mvneta_rx_swbm</h3>
-<div class="outline-text-3" id="text-org1b69797">
+<div id="outline-container-Test%3A%20Comment%20out%20code%20in%20mvneta_rx_swbm" class="outline-3">
+<h3 id="Test%3A%20Comment%20out%20code%20in%20mvneta_rx_swbm"><a href="#Test%3A%20Comment%20out%20code%20in%20mvneta_rx_swbm">Test: Comment out code in mvneta_rx_swbm</a></h3>
+<div class="outline-text-3" id="text-Test%3A%20Comment%20out%20code%20in%20mvneta_rx_swbm">
 <p>
 The main NAPI poll RX funtion in driver mvneta mvneta_rx_swbm() have
 special handling of "Middle or Last descriptor" inside this main loop,
@@ -424,9 +423,9 @@ I-cache-misses).
 </div>
 </div>
 
-<div id="outline-container-orgea2f311" class="outline-3">
-<h3 id="orgea2f311">Playing with other perf events</h3>
-<div class="outline-text-3" id="text-orgea2f311">
+<div id="outline-container-Playing%20with%20other%20perf%20events" class="outline-3">
+<h3 id="Playing%20with%20other%20perf%20events"><a href="#Playing%20with%20other%20perf%20events">Playing with other perf events</a></h3>
+<div class="outline-text-3" id="text-Playing%20with%20other%20perf%20events">
 <pre class="example">
 pipeline:
   agu_dep_stall                                     
@@ -548,9 +547,9 @@ XDP-RX CPU      total   616934
 </div>
 </div>
 
-<div id="outline-container-org35fd9ad" class="outline-3">
-<h3 id="org35fd9ad">New kernel config with tracing</h3>
-<div class="outline-text-3" id="text-org35fd9ad">
+<div id="outline-container-New%20kernel%20config%20with%20tracing" class="outline-3">
+<h3 id="New%20kernel%20config%20with%20tracing"><a href="#New%20kernel%20config%20with%20tracing">New kernel config with tracing</a></h3>
+<div class="outline-text-3" id="text-New%20kernel%20config%20with%20tracing">
 <p>
 In-order to use some of the other XDP sample/bpf program, we need to
 enable tracing, as XDP error handling use tracing.  Thus, enable this
@@ -570,9 +569,9 @@ New kernel config with tracing:
 
 
 
-<div id="outline-container-org5333c33" class="outline-2">
-<h2 id="org5333c33">Fixing XDP_REDIRECT</h2>
-<div class="outline-text-2" id="text-org5333c33">
+<div id="outline-container-Fixing%20XDP_REDIRECT" class="outline-2">
+<h2 id="Fixing%20XDP_REDIRECT"><a href="#Fixing%20XDP_REDIRECT">Fixing XDP_REDIRECT</a></h2>
+<div class="outline-text-2" id="text-Fixing%20XDP_REDIRECT">
 <p>
 XDP_REDIRECT via CPUMAP didn't work.  This was due to wrong
 XDP-headroom setting.
@@ -607,9 +606,9 @@ headroom adjustment for XDP programs.
 </p>
 </div>
 
-<div id="outline-container-org0b78e7e" class="outline-3">
-<h3 id="org0b78e7e">Crash with tcpdump + cpumap-redirect</h3>
-<div class="outline-text-3" id="text-org0b78e7e">
+<div id="outline-container-Crash%20with%20tcpdump%20%2B%20cpumap-redirect" class="outline-3">
+<h3 id="Crash%20with%20tcpdump%20%2B%20cpumap-redirect"><a href="#Crash%20with%20tcpdump%20%2B%20cpumap-redirect">Crash with tcpdump + cpumap-redirect</a></h3>
+<div class="outline-text-3" id="text-Crash%20with%20tcpdump%20%2B%20cpumap-redirect">
 <p>
 Provoked crash with tcpdump + cpumap-redirect
 </p>
@@ -793,9 +792,9 @@ Got a new crash dump that contains the DSA calls:
 </pre>
 </div>
 
-<div id="outline-container-org09fc5a5" class="outline-4">
-<h4 id="org09fc5a5">Test: compile without CONFIG_NET_DSA</h4>
-<div class="outline-text-4" id="text-org09fc5a5">
+<div id="outline-container-Test%3A%20compile%20without%20CONFIG_NET_DSA" class="outline-4">
+<h4 id="Test%3A%20compile%20without%20CONFIG_NET_DSA"><a href="#Test%3A%20compile%20without%20CONFIG_NET_DSA">Test: compile without CONFIG_NET_DSA</a></h4>
+<div class="outline-text-4" id="text-Test%3A%20compile%20without%20CONFIG_NET_DSA">
 <p>
 As described in <a href="configs/README_espressobin.html">configs/README_espressobin.html</a>, it is possible to
 compile the kernel without DSA support and only get a <code>eth0</code> device.
@@ -974,7 +973,7 @@ root@espressobin:~# tcpdump -ni eth0 -c 10
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="date">Date: 2018-12-05 Wed 16:13</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

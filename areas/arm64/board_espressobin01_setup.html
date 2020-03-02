@@ -3,7 +3,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-01-24 Fri 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Setup notes for board espressobin</title>
@@ -22,24 +21,24 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgc5ab262">NIC driver</a></li>
-<li><a href="#orgf8462f5">Wiki setup info</a></li>
-<li><a href="#org4e9bccc">Board info in U-Boot</a></li>
-<li><a href="#org656c465">Uboot config</a>
+<li><a href="#NIC%20driver">NIC driver</a></li>
+<li><a href="#Wiki%20setup%20info">Wiki setup info</a></li>
+<li><a href="#Board%20info%20in%20U-Boot">Board info in U-Boot</a></li>
+<li><a href="#Uboot%20config">Uboot config</a>
 <ul>
-<li><a href="#orgf3d7030">Backup/fallback kernel</a></li>
+<li><a href="#Backup%2Ffallback%20kernel">Backup/fallback kernel</a></li>
 </ul>
 </li>
-<li><a href="#orgc90aa60">Ubuntu tar.gz hack</a></li>
-<li><a href="#orgb446569">Extra packages</a></li>
-<li><a href="#org6de8eae">Getting perf on Ubuntu</a></li>
-<li><a href="#org622b4e1">Ubuntu network setup via netplan</a>
+<li><a href="#Ubuntu%20tar.gz%20hack">Ubuntu tar.gz hack</a></li>
+<li><a href="#Extra%20packages">Extra packages</a></li>
+<li><a href="#Getting%20perf%20on%20Ubuntu">Getting perf on Ubuntu</a></li>
+<li><a href="#Ubuntu%20network%20setup%20via%20netplan">Ubuntu network setup via netplan</a>
 <ul>
-<li><a href="#orgd2c34f7">First failed attempt with netplan</a></li>
-<li><a href="#orgab1d151">Second attempt with netplan</a></li>
+<li><a href="#First%20failed%20attempt%20with%20netplan">First failed attempt with netplan</a></li>
+<li><a href="#Second%20attempt%20with%20netplan">Second attempt with netplan</a></li>
 </ul>
 </li>
-<li><a href="#orga7b3789">perf profiling on ubuntu with ARM64</a></li>
+<li><a href="#perf%20profiling%20on%20ubuntu%20with%20ARM64">perf profiling on ubuntu with ARM64</a></li>
 </ul>
 </div>
 </div>
@@ -50,9 +49,9 @@ The Espressobin board homepage:
 <li><a href="http://espressobin.net/tech-spec/">http://espressobin.net/tech-spec/</a></li>
 </ul>
 
-<div id="outline-container-orgc5ab262" class="outline-2">
-<h2 id="orgc5ab262">NIC driver</h2>
-<div class="outline-text-2" id="text-orgc5ab262">
+<div id="outline-container-NIC%20driver" class="outline-2">
+<h2 id="NIC%20driver"><a href="#NIC%20driver">NIC driver</a></h2>
+<div class="outline-text-2" id="text-NIC%20driver">
 <p>
 This project is heavily focused on the network driver of the board.
 </p>
@@ -122,18 +121,18 @@ driver: dsa
 </div>
 </div>
 
-<div id="outline-container-orgf8462f5" class="outline-2">
-<h2 id="orgf8462f5">Wiki setup info</h2>
-<div class="outline-text-2" id="text-orgf8462f5">
+<div id="outline-container-Wiki%20setup%20info" class="outline-2">
+<h2 id="Wiki%20setup%20info"><a href="#Wiki%20setup%20info">Wiki setup info</a></h2>
+<div class="outline-text-2" id="text-Wiki%20setup%20info">
 <p>
 <a href="http://wiki.espressobin.net/tiki-index.php?page=Boot+from+removable+storage+-+Ubuntu#Ubuntu_16.04.4_LTS">http://wiki.espressobin.net/tiki-index.php?page=Boot+from+removable+storage+-+Ubuntu#Ubuntu_16.04.4_LTS</a>
 </p>
 </div>
 </div>
 
-<div id="outline-container-org4e9bccc" class="outline-2">
-<h2 id="org4e9bccc">Board info in U-Boot</h2>
-<div class="outline-text-2" id="text-org4e9bccc">
+<div id="outline-container-Board%20info%20in%20U-Boot" class="outline-2">
+<h2 id="Board%20info%20in%20U-Boot"><a href="#Board%20info%20in%20U-Boot">Board info in U-Boot</a></h2>
+<div class="outline-text-2" id="text-Board%20info%20in%20U-Boot">
 <p>
 After you press the reset key on your ESPRESSObin board, the system
 should reboot, and you see something like this via the serial console
@@ -160,9 +159,9 @@ Comphy-2: SATA0         6 Gbps
 </div>
 </div>
 
-<div id="outline-container-org656c465" class="outline-2">
-<h2 id="org656c465">Uboot config</h2>
-<div class="outline-text-2" id="text-org656c465">
+<div id="outline-container-Uboot%20config" class="outline-2">
+<h2 id="Uboot%20config"><a href="#Uboot%20config">Uboot config</a></h2>
+<div class="outline-text-2" id="text-Uboot%20config">
 <p>
 Got to boot prompt "Marvell&gt;&gt;".
 </p>
@@ -303,9 +302,9 @@ run bootmmc
 </pre>
 </div>
 
-<div id="outline-container-orgf3d7030" class="outline-3">
-<h3 id="orgf3d7030">Backup/fallback kernel</h3>
-<div class="outline-text-3" id="text-orgf3d7030">
+<div id="outline-container-Backup%2Ffallback%20kernel" class="outline-3">
+<h3 id="Backup%2Ffallback%20kernel"><a href="#Backup%2Ffallback%20kernel">Backup/fallback kernel</a></h3>
+<div class="outline-text-3" id="text-Backup%2Ffallback%20kernel">
 <p>
 Setup a U-Boot fallback option in case I upload a broken kernel:
 </p>
@@ -318,9 +317,9 @@ run bootmmc.works
 </div>
 </div>
 
-<div id="outline-container-orgc90aa60" class="outline-2">
-<h2 id="orgc90aa60">Ubuntu tar.gz hack</h2>
-<div class="outline-text-2" id="text-orgc90aa60">
+<div id="outline-container-Ubuntu%20tar.gz%20hack" class="outline-2">
+<h2 id="Ubuntu%20tar.gz%20hack"><a href="#Ubuntu%20tar.gz%20hack">Ubuntu tar.gz hack</a></h2>
+<div class="outline-text-2" id="text-Ubuntu%20tar.gz%20hack">
 <p>
 Got Ubuntu tar image from apalos/ilias.  Just mounted a macchiatobin
 image and tar extracted into this&#x2026;
@@ -337,9 +336,9 @@ Linux localhost.localdomain 4.19.0-rc7-02549-g3ddeac6 #1 SMP PREEMPT Fri Oct 19 
 </div>
 </div>
 
-<div id="outline-container-orgb446569" class="outline-2">
-<h2 id="orgb446569">Extra packages</h2>
-<div class="outline-text-2" id="text-orgb446569">
+<div id="outline-container-Extra%20packages" class="outline-2">
+<h2 id="Extra%20packages"><a href="#Extra%20packages">Extra packages</a></h2>
+<div class="outline-text-2" id="text-Extra%20packages">
 <p>
 Install some extra software packages:
 </p>
@@ -399,9 +398,9 @@ apt install libbabeltrace-ctf-dev libbabeltrace-dev
 </div>
 
 
-<div id="outline-container-org6de8eae" class="outline-2">
-<h2 id="org6de8eae">Getting perf on Ubuntu</h2>
-<div class="outline-text-2" id="text-org6de8eae">
+<div id="outline-container-Getting%20perf%20on%20Ubuntu" class="outline-2">
+<h2 id="Getting%20perf%20on%20Ubuntu"><a href="#Getting%20perf%20on%20Ubuntu">Getting perf on Ubuntu</a></h2>
+<div class="outline-text-2" id="text-Getting%20perf%20on%20Ubuntu">
 <p>
 The perf tool is a bit annoying on Ubuntu, as it maintains a
 linux-tools package per kernel version.  And the perf program is a
@@ -429,18 +428,18 @@ linux-tools-4.15.0-38: /usr/lib/linux-tools-4.15.0-38/perf
 </div>
 </div>
 
-<div id="outline-container-org622b4e1" class="outline-2">
-<h2 id="org622b4e1">Ubuntu network setup via netplan</h2>
-<div class="outline-text-2" id="text-org622b4e1">
+<div id="outline-container-Ubuntu%20network%20setup%20via%20netplan" class="outline-2">
+<h2 id="Ubuntu%20network%20setup%20via%20netplan"><a href="#Ubuntu%20network%20setup%20via%20netplan">Ubuntu network setup via netplan</a></h2>
+<div class="outline-text-2" id="text-Ubuntu%20network%20setup%20via%20netplan">
 <p>
 Annoying Ubuntu (18.04.1 LTS) seems to have changed network interface
 setup, to a system called 'netplan'.
 </p>
 </div>
 
-<div id="outline-container-orgd2c34f7" class="outline-3">
-<h3 id="orgd2c34f7">First failed attempt with netplan</h3>
-<div class="outline-text-3" id="text-orgd2c34f7">
+<div id="outline-container-First%20failed%20attempt%20with%20netplan" class="outline-3">
+<h3 id="First%20failed%20attempt%20with%20netplan"><a href="#First%20failed%20attempt%20with%20netplan">First failed attempt with netplan</a></h3>
+<div class="outline-text-3" id="text-First%20failed%20attempt%20with%20netplan">
 <p>
 Follow:
  <a href="https://websiteforstudents.com/configure-static-ip-addresses-on-ubuntu-18-04-beta/">https://websiteforstudents.com/configure-static-ip-addresses-on-ubuntu-18-04-beta/</a>
@@ -471,9 +470,9 @@ Run: netplan apply
 </div>
 </div>
 
-<div id="outline-container-orgab1d151" class="outline-3">
-<h3 id="orgab1d151">Second attempt with netplan</h3>
-<div class="outline-text-3" id="text-orgab1d151">
+<div id="outline-container-Second%20attempt%20with%20netplan" class="outline-3">
+<h3 id="Second%20attempt%20with%20netplan"><a href="#Second%20attempt%20with%20netplan">Second attempt with netplan</a></h3>
+<div class="outline-text-3" id="text-Second%20attempt%20with%20netplan">
 <p>
 After booting another kernel on espressobin, it comes up with
 interfaces: lan0, lan1 and wan. But now networking is broken.
@@ -570,9 +569,9 @@ Info on different options for systemd-network setup:
 </div>
 
 
-<div id="outline-container-orga7b3789" class="outline-2">
-<h2 id="orga7b3789">perf profiling on ubuntu with ARM64</h2>
-<div class="outline-text-2" id="text-orga7b3789">
+<div id="outline-container-perf%20profiling%20on%20ubuntu%20with%20ARM64" class="outline-2">
+<h2 id="perf%20profiling%20on%20ubuntu%20with%20ARM64"><a href="#perf%20profiling%20on%20ubuntu%20with%20ARM64">perf profiling on ubuntu with ARM64</a></h2>
+<div class="outline-text-2" id="text-perf%20profiling%20on%20ubuntu%20with%20ARM64">
 <p>
 Annoying Ubuntu/Debian have their perf binary is a script that tried
 to detect the real perf binary via the kernel version.  This obviously
@@ -604,7 +603,7 @@ And then manually call e.g.: /usr/lib/linux-tools-4.15.0-38/perf
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="date">Date: 2018-12-03 Mon 14:06</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

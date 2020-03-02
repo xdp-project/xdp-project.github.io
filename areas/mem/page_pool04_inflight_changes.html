@@ -3,7 +3,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-01-24 Fri 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Change page_pool handling in-flight frames during shutdown</title>
@@ -22,41 +21,41 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org5813a67">Background - design issue in shutdown</a>
+<li><a href="#Background%20-%20design%20issue%20in%20shutdown">Background - design issue in shutdown</a>
 <ul>
-<li><a href="#org26efdf1">Lost Catch-bug-feature</a></li>
+<li><a href="#Lost%20Catch-bug-feature">Lost Catch-bug-feature</a></li>
 </ul>
 </li>
-<li><a href="#orgf36fd70">Upstream patch with issue</a>
+<li><a href="#Upstream%20patch%20with%20issue">Upstream patch with issue</a>
 <ul>
-<li><a href="#org3aea1ce">Investigated if we can just revert this.</a></li>
+<li><a href="#Investigated%20if%20we%20can%20just%20revert%20this.">Investigated if we can just revert this.</a></li>
 </ul>
 </li>
-<li><a href="#org2bb2504">Patchset#1 - REJECTED UPSTREAM</a>
+<li><a href="#Patchset%231%20-%20REJECTED%20UPSTREAM">Patchset#1 - REJECTED UPSTREAM</a>
 <ul>
-<li><a href="#org5b8b7db">Cover-letter</a>
+<li><a href="#Cover-letter">Cover-letter</a>
 <ul>
-<li><a href="#orga357692">stg mail</a></li>
+<li><a href="#stg%20mail">stg mail</a></li>
 </ul>
 </li>
-<li><a href="#org4e09561">Patch1: xdp: revert forced mem allocator removal for page_pool</a></li>
-<li><a href="#org95e8a22">patch2: page_pool: make inflight returns more robust via blocking alloc cache</a></li>
-<li><a href="#org9438167">Potential bug?</a></li>
+<li><a href="#Patch1%3A%20xdp%3A%20revert%20forced%20mem%20allocator%20removal%20for%20page_pool">Patch1: xdp: revert forced mem allocator removal for page_pool</a></li>
+<li><a href="#patch2%3A%20page_pool%3A%20make%20inflight%20returns%20more%20robust%20via%20blocking%20alloc%20cache">patch2: page_pool: make inflight returns more robust via blocking alloc cache</a></li>
+<li><a href="#Potential%20bug%3F">Potential bug?</a></li>
 </ul>
 </li>
-<li><a href="#org14a1ca0">Followup patchset</a>
+<li><a href="#Followup%20patchset">Followup patchset</a>
 <ul>
-<li><a href="#org0eeb984">cover-letter</a>
+<li><a href="#cover-letter">cover-letter</a>
 <ul>
-<li><a href="#org401e8c7">stg mail</a></li>
+<li><a href="#cover-letter--stg%20mail">stg mail</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org30aadd3">Notes</a>
+<li><a href="#Notes">Notes</a>
 <ul>
-<li><a href="#orgf39da52">Performance notes</a></li>
-<li><a href="#orgffc847f">bpftrace measurement tool output</a></li>
+<li><a href="#Performance%20notes">Performance notes</a></li>
+<li><a href="#bpftrace%20measurement%20tool%20output">bpftrace measurement tool output</a></li>
 </ul>
 </li>
 </ul>
@@ -72,9 +71,9 @@ As pointed out by Jonathan Lemon, we have to fix the page_pool shutdown
 mechanism, when wanting page_pool for SKB-recycling.
 </p>
 
-<div id="outline-container-org5813a67" class="outline-2">
-<h2 id="org5813a67">Background - design issue in shutdown</h2>
-<div class="outline-text-2" id="text-org5813a67">
+<div id="outline-container-Background%20-%20design%20issue%20in%20shutdown" class="outline-2">
+<h2 id="Background%20-%20design%20issue%20in%20shutdown"><a href="#Background%20-%20design%20issue%20in%20shutdown">Background - design issue in shutdown</a></h2>
+<div class="outline-text-2" id="text-Background%20-%20design%20issue%20in%20shutdown">
 <p>
 The current page_pool shutdown have a design problem, it assumes that if the
 page_pool have pages 'inflight' for more that 120 sec, then it's a bug. It
@@ -101,9 +100,9 @@ object for real.
 </p>
 </div>
 
-<div id="outline-container-org26efdf1" class="outline-3">
-<h3 id="org26efdf1">Lost Catch-bug-feature</h3>
-<div class="outline-text-3" id="text-org26efdf1">
+<div id="outline-container-Lost%20Catch-bug-feature" class="outline-3">
+<h3 id="Lost%20Catch-bug-feature"><a href="#Lost%20Catch-bug-feature">Lost Catch-bug-feature</a></h3>
+<div class="outline-text-3" id="text-Lost%20Catch-bug-feature">
 <p>
 With above design, we also loose one bug catching feature. I've used the
 timeout feature to catch bugs, where the 'inflight' count never reach zero,
@@ -124,9 +123,9 @@ but when not troubleshooting the overhead is zero.  I've started writing
 </div>
 </div>
 
-<div id="outline-container-orgf36fd70" class="outline-2">
-<h2 id="orgf36fd70">Upstream patch with issue</h2>
-<div class="outline-text-2" id="text-orgf36fd70">
+<div id="outline-container-Upstream%20patch%20with%20issue" class="outline-2">
+<h2 id="Upstream%20patch%20with%20issue"><a href="#Upstream%20patch%20with%20issue">Upstream patch with issue</a></h2>
+<div class="outline-text-2" id="text-Upstream%20patch%20with%20issue">
 <p>
 The main patch that caused this issue is:
 </p>
@@ -158,9 +157,9 @@ Date:   Tue Jun 18 15:05:53 2019 +0200
 </pre>
 </div>
 
-<div id="outline-container-org3aea1ce" class="outline-3">
-<h3 id="org3aea1ce">Investigated if we can just revert this.</h3>
-<div class="outline-text-3" id="text-org3aea1ce">
+<div id="outline-container-Investigated%20if%20we%20can%20just%20revert%20this." class="outline-3">
+<h3 id="Investigated%20if%20we%20can%20just%20revert%20this."><a href="#Investigated%20if%20we%20can%20just%20revert%20this.">Investigated if we can just revert this.</a></h3>
+<div class="outline-text-3" id="text-Investigated%20if%20we%20can%20just%20revert%20this.">
 <p>
 Assessment is that might be useful to keep around the periodic warning, but
 e.g. after 5 minutes.  This can help us spot bugs, where inflight packets
@@ -176,9 +175,9 @@ page_pool being in a shutdown state.
 </div>
 </div>
 
-<div id="outline-container-org2bb2504" class="outline-2">
-<h2 id="org2bb2504">Patchset#1 - REJECTED UPSTREAM</h2>
-<div class="outline-text-2" id="text-org2bb2504">
+<div id="outline-container-Patchset%231%20-%20REJECTED%20UPSTREAM" class="outline-2">
+<h2 id="Patchset%231%20-%20REJECTED%20UPSTREAM"><a href="#Patchset%231%20-%20REJECTED%20UPSTREAM">Patchset#1 - REJECTED UPSTREAM</a></h2>
+<div class="outline-text-2" id="text-Patchset%231%20-%20REJECTED%20UPSTREAM">
 <p>
 <b>Update</b>: Patchset rejected upstream.
 </p>
@@ -195,9 +194,9 @@ Instead this patch is being considered:
 </ul>
 </div>
 
-<div id="outline-container-org5b8b7db" class="outline-3">
-<h3 id="org5b8b7db">Cover-letter</h3>
-<div class="outline-text-3" id="text-org5b8b7db">
+<div id="outline-container-Cover-letter" class="outline-3">
+<h3 id="Cover-letter"><a href="#Cover-letter">Cover-letter</a></h3>
+<div class="outline-text-3" id="text-Cover-letter">
 <p>
 Subj: Change XDP lifetime guarantees for page_pool objects
 </p>
@@ -232,9 +231,9 @@ Note, patches are based on-top of Saeed's page_pool NUMA changes.
 </p>
 </div>
 
-<div id="outline-container-orga357692" class="outline-4">
-<h4 id="orga357692">stg mail</h4>
-<div class="outline-text-4" id="text-orga357692">
+<div id="outline-container-stg%20mail" class="outline-4">
+<h4 id="stg%20mail"><a href="#stg%20mail">stg mail</a></h4>
+<div class="outline-text-4" id="text-stg%20mail">
 <p>
 Commands used for stg-mail:
 </p>
@@ -251,9 +250,9 @@ Commands used for stg-mail:
 </div>
 </div>
 
-<div id="outline-container-org4e09561" class="outline-3">
-<h3 id="org4e09561">Patch1: xdp: revert forced mem allocator removal for page_pool</h3>
-<div class="outline-text-3" id="text-org4e09561">
+<div id="outline-container-Patch1%3A%20xdp%3A%20revert%20forced%20mem%20allocator%20removal%20for%20page_pool" class="outline-3">
+<h3 id="Patch1%3A%20xdp%3A%20revert%20forced%20mem%20allocator%20removal%20for%20page_pool"><a href="#Patch1%3A%20xdp%3A%20revert%20forced%20mem%20allocator%20removal%20for%20page_pool">Patch1: xdp: revert forced mem allocator removal for page_pool</a></h3>
+<div class="outline-text-3" id="text-Patch1%3A%20xdp%3A%20revert%20forced%20mem%20allocator%20removal%20for%20page_pool">
 <p>
 Forced removal of XDP mem allocator, specifically related to page_pool,
 turned out to be a wrong approach. Special thanks to Jonathan Lemon for
@@ -289,9 +288,9 @@ Fixes: d956a048cd3f (“xdp: force mem allocator removal and periodic warning”
 </div>
 </div>
 
-<div id="outline-container-org95e8a22" class="outline-3">
-<h3 id="org95e8a22">patch2: page_pool: make inflight returns more robust via blocking alloc cache</h3>
-<div class="outline-text-3" id="text-org95e8a22">
+<div id="outline-container-patch2%3A%20page_pool%3A%20make%20inflight%20returns%20more%20robust%20via%20blocking%20alloc%20cache" class="outline-3">
+<h3 id="patch2%3A%20page_pool%3A%20make%20inflight%20returns%20more%20robust%20via%20blocking%20alloc%20cache"><a href="#patch2%3A%20page_pool%3A%20make%20inflight%20returns%20more%20robust%20via%20blocking%20alloc%20cache">patch2: page_pool: make inflight returns more robust via blocking alloc cache</a></h3>
+<div class="outline-text-3" id="text-patch2%3A%20page_pool%3A%20make%20inflight%20returns%20more%20robust%20via%20blocking%20alloc%20cache">
 <p>
 When requesting page_pool shutdown, it's a requirement that consumer
 RX-side have been disconnected, but __page_pool_request_shutdown()
@@ -310,9 +309,9 @@ and consumer (which is not allowed) will see a NULL pointer.
 </div>
 </div>
 
-<div id="outline-container-org9438167" class="outline-3">
-<h3 id="org9438167">Potential bug?</h3>
-<div class="outline-text-3" id="text-org9438167">
+<div id="outline-container-Potential%20bug%3F" class="outline-3">
+<h3 id="Potential%20bug%3F"><a href="#Potential%20bug%3F">Potential bug?</a></h3>
+<div class="outline-text-3" id="text-Potential%20bug%3F">
 <p>
 <b>Update</b>: below issue should be addressed in patch2.
 </p>
@@ -346,13 +345,13 @@ catch users still allocating from it.
 </div>
 
 
-<div id="outline-container-org14a1ca0" class="outline-2">
-<h2 id="org14a1ca0">Followup patchset</h2>
-<div class="outline-text-2" id="text-org14a1ca0">
+<div id="outline-container-Followup%20patchset" class="outline-2">
+<h2 id="Followup%20patchset"><a href="#Followup%20patchset">Followup patchset</a></h2>
+<div class="outline-text-2" id="text-Followup%20patchset">
 </div>
-<div id="outline-container-org0eeb984" class="outline-3">
-<h3 id="org0eeb984">cover-letter</h3>
-<div class="outline-text-3" id="text-org0eeb984">
+<div id="outline-container-cover-letter" class="outline-3">
+<h3 id="cover-letter"><a href="#cover-letter">cover-letter</a></h3>
+<div class="outline-text-3" id="text-cover-letter">
 <p>
 page_pool: followup changes to restore tracepoint features
 </p>
@@ -372,9 +371,9 @@ With these changes, the same capabilities are regained.
 </p>
 </div>
 
-<div id="outline-container-org401e8c7" class="outline-4">
-<h4 id="org401e8c7">stg mail</h4>
-<div class="outline-text-4" id="text-org401e8c7">
+<div id="outline-container-cover-letter--stg%20mail" class="outline-4">
+<h4 id="cover-letter--stg%20mail"><a href="#cover-letter--stg%20mail">stg mail</a></h4>
+<div class="outline-text-4" id="text-cover-letter--stg%20mail">
 <p>
 Commands used for stg-mail:
 </p>
@@ -395,13 +394,13 @@ Commands used for stg-mail:
 
 
 
-<div id="outline-container-org30aadd3" class="outline-2">
-<h2 id="org30aadd3">Notes</h2>
-<div class="outline-text-2" id="text-org30aadd3">
+<div id="outline-container-Notes" class="outline-2">
+<h2 id="Notes"><a href="#Notes">Notes</a></h2>
+<div class="outline-text-2" id="text-Notes">
 </div>
-<div id="outline-container-orgf39da52" class="outline-3">
-<h3 id="orgf39da52">Performance notes</h3>
-<div class="outline-text-3" id="text-orgf39da52">
+<div id="outline-container-Performance%20notes" class="outline-3">
+<h3 id="Performance%20notes"><a href="#Performance%20notes">Performance notes</a></h3>
+<div class="outline-text-3" id="text-Performance%20notes">
 <p>
 Result with patchset + Saeed NUMA changes + mlx5-cache-removal-patch
 </p>
@@ -461,9 +460,9 @@ Calc: (1/22359831-1/22188213)*10^9 = -0.3459 ns
 </div>
 </div>
 
-<div id="outline-container-orgffc847f" class="outline-3">
-<h3 id="orgffc847f">bpftrace measurement tool output</h3>
-<div class="outline-text-3" id="text-orgffc847f">
+<div id="outline-container-bpftrace%20measurement%20tool%20output" class="outline-3">
+<h3 id="bpftrace%20measurement%20tool%20output"><a href="#bpftrace%20measurement%20tool%20output">bpftrace measurement tool output</a></h3>
+<div class="outline-text-3" id="text-bpftrace%20measurement%20tool%20output">
 <p>
 Repeating test of patchset and monitor that the testcase of activating
 work-queue does happen. The specific test run is xdp_redirect_map from
@@ -545,7 +544,7 @@ tracepoint:xdp:mem_disconnect: type:PAGE_POOL mem.id:28 0xFFFF888848D59800 safe_
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="date">Date: 2019-11-18 Mon 15:01</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

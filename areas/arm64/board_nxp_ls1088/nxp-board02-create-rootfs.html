@@ -3,7 +3,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-01-24 Fri 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>NXP LS1088A - Create rootfs</title>
@@ -22,11 +21,11 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org264741e">Download flexbuild</a></li>
-<li><a href="#org554706e">Create Ubuntu rootfs</a></li>
-<li><a href="#org9ed6c04">Install on SD-card</a></li>
-<li><a href="#org61654f5">Boot setup</a></li>
-<li><a href="#org0742d2b">Kernel DTS files</a></li>
+<li><a href="#Download%20flexbuild">Download flexbuild</a></li>
+<li><a href="#Create%20Ubuntu%20rootfs">Create Ubuntu rootfs</a></li>
+<li><a href="#Install%20on%20SD-card">Install on SD-card</a></li>
+<li><a href="#Boot%20setup">Boot setup</a></li>
+<li><a href="#Kernel%20DTS%20files">Kernel DTS files</a></li>
 </ul>
 </div>
 </div>
@@ -57,9 +56,9 @@ This document is basically a cheat-sheet, with steps that I performed to
 bring-up the board.
 </p>
 
-<div id="outline-container-org264741e" class="outline-2">
-<h2 id="org264741e">Download flexbuild</h2>
-<div class="outline-text-2" id="text-org264741e">
+<div id="outline-container-Download%20flexbuild" class="outline-2">
+<h2 id="Download%20flexbuild"><a href="#Download%20flexbuild">Download flexbuild</a></h2>
+<div class="outline-text-2" id="text-Download%20flexbuild">
 <p>
 First step is downloading and extracting the flexbuild tool:
 </p>
@@ -69,9 +68,9 @@ First step is downloading and extracting the flexbuild tool:
 </div>
 </div>
 
-<div id="outline-container-org554706e" class="outline-2">
-<h2 id="org554706e">Create Ubuntu rootfs</h2>
-<div class="outline-text-2" id="text-org554706e">
+<div id="outline-container-Create%20Ubuntu%20rootfs" class="outline-2">
+<h2 id="Create%20Ubuntu%20rootfs"><a href="#Create%20Ubuntu%20rootfs">Create Ubuntu rootfs</a></h2>
+<div class="outline-text-2" id="text-Create%20Ubuntu%20rootfs">
 <p>
 A more detailed description of all the steps can be found in chapter 4.1.7.2
 from <a href="https://www.nxp.com/docs/en/user-guide/LSDKUG_Rev19.03.pdf">LSDK 19.03</a> User Guide.
@@ -142,9 +141,9 @@ wget http://www.nxp.com/lgfiles/sdk/lsdk1903/lib_modules_LS_arm64_4.19.26.tgz
 </div>
 </div>
 
-<div id="outline-container-org9ed6c04" class="outline-2">
-<h2 id="org9ed6c04">Install on SD-card</h2>
-<div class="outline-text-2" id="text-org9ed6c04">
+<div id="outline-container-Install%20on%20SD-card" class="outline-2">
+<h2 id="Install%20on%20SD-card"><a href="#Install%20on%20SD-card">Install on SD-card</a></h2>
+<div class="outline-text-2" id="text-Install%20on%20SD-card">
 <p>
 Install the bootpartition and Ubuntu rootfs onto an SD card or USB directly
 from an x86 machine.
@@ -183,9 +182,9 @@ and use it to install the images on the SD-card:
 </div>
 </div>
 
-<div id="outline-container-org61654f5" class="outline-2">
-<h2 id="org61654f5">Boot setup</h2>
-<div class="outline-text-2" id="text-org61654f5">
+<div id="outline-container-Boot%20setup" class="outline-2">
+<h2 id="Boot%20setup"><a href="#Boot%20setup">Boot setup</a></h2>
+<div class="outline-text-2" id="text-Boot%20setup">
 <p>
 From <a href="https://www.nxp.com/docs/en/user-guide/LSDKUG_Rev19.03.pdf">LSDK 19.03</a> User Guide:
 "4.1.7.3.2 Option 1 - Deploy LSDK images using removable storage device"
@@ -207,9 +206,9 @@ Changed DIP switch <code>SW1[1:8]</code> :
 </div>
 </div>
 
-<div id="outline-container-org0742d2b" class="outline-2">
-<h2 id="org0742d2b">Kernel DTS files</h2>
-<div class="outline-text-2" id="text-org0742d2b">
+<div id="outline-container-Kernel%20DTS%20files" class="outline-2">
+<h2 id="Kernel%20DTS%20files"><a href="#Kernel%20DTS%20files">Kernel DTS files</a></h2>
+<div class="outline-text-2" id="text-Kernel%20DTS%20files">
 <p>
 Upstream kernel also have DTS files for this board:
 </p>
@@ -231,7 +230,7 @@ $ make freescale/fsl-ls1088a-rdb.dtb
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="date">Date: 2019-05-08 Wed 12:43</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

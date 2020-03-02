@@ -3,7 +3,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-01-24 Fri 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Prepare RFC patchset for upstream to show page_pool plans</title>
@@ -22,25 +21,25 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org5a7594b">Cover-letter</a></li>
-<li><a href="#org75f2c4c">People needing to see/review patchset</a></li>
-<li><a href="#org18cc6b1">Patch descriptions</a>
+<li><a href="#Cover-letter">Cover-letter</a></li>
+<li><a href="#People%20needing%20to%20see%2Freview%20patchset">People needing to see/review patchset</a></li>
+<li><a href="#Patch%20descriptions">Patch descriptions</a>
 <ul>
-<li><a href="#org433889c">net: core: add recycle capabilities on skbs via page_pool API</a></li>
-<li><a href="#orga5dad88">net: mvneta: remove copybreak, prefetch and use build_skb</a></li>
-<li><a href="#org5cc5565">mvneta: activate page recycling via skb using page_pool</a></li>
-<li><a href="#orgf3f27d7">cpumap fix</a></li>
-<li><a href="#orgec49d42">veth fix</a></li>
+<li><a href="#net%3A%20core%3A%20add%20recycle%20capabilities%20on%20skbs%20via%20page_pool%20API">net: core: add recycle capabilities on skbs via page_pool API</a></li>
+<li><a href="#net%3A%20mvneta%3A%20remove%20copybreak%2C%20prefetch%20and%20use%20build_skb">net: mvneta: remove copybreak, prefetch and use build_skb</a></li>
+<li><a href="#mvneta%3A%20activate%20page%20recycling%20via%20skb%20using%20page_pool">mvneta: activate page recycling via skb using page_pool</a></li>
+<li><a href="#cpumap%20fix">cpumap fix</a></li>
+<li><a href="#veth%20fix">veth fix</a></li>
 </ul>
 </li>
-<li><a href="#orge0eafe3">Apalos/Ilias comments:</a></li>
+<li><a href="#Apalos%2FIlias%20comments%3A">Apalos/Ilias comments:</a></li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-org5a7594b" class="outline-2">
-<h2 id="org5a7594b">Cover-letter</h2>
-<div class="outline-text-2" id="text-org5a7594b">
+<div id="outline-container-Cover-letter" class="outline-2">
+<h2 id="Cover-letter"><a href="#Cover-letter">Cover-letter</a></h2>
+<div class="outline-text-2" id="text-Cover-letter">
 <p>
 Subj: page_pool DMA handling and allow to recycles frames via SKB
 </p>
@@ -84,9 +83,9 @@ restricted to read-only.
 </div>
 
 
-<div id="outline-container-org75f2c4c" class="outline-2">
-<h2 id="org75f2c4c">People needing to see/review patchset</h2>
-<div class="outline-text-2" id="text-org75f2c4c">
+<div id="outline-container-People%20needing%20to%20see%2Freview%20patchset" class="outline-2">
+<h2 id="People%20needing%20to%20see%2Freview%20patchset"><a href="#People%20needing%20to%20see%2Freview%20patchset">People needing to see/review patchset</a></h2>
+<div class="outline-text-2" id="text-People%20needing%20to%20see%2Freview%20patchset">
 <p>
 stg mail &#x2013;version=RFC &#x2013;prefix="net-next" -e &#x2013;to meup \
  &#x2013;cc ilias.apalodimas@linaro.org \
@@ -118,17 +117,17 @@ Cc:
 
 
 
-<div id="outline-container-org18cc6b1" class="outline-2">
-<h2 id="org18cc6b1">Patch descriptions</h2>
-<div class="outline-text-2" id="text-org18cc6b1">
+<div id="outline-container-Patch%20descriptions" class="outline-2">
+<h2 id="Patch%20descriptions"><a href="#Patch%20descriptions">Patch descriptions</a></h2>
+<div class="outline-text-2" id="text-Patch%20descriptions">
 <p>
 Prepare patch desc in this docs, before updating git-repo.
 </p>
 </div>
 
-<div id="outline-container-org433889c" class="outline-3">
-<h3 id="org433889c">net: core: add recycle capabilities on skbs via page_pool API</h3>
-<div class="outline-text-3" id="text-org433889c">
+<div id="outline-container-net%3A%20core%3A%20add%20recycle%20capabilities%20on%20skbs%20via%20page_pool%20API" class="outline-3">
+<h3 id="net%3A%20core%3A%20add%20recycle%20capabilities%20on%20skbs%20via%20page_pool%20API"><a href="#net%3A%20core%3A%20add%20recycle%20capabilities%20on%20skbs%20via%20page_pool%20API">net: core: add recycle capabilities on skbs via page_pool API</a></h3>
+<div class="outline-text-3" id="text-net%3A%20core%3A%20add%20recycle%20capabilities%20on%20skbs%20via%20page_pool%20API">
 <p>
 This patch is changing struct sk_buff, and is thus per-definition
 controversial.
@@ -152,9 +151,9 @@ head_frag and pfmemalloc into this area.
 </div>
 </div>
 
-<div id="outline-container-orga5dad88" class="outline-3">
-<h3 id="orga5dad88">net: mvneta: remove copybreak, prefetch and use build_skb</h3>
-<div class="outline-text-3" id="text-orga5dad88">
+<div id="outline-container-net%3A%20mvneta%3A%20remove%20copybreak%2C%20prefetch%20and%20use%20build_skb" class="outline-3">
+<h3 id="net%3A%20mvneta%3A%20remove%20copybreak%2C%20prefetch%20and%20use%20build_skb"><a href="#net%3A%20mvneta%3A%20remove%20copybreak%2C%20prefetch%20and%20use%20build_skb">net: mvneta: remove copybreak, prefetch and use build_skb</a></h3>
+<div class="outline-text-3" id="text-net%3A%20mvneta%3A%20remove%20copybreak%2C%20prefetch%20and%20use%20build_skb">
 <p>
 The driver memcpy for packets &lt; 256b and it's recycle tricks are not
 needed anymore.  As previous patch introduces buffer recycling using
@@ -177,9 +176,9 @@ any DMA sync ops it ends up hurting performance.
 </div>
 </div>
 
-<div id="outline-container-org5cc5565" class="outline-3">
-<h3 id="org5cc5565">mvneta: activate page recycling via skb using page_pool</h3>
-<div class="outline-text-3" id="text-org5cc5565">
+<div id="outline-container-mvneta%3A%20activate%20page%20recycling%20via%20skb%20using%20page_pool" class="outline-3">
+<h3 id="mvneta%3A%20activate%20page%20recycling%20via%20skb%20using%20page_pool"><a href="#mvneta%3A%20activate%20page%20recycling%20via%20skb%20using%20page_pool">mvneta: activate page recycling via skb using page_pool</a></h3>
+<div class="outline-text-3" id="text-mvneta%3A%20activate%20page%20recycling%20via%20skb%20using%20page_pool">
 <p>
 Previous mvneta patches have already started to use page_pool, but
 this was primarily for RX page alloc-side and for doing DMA map/unmap
@@ -196,9 +195,9 @@ SKB-&gt;mem_info field with info from the xdp_rxq_info.
 </div>
 </div>
 
-<div id="outline-container-orgf3f27d7" class="outline-3">
-<h3 id="orgf3f27d7">cpumap fix</h3>
-<div class="outline-text-3" id="text-orgf3f27d7">
+<div id="outline-container-cpumap%20fix" class="outline-3">
+<h3 id="cpumap%20fix"><a href="#cpumap%20fix">cpumap fix</a></h3>
+<div class="outline-text-3" id="text-cpumap%20fix">
 <p>
 xdp: bpf: cpumap redirect must update skb-&gt;mem_info
 </p>
@@ -211,9 +210,9 @@ info to the new SKB mem_info field.
 </div>
 </div>
 
-<div id="outline-container-orgec49d42" class="outline-3">
-<h3 id="orgec49d42">veth fix</h3>
-<div class="outline-text-3" id="text-orgec49d42">
+<div id="outline-container-veth%20fix" class="outline-3">
+<h3 id="veth%20fix"><a href="#veth%20fix">veth fix</a></h3>
+<div class="outline-text-3" id="text-veth%20fix">
 <p>
 veth: xdp_frames redirected into veth need to transfer xdp_mem_info
 </p>
@@ -228,9 +227,9 @@ transferred into the SKB.
 </div>
 
 
-<div id="outline-container-orge0eafe3" class="outline-2">
-<h2 id="orge0eafe3">Apalos/Ilias comments:</h2>
-<div class="outline-text-2" id="text-orge0eafe3">
+<div id="outline-container-Apalos%2FIlias%20comments%3A" class="outline-2">
+<h2 id="Apalos%2FIlias%20comments%3A"><a href="#Apalos%2FIlias%20comments%3A">Apalos/Ilias comments:</a></h2>
+<div class="outline-text-2" id="text-Apalos%2FIlias%20comments%3A">
 <p>
 TODO: Mention jumbo frames are not tested and needs proper test/review,
 </p>
@@ -246,7 +245,7 @@ for now, since mvneta does not need that"
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="date">Date: 2018-12-07 Fri 17:21</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

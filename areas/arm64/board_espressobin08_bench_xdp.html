@@ -3,7 +3,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-01-24 Fri 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Benchmarks for Espressobin driver mvneta</title>
@@ -23,38 +22,38 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org77d9a8a">Code being tested</a></li>
-<li><a href="#org7e72930">Review notes: Issues with patchset/code</a>
+<li><a href="#Code%20being%20tested">Code being tested</a></li>
+<li><a href="#Review%20notes%3A%20Issues%20with%20patchset%2Fcode">Review notes: Issues with patchset/code</a>
 <ul>
-<li><a href="#org58f2bc0">Wrong stats</a>
+<li><a href="#Wrong%20stats">Wrong stats</a>
 <ul>
-<li><a href="#orgf060bce">Stats-issue-1: XDP_DROP are invisible</a></li>
+<li><a href="#Stats-issue-1%3A%20XDP_DROP%20are%20invisible">Stats-issue-1: XDP_DROP are invisible</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org1b7e7ec">Extra: Config settings</a></li>
-<li><a href="#org31d7b31">Initial benchmark: Identify DMA sync cost</a>
+<li><a href="#Extra%3A%20Config%20settings">Extra: Config settings</a></li>
+<li><a href="#Initial%20benchmark%3A%20Identify%20DMA%20sync%20cost">Initial benchmark: Identify DMA sync cost</a>
 <ul>
-<li><a href="#orgaaf750c">iptables drop</a></li>
-<li><a href="#org8615b3d">XDP_DROP via xdp1</a></li>
-<li><a href="#org561c3df">XDP_REDIRECT</a></li>
+<li><a href="#iptables%20drop">iptables drop</a></li>
+<li><a href="#XDP_DROP%20via%20xdp1">XDP_DROP via xdp1</a></li>
+<li><a href="#XDP_REDIRECT">XDP_REDIRECT</a></li>
 </ul>
 </li>
-<li><a href="#org65ab066">Experiment: NO DMA sync to device</a>
+<li><a href="#Experiment%3A%20NO%20DMA%20sync%20to%20device">Experiment: NO DMA sync to device</a>
 <ul>
-<li><a href="#org06d2fbe">No-DMA-sync: iptables raw-drop</a></li>
+<li><a href="#No-DMA-sync%3A%20iptables%20raw-drop">No-DMA-sync: iptables raw-drop</a></li>
 </ul>
 </li>
-<li><a href="#org1941583">Experiment: 1536 bytes DMA sync to device</a>
+<li><a href="#Experiment%3A%201536%20bytes%20DMA%20sync%20to%20device">Experiment: 1536 bytes DMA sync to device</a>
 <ul>
-<li><a href="#org4eee24c">XDP_DROP: with 1536 bytes DMA sync</a></li>
-<li><a href="#orgc56721d">XDP_REDIRECT: with 1536 bytes DMA sync</a></li>
+<li><a href="#XDP_DROP%3A%20with%201536%20bytes%20DMA%20sync">XDP_DROP: with 1536 bytes DMA sync</a></li>
+<li><a href="#XDP_REDIRECT%3A%20with%201536%20bytes%20DMA%20sync">XDP_REDIRECT: with 1536 bytes DMA sync</a></li>
 </ul>
 </li>
-<li><a href="#orge4d1d76">Experiment: faster XDP_DROP</a>
+<li><a href="#Experiment%3A%20faster%20XDP_DROP">Experiment: faster XDP_DROP</a>
 <ul>
-<li><a href="#org0482124">XDP_DROP: with page_pool_recycle_direct</a></li>
+<li><a href="#XDP_DROP%3A%20with%20page_pool_recycle_direct">XDP_DROP: with page_pool_recycle_direct</a></li>
 </ul>
 </li>
 </ul>
@@ -77,9 +76,9 @@ The patchset adds XDP support to the Marvell driver mvneta.
 The benchmark will be performed on a <a href="https://espressobin.net/">EspressoBin</a> board.
 </p>
 
-<div id="outline-container-org77d9a8a" class="outline-2">
-<h2 id="org77d9a8a">Code being tested</h2>
-<div class="outline-text-2" id="text-org77d9a8a">
+<div id="outline-container-Code%20being%20tested" class="outline-2">
+<h2 id="Code%20being%20tested"><a href="#Code%20being%20tested">Code being tested</a></h2>
+<div class="outline-text-2" id="text-Code%20being%20tested">
 <p>
 Due to some adjustment to patchset V1, that involved DMA-sync to-device,
 which is <b>VERY</b> expensive on this board, I've decided to create a separate
@@ -105,13 +104,13 @@ More stable tree with patches I've tested:
 </div>
 </div>
 
-<div id="outline-container-org7e72930" class="outline-2">
-<h2 id="org7e72930">Review notes: Issues with patchset/code</h2>
-<div class="outline-text-2" id="text-org7e72930">
+<div id="outline-container-Review%20notes%3A%20Issues%20with%20patchset%2Fcode" class="outline-2">
+<h2 id="Review%20notes%3A%20Issues%20with%20patchset%2Fcode"><a href="#Review%20notes%3A%20Issues%20with%20patchset%2Fcode">Review notes: Issues with patchset/code</a></h2>
+<div class="outline-text-2" id="text-Review%20notes%3A%20Issues%20with%20patchset%2Fcode">
 </div>
-<div id="outline-container-org58f2bc0" class="outline-3">
-<h3 id="org58f2bc0">Wrong stats</h3>
-<div class="outline-text-3" id="text-org58f2bc0">
+<div id="outline-container-Wrong%20stats" class="outline-3">
+<h3 id="Wrong%20stats"><a href="#Wrong%20stats">Wrong stats</a></h3>
+<div class="outline-text-3" id="text-Wrong%20stats">
 <p>
 The stats accounting is wrong. Other drivers also gets this wrong, and are
 inconsistent. Upstream have not fully agree on the semantics.  Thus,
@@ -119,9 +118,9 @@ claiming it is "wrong" might be too harsh.
 </p>
 </div>
 
-<div id="outline-container-orgf060bce" class="outline-4">
-<h4 id="orgf060bce">Stats-issue-1: XDP_DROP are invisible</h4>
-<div class="outline-text-4" id="text-orgf060bce">
+<div id="outline-container-Stats-issue-1%3A%20XDP_DROP%20are%20invisible" class="outline-4">
+<h4 id="Stats-issue-1%3A%20XDP_DROP%20are%20invisible"><a href="#Stats-issue-1%3A%20XDP_DROP%20are%20invisible">Stats-issue-1: XDP_DROP are invisible</a></h4>
+<div class="outline-text-4" id="text-Stats-issue-1%3A%20XDP_DROP%20are%20invisible">
 <p>
 Usually drivers (e.g. ixgbe + i40e) will still keep track of XDP_DROP frames
 and count them as RX-frames in net_device stats, as XDP is a software drop,
@@ -158,9 +157,9 @@ It's possible to deduce the XDP_DROP rate via subtraction:
 </div>
 
 
-<div id="outline-container-org1b7e7ec" class="outline-2">
-<h2 id="org1b7e7ec">Extra: Config settings</h2>
-<div class="outline-text-2" id="text-org1b7e7ec">
+<div id="outline-container-Extra%3A%20Config%20settings" class="outline-2">
+<h2 id="Extra%3A%20Config%20settings"><a href="#Extra%3A%20Config%20settings">Extra: Config settings</a></h2>
+<div class="outline-text-2" id="text-Extra%3A%20Config%20settings">
 <p>
 Enable kernel config setting: <code>CONFIG_ARM64_PSEUDO_NMI</code>
 </p>
@@ -180,9 +179,9 @@ See why in Kernel-Recipes 2019 talk:
 </div>
 </div>
 
-<div id="outline-container-org31d7b31" class="outline-2">
-<h2 id="org31d7b31">Initial benchmark: Identify DMA sync cost</h2>
-<div class="outline-text-2" id="text-org31d7b31">
+<div id="outline-container-Initial%20benchmark%3A%20Identify%20DMA%20sync%20cost" class="outline-2">
+<h2 id="Initial%20benchmark%3A%20Identify%20DMA%20sync%20cost"><a href="#Initial%20benchmark%3A%20Identify%20DMA%20sync%20cost">Initial benchmark: Identify DMA sync cost</a></h2>
+<div class="outline-text-2" id="text-Initial%20benchmark%3A%20Identify%20DMA%20sync%20cost">
 <p>
 The initial benchmarking clearly show, that the primary cost for this
 hardware/driver is due to DMA-sync for device (kernel function
@@ -210,9 +209,9 @@ index 3e036642257c..ed4a0843cb05 100644
 </div>
 </div>
 
-<div id="outline-container-orgaaf750c" class="outline-3">
-<h3 id="orgaaf750c">iptables drop</h3>
-<div class="outline-text-3" id="text-orgaaf750c">
+<div id="outline-container-iptables%20drop" class="outline-3">
+<h3 id="iptables%20drop"><a href="#iptables%20drop">iptables drop</a></h3>
+<div class="outline-text-3" id="text-iptables%20drop">
 <pre class="example">
 espressobin:~# iptables -t raw -I PREROUTING -p udp --dport 9 -j DROP
 root@espressobin:~# nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
@@ -284,9 +283,9 @@ Perf report for iptables-raw drop:
 </div>
 </div>
 
-<div id="outline-container-org8615b3d" class="outline-3">
-<h3 id="org8615b3d">XDP_DROP via xdp1</h3>
-<div class="outline-text-3" id="text-org8615b3d">
+<div id="outline-container-XDP_DROP%20via%20xdp1" class="outline-3">
+<h3 id="XDP_DROP%20via%20xdp1"><a href="#XDP_DROP%20via%20xdp1">XDP_DROP via xdp1</a></h3>
+<div class="outline-text-3" id="text-XDP_DROP%20via%20xdp1">
 <pre class="example">
 root@espressobin:~/samples/bpf# ./xdp1 3
 proto 0:      27797 pkt/s
@@ -344,9 +343,9 @@ perf report --sort cpu,comm,symbol --no-children --stdio -g none
 </div>
 </div>
 
-<div id="outline-container-org561c3df" class="outline-3">
-<h3 id="org561c3df">XDP_REDIRECT</h3>
-<div class="outline-text-3" id="text-org561c3df">
+<div id="outline-container-XDP_REDIRECT" class="outline-3">
+<h3 id="XDP_REDIRECT"><a href="#XDP_REDIRECT">XDP_REDIRECT</a></h3>
+<div class="outline-text-3" id="text-XDP_REDIRECT">
 <p>
 Doing redirect out same interface:
 </p>
@@ -424,9 +423,9 @@ Perf report:
 </div>
 </div>
 
-<div id="outline-container-org65ab066" class="outline-2">
-<h2 id="org65ab066">Experiment: NO DMA sync to device</h2>
-<div class="outline-text-2" id="text-org65ab066">
+<div id="outline-container-Experiment%3A%20NO%20DMA%20sync%20to%20device" class="outline-2">
+<h2 id="Experiment%3A%20NO%20DMA%20sync%20to%20device"><a href="#Experiment%3A%20NO%20DMA%20sync%20to%20device">Experiment: NO DMA sync to device</a></h2>
+<div class="outline-text-2" id="text-Experiment%3A%20NO%20DMA%20sync%20to%20device">
 <p>
 Testing the overhead of the DMA-sync for device <code>dma_sync_single_for_device</code>
 via simply commenting the code out.  Like this:
@@ -506,9 +505,9 @@ Perf result for No-DMA-sync: XDP_DROP
 </pre>
 </div>
 
-<div id="outline-container-org06d2fbe" class="outline-3">
-<h3 id="org06d2fbe">No-DMA-sync: iptables raw-drop</h3>
-<div class="outline-text-3" id="text-org06d2fbe">
+<div id="outline-container-No-DMA-sync%3A%20iptables%20raw-drop" class="outline-3">
+<h3 id="No-DMA-sync%3A%20iptables%20raw-drop"><a href="#No-DMA-sync%3A%20iptables%20raw-drop">No-DMA-sync: iptables raw-drop</a></h3>
+<div class="outline-text-3" id="text-No-DMA-sync%3A%20iptables%20raw-drop">
 <p>
 Drop via iptables:
 </p>
@@ -527,9 +526,9 @@ IpExtInNoECTPkts                175994             0.0
 </div>
 </div>
 
-<div id="outline-container-org1941583" class="outline-2">
-<h2 id="org1941583">Experiment: 1536 bytes DMA sync to device</h2>
-<div class="outline-text-2" id="text-org1941583">
+<div id="outline-container-Experiment%3A%201536%20bytes%20DMA%20sync%20to%20device" class="outline-2">
+<h2 id="Experiment%3A%201536%20bytes%20DMA%20sync%20to%20device"><a href="#Experiment%3A%201536%20bytes%20DMA%20sync%20to%20device">Experiment: 1536 bytes DMA sync to device</a></h2>
+<div class="outline-text-2" id="text-Experiment%3A%201536%20bytes%20DMA%20sync%20to%20device">
 <p>
 This experiment change the size of the DMA sync to device to be 1536 bytes,
 the usual Ethernet MTU aligned to 64 bytes.
@@ -559,9 +558,9 @@ index ed4a0843cb05..7c5bfdf429c4 100644
 </div>
 </div>
 
-<div id="outline-container-org4eee24c" class="outline-3">
-<h3 id="org4eee24c">XDP_DROP: with 1536 bytes DMA sync</h3>
-<div class="outline-text-3" id="text-org4eee24c">
+<div id="outline-container-XDP_DROP%3A%20with%201536%20bytes%20DMA%20sync" class="outline-3">
+<h3 id="XDP_DROP%3A%20with%201536%20bytes%20DMA%20sync"><a href="#XDP_DROP%3A%20with%201536%20bytes%20DMA%20sync">XDP_DROP: with 1536 bytes DMA sync</a></h3>
+<div class="outline-text-3" id="text-XDP_DROP%3A%20with%201536%20bytes%20DMA%20sync">
 <pre class="example">
 root@espressobin:~/samples/bpf# ./xdp1 3 
 proto 0:     479068 pkt/s
@@ -637,9 +636,9 @@ Going from above zero-DMA sync to 1536 bytes
 </div>
 </div>
 
-<div id="outline-container-orgc56721d" class="outline-3">
-<h3 id="orgc56721d">XDP_REDIRECT: with 1536 bytes DMA sync</h3>
-<div class="outline-text-3" id="text-orgc56721d">
+<div id="outline-container-XDP_REDIRECT%3A%20with%201536%20bytes%20DMA%20sync" class="outline-3">
+<h3 id="XDP_REDIRECT%3A%20with%201536%20bytes%20DMA%20sync"><a href="#XDP_REDIRECT%3A%20with%201536%20bytes%20DMA%20sync">XDP_REDIRECT: with 1536 bytes DMA sync</a></h3>
+<div class="outline-text-3" id="text-XDP_REDIRECT%3A%20with%201536%20bytes%20DMA%20sync">
 <pre class="example">
 # ./xdp_redirect_map 3 3 
 input: 3 output: 3
@@ -732,9 +731,9 @@ Perf report XDP_REDIRECT with 1536 bytes DMA sync
 </div>
 </div>
 
-<div id="outline-container-orge4d1d76" class="outline-2">
-<h2 id="orge4d1d76">Experiment: faster XDP_DROP</h2>
-<div class="outline-text-2" id="text-orge4d1d76">
+<div id="outline-container-Experiment%3A%20faster%20XDP_DROP" class="outline-2">
+<h2 id="Experiment%3A%20faster%20XDP_DROP"><a href="#Experiment%3A%20faster%20XDP_DROP">Experiment: faster XDP_DROP</a></h2>
+<div class="outline-text-2" id="text-Experiment%3A%20faster%20XDP_DROP">
 <p>
 Current patchset uses <code>xdp_return_buff</code> in XDP_DROP code-path, instead of
 <code>page_pool_recycle_direct(rxq-&gt;page_pool, page)</code>.
@@ -807,9 +806,9 @@ index ed4a0843cb05..4fb7b6eb22d9 100644
 </div>
 </div>
 
-<div id="outline-container-org0482124" class="outline-3">
-<h3 id="org0482124">XDP_DROP: with page_pool_recycle_direct</h3>
-<div class="outline-text-3" id="text-org0482124">
+<div id="outline-container-XDP_DROP%3A%20with%20page_pool_recycle_direct" class="outline-3">
+<h3 id="XDP_DROP%3A%20with%20page_pool_recycle_direct"><a href="#XDP_DROP%3A%20with%20page_pool_recycle_direct">XDP_DROP: with page_pool_recycle_direct</a></h3>
+<div class="outline-text-3" id="text-XDP_DROP%3A%20with%20page_pool_recycle_direct">
 <p>
 Result XDP_DROP via samples/bpf/xdp1
 </p>
@@ -922,8 +921,8 @@ instruction cache does fit.
 </div>
 </div>
 <div id="postamble" class="status">
+<p class="date">Date: 2019-10-10 Thu 14:27</p>
 <p class="author">Author: Jesper Dangaard Brouer</p>
-<p class="date">Created: 2020-01-24 Fri 16:09</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

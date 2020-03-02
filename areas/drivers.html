@@ -3,7 +3,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-01-24 Fri 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Project management for XDP driver support</title>
@@ -22,19 +21,19 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org9811946">Important medium-term tasks</a>
+<li><a href="#Important%20medium-term%20tasks">Important medium-term tasks</a>
 <ul>
-<li><a href="#org3e34610"><span class="todo TODO">TODO</span> Expanding XDP_REDIRECT support to more drivers</a>
+<li><a href="#Expanding%20XDP_REDIRECT%20support%20to%20more%20drivers"><span class="todo TODO">TODO</span> Expanding XDP_REDIRECT support to more drivers</a>
 <ul>
-<li><a href="#org2e442cf"><span class="todo NEXT">NEXT</span> Map out redirect support in drivers and make a plan</a></li>
-<li><a href="#org8946f16"><span class="todo TODO">TODO</span> What to do about failing REDIRECT</a></li>
-<li><a href="#org85903b2"><span class="todo TODO">TODO</span> Queueing</a></li>
+<li><a href="#Map%20out%20redirect%20support%20in%20drivers%20and%20make%20a%20plan"><span class="todo NEXT">NEXT</span> Map out redirect support in drivers and make a plan</a></li>
+<li><a href="#What%20to%20do%20about%20failing%20REDIRECT"><span class="todo TODO">TODO</span> What to do about failing REDIRECT</a></li>
+<li><a href="#Queueing"><span class="todo TODO">TODO</span> Queueing</a></li>
 </ul>
 </li>
-<li><a href="#org3313050"><span class="todo WAIT">WAIT</span> Adding XDP support to new drivers</a>
+<li><a href="#Adding%20XDP%20support%20to%20new%20drivers"><span class="todo WAIT">WAIT</span> Adding XDP support to new drivers</a>
 <ul>
-<li><a href="#org38da00f"><span class="todo TODO">TODO</span> Driver support for sfc driver</a></li>
-<li><a href="#orga0609a1"><span class="todo TODO">TODO</span> Driver support for Marvell mvpp2</a></li>
+<li><a href="#Driver%20support%20for%20sfc%20driver"><span class="todo TODO">TODO</span> Driver support for sfc driver</a></li>
+<li><a href="#Driver%20support%20for%20Marvell%20mvpp2"><span class="todo TODO">TODO</span> Driver support for Marvell mvpp2</a></li>
 </ul>
 </li>
 </ul>
@@ -46,13 +45,13 @@
 Top-level headings indicate category, as explained in <a href="../xdp-project.html">../xdp-project.html</a>.
 </p>
 
-<div id="outline-container-org9811946" class="outline-2">
-<h2 id="org9811946">Important medium-term tasks</h2>
-<div class="outline-text-2" id="text-org9811946">
+<div id="outline-container-Important%20medium-term%20tasks" class="outline-2">
+<h2 id="Important%20medium-term%20tasks"><a href="#Important%20medium-term%20tasks">Important medium-term tasks</a></h2>
+<div class="outline-text-2" id="text-Important%20medium-term%20tasks">
 </div>
-<div id="outline-container-org3e34610" class="outline-3">
-<h3 id="org3e34610"><span class="todo TODO">TODO</span> Expanding XDP_REDIRECT support to more drivers</h3>
-<div class="outline-text-3" id="text-org3e34610">
+<div id="outline-container-Expanding%20XDP_REDIRECT%20support%20to%20more%20drivers" class="outline-3">
+<h3 id="Expanding%20XDP_REDIRECT%20support%20to%20more%20drivers"><a href="#Expanding%20XDP_REDIRECT%20support%20to%20more%20drivers"><span class="todo TODO">TODO</span> Expanding XDP_REDIRECT support to more drivers</a></h3>
+<div class="outline-text-3" id="text-Expanding%20XDP_REDIRECT%20support%20to%20more%20drivers">
 <p>
 Very few drivers support XDP_REDIRECT.
 </p>
@@ -66,9 +65,9 @@ SW drivers: veth, tun (tuntap), virtio_net
 </p>
 </div>
 
-<div id="outline-container-org2e442cf" class="outline-4">
-<h4 id="org2e442cf"><span class="todo NEXT">NEXT</span> Map out redirect support in drivers and make a plan</h4>
-<div class="outline-text-4" id="text-org2e442cf">
+<div id="outline-container-Map%20out%20redirect%20support%20in%20drivers%20and%20make%20a%20plan" class="outline-4">
+<h4 id="Map%20out%20redirect%20support%20in%20drivers%20and%20make%20a%20plan"><a href="#Map%20out%20redirect%20support%20in%20drivers%20and%20make%20a%20plan"><span class="todo NEXT">NEXT</span> Map out redirect support in drivers and make a plan</a></h4>
+<div class="outline-text-4" id="text-Map%20out%20redirect%20support%20in%20drivers%20and%20make%20a%20plan">
 <p>
 It would be useful with a complete list drivers that are missing some or all
 parts of REDIRECT support. Based on this we can make a plan for what to do about
@@ -77,40 +76,40 @@ each of these.
 </div>
 </div>
 
-<div id="outline-container-org8946f16" class="outline-4">
-<h4 id="org8946f16"><span class="todo TODO">TODO</span> What to do about failing REDIRECT</h4>
-<div class="outline-text-4" id="text-org8946f16">
+<div id="outline-container-What%20to%20do%20about%20failing%20REDIRECT" class="outline-4">
+<h4 id="What%20to%20do%20about%20failing%20REDIRECT"><a href="#What%20to%20do%20about%20failing%20REDIRECT"><span class="todo TODO">TODO</span> What to do about failing REDIRECT</a></h4>
+<div class="outline-text-4" id="text-What%20to%20do%20about%20failing%20REDIRECT">
 <p>
 <a href="../xdp-project.html#ID-760b03fc-2a8e-499c-a90c-74dbc4716cbc">Handling XDP_REDIRECT failures</a>
 </p>
 </div>
 </div>
 
-<div id="outline-container-org85903b2" class="outline-4">
-<h4 id="org85903b2"><span class="todo TODO">TODO</span> Queueing</h4>
+<div id="outline-container-Queueing" class="outline-4">
+<h4 id="Queueing"><a href="#Queueing"><span class="todo TODO">TODO</span> Queueing</a></h4>
 </div>
 </div>
 
-<div id="outline-container-org3313050" class="outline-3">
-<h3 id="org3313050"><span class="todo WAIT">WAIT</span> Adding XDP support to new drivers</h3>
-<div class="outline-text-3" id="text-org3313050">
+<div id="outline-container-Adding%20XDP%20support%20to%20new%20drivers" class="outline-3">
+<h3 id="Adding%20XDP%20support%20to%20new%20drivers"><a href="#Adding%20XDP%20support%20to%20new%20drivers"><span class="todo WAIT">WAIT</span> Adding XDP support to new drivers</a></h3>
+<div class="outline-text-3" id="text-Adding%20XDP%20support%20to%20new%20drivers">
 <p>
 Waiting for page pool work
 </p>
 </div>
 
-<div id="outline-container-org38da00f" class="outline-4">
-<h4 id="org38da00f"><span class="todo TODO">TODO</span> Driver support for sfc driver</h4>
-<div class="outline-text-4" id="text-org38da00f">
+<div id="outline-container-Driver%20support%20for%20sfc%20driver" class="outline-4">
+<h4 id="Driver%20support%20for%20sfc%20driver"><a href="#Driver%20support%20for%20sfc%20driver"><span class="todo TODO">TODO</span> Driver support for sfc driver</a></h4>
+<div class="outline-text-4" id="text-Driver%20support%20for%20sfc%20driver">
 </div>
 <ul class="org-ul">
-<li><a id="org121be17"></a><span class="todo NEXT">NEXT</span> Sync with Edward Cree et al<br /></li>
+<li><a id="Sync%20with%20Edward%20Cree%20et%20al"></a><a href="#Sync%20with%20Edward%20Cree%20et%20al"><span class="todo NEXT">NEXT</span> Sync with Edward Cree et al</a><br /></li>
 </ul>
 </div>
 
-<div id="outline-container-orga0609a1" class="outline-4">
-<h4 id="orga0609a1"><span class="todo TODO">TODO</span> Driver support for Marvell mvpp2</h4>
-<div class="outline-text-4" id="text-orga0609a1">
+<div id="outline-container-Driver%20support%20for%20Marvell%20mvpp2" class="outline-4">
+<h4 id="Driver%20support%20for%20Marvell%20mvpp2"><a href="#Driver%20support%20for%20Marvell%20mvpp2"><span class="todo TODO">TODO</span> Driver support for Marvell mvpp2</a></h4>
+<div class="outline-text-4" id="text-Driver%20support%20for%20Marvell%20mvpp2">
 <p>
 Matteo
 </p>
@@ -120,7 +119,7 @@ Matteo
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="date">Date: 2019-07-02 Tue 08:31</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

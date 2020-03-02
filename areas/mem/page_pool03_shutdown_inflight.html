@@ -3,7 +3,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-01-24 Fri 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>page_pool handling in-flight frames during shutdown</title>
@@ -22,66 +21,66 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgb4b386f">Issue: lifetime of device + page_pool</a>
+<li><a href="#Issue%3A%20lifetime%20of%20device%20%2B%20page_pool">Issue: lifetime of device + page_pool</a>
 <ul>
-<li><a href="#org492f8ec">Solution#1 - kill performance</a></li>
-<li><a href="#orgef6e0bf">Solution#2</a></li>
-<li><a href="#org58a4523">Solution#3</a>
+<li><a href="#Solution%231%20-%20kill%20performance">Solution#1 - kill performance</a></li>
+<li><a href="#Solution%232">Solution#2</a></li>
+<li><a href="#Solution%233">Solution#3</a>
 <ul>
-<li><a href="#org9971969">Complications with solution#3</a></li>
-<li><a href="#org184acc6">TODO: cleanup/error code-path in drivers</a></li>
+<li><a href="#Complications%20with%20solution%233">Complications with solution#3</a></li>
+<li><a href="#TODO%3A%20cleanup%2Ferror%20code-path%20in%20drivers">TODO: cleanup/error code-path in drivers</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#orgfe06711">Notes while cleanup patchset</a>
+<li><a href="#Notes%20while%20cleanup%20patchset">Notes while cleanup patchset</a>
 <ul>
-<li><a href="#orgf98cf63">Prepare mlx5</a></li>
-<li><a href="#org340d56c">mlx5: more correct usage of page_pool API</a></li>
-<li><a href="#orgac5a70a">Strange use in i40e</a></li>
-<li><a href="#org007930e">page_pool: handle in-flight pages and remove page_pool_destroy</a></li>
-<li><a href="#org3ba4ae1">Notes for patchset RFCv1-pre-upstream</a></li>
-<li><a href="#org6e30a3a">Notes for patchset RFCv2-pre-upstream</a></li>
+<li><a href="#Prepare%20mlx5">Prepare mlx5</a></li>
+<li><a href="#mlx5%3A%20more%20correct%20usage%20of%20page_pool%20API">mlx5: more correct usage of page_pool API</a></li>
+<li><a href="#Strange%20use%20in%20i40e">Strange use in i40e</a></li>
+<li><a href="#page_pool%3A%20handle%20in-flight%20pages%20and%20remove%20page_pool_destroy">page_pool: handle in-flight pages and remove page_pool_destroy</a></li>
+<li><a href="#Notes%20for%20patchset%20RFCv1-pre-upstream">Notes for patchset RFCv1-pre-upstream</a></li>
+<li><a href="#Notes%20for%20patchset%20RFCv2-pre-upstream">Notes for patchset RFCv2-pre-upstream</a></li>
 </ul>
 </li>
-<li><a href="#org9d0951b">Patchset submission</a>
+<li><a href="#Patchset%20submission">Patchset submission</a>
 <ul>
-<li><a href="#org5a67aa3">Cover letter V1 + V2</a></li>
-<li><a href="#orga610e1f">cpumap issue and fix</a></li>
-<li><a href="#org6bea27e">Patch-desc: mlx5: more strict use of page_pool API</a></li>
-<li><a href="#orge8f221a">Patch-desc: xdp: tracking page_pool resources and safe removal</a></li>
-<li><a href="#orgcae806b">Patch-desc: xdp: force mem allocator removal and periodic warning</a></li>
+<li><a href="#Cover%20letter%20V1%20%2B%20V2">Cover letter V1 + V2</a></li>
+<li><a href="#cpumap%20issue%20and%20fix">cpumap issue and fix</a></li>
+<li><a href="#Patch-desc%3A%20mlx5%3A%20more%20strict%20use%20of%20page_pool%20API">Patch-desc: mlx5: more strict use of page_pool API</a></li>
+<li><a href="#Patch-desc%3A%20xdp%3A%20tracking%20page_pool%20resources%20and%20safe%20removal">Patch-desc: xdp: tracking page_pool resources and safe removal</a></li>
+<li><a href="#Patch-desc%3A%20xdp%3A%20force%20mem%20allocator%20removal%20and%20periodic%20warning">Patch-desc: xdp: force mem allocator removal and periodic warning</a></li>
 </ul>
 </li>
-<li><a href="#org5f87e1c">Tests</a>
+<li><a href="#Tests">Tests</a>
 <ul>
-<li><a href="#orgc13fd8d">(Established): Test if __xdp_return() can hit no page_pool id issue</a></li>
-<li><a href="#orgd4a375f">Test work-in-progress patch</a></li>
-<li><a href="#org6ea3100">Confused mlx5 doesn't fully use ring-size</a></li>
-<li><a href="#org13a26cd">TCP performance difference with XDP_PASS</a></li>
-<li><a href="#org023366e">CPUMAP redirect not releasing page_pool pages</a></li>
+<li><a href="#%28Established%29%3A%20Test%20if%20__xdp_return%28%29%20can%20hit%20no%20page_pool%20id%20issue">(Established): Test if __xdp_return() can hit no page_pool id issue</a></li>
+<li><a href="#Test%20work-in-progress%20patch">Test work-in-progress patch</a></li>
+<li><a href="#Confused%20mlx5%20doesn%27t%20fully%20use%20ring-size">Confused mlx5 doesn't fully use ring-size</a></li>
+<li><a href="#TCP%20performance%20difference%20with%20XDP_PASS">TCP performance difference with XDP_PASS</a></li>
+<li><a href="#CPUMAP%20redirect%20not%20releasing%20page_pool%20pages">CPUMAP redirect not releasing page_pool pages</a></li>
 </ul>
 </li>
-<li><a href="#orgb833287">Tracepoints</a>
+<li><a href="#Tracepoints">Tracepoints</a>
 <ul>
-<li><a href="#org9f37c58">Playing with bpftrace</a></li>
-<li><a href="#org466f025">bpftrace for XDP/page_pool disconnect/shutdown</a></li>
-<li><a href="#org9f22fc0">Adding tracepoints for xdp mem_disconnect</a>
+<li><a href="#Playing%20with%20bpftrace">Playing with bpftrace</a></li>
+<li><a href="#bpftrace%20for%20XDP%2Fpage_pool%20disconnect%2Fshutdown">bpftrace for XDP/page_pool disconnect/shutdown</a></li>
+<li><a href="#Adding%20tracepoints%20for%20xdp%20mem_disconnect">Adding tracepoints for xdp mem_disconnect</a>
 <ul>
-<li><a href="#org95eb2ea">Adding tracepoint for xdp mem_connect</a></li>
-<li><a href="#org75c12ac">Patch desc for adding xdp tracepoints</a></li>
+<li><a href="#Adding%20tracepoint%20for%20xdp%20mem_connect">Adding tracepoint for xdp mem_connect</a></li>
+<li><a href="#Patch%20desc%20for%20adding%20xdp%20tracepoints">Patch desc for adding xdp tracepoints</a></li>
 </ul>
 </li>
-<li><a href="#orga56b66a">Adding tracepoints for page_pool</a>
+<li><a href="#Adding%20tracepoints%20for%20page_pool">Adding tracepoints for page_pool</a>
 <ul>
-<li><a href="#org6e08772">Patch desc: page_pool: add tracepoints for page_pool details need by XDP</a></li>
+<li><a href="#Patch%20desc%3A%20page_pool%3A%20add%20tracepoints%20for%20page_pool%20details%20need%20by%20XDP">Patch desc: page_pool: add tracepoints for page_pool details need by XDP</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org447eab5">bpftrace notes</a>
+<li><a href="#bpftrace%20notes">bpftrace notes</a>
 <ul>
-<li><a href="#org031a979">Compile notes</a></li>
+<li><a href="#Compile%20notes">Compile notes</a></li>
 </ul>
 </li>
 </ul>
@@ -92,9 +91,9 @@ This issue is (unfortunately) blocking drivers from using the DMA-mapping
 feature of page_pool.
 </p>
 
-<div id="outline-container-orgb4b386f" class="outline-2">
-<h2 id="orgb4b386f">Issue: lifetime of device + page_pool</h2>
-<div class="outline-text-2" id="text-orgb4b386f">
+<div id="outline-container-Issue%3A%20lifetime%20of%20device%20%2B%20page_pool" class="outline-2">
+<h2 id="Issue%3A%20lifetime%20of%20device%20%2B%20page_pool"><a href="#Issue%3A%20lifetime%20of%20device%20%2B%20page_pool">Issue: lifetime of device + page_pool</a></h2>
+<div class="outline-text-2" id="text-Issue%3A%20lifetime%20of%20device%20%2B%20page_pool">
 <p>
 There is an issue/challenge when a page_pool object itself is freed, while
 there are still packets in-flight (that need to be returned to the
@@ -110,9 +109,9 @@ DMA-mapping.
 </p>
 </div>
 
-<div id="outline-container-org492f8ec" class="outline-3">
-<h3 id="org492f8ec">Solution#1 - kill performance</h3>
-<div class="outline-text-3" id="text-org492f8ec">
+<div id="outline-container-Solution%231%20-%20kill%20performance" class="outline-3">
+<h3 id="Solution%231%20-%20kill%20performance"><a href="#Solution%231%20-%20kill%20performance">Solution#1 - kill performance</a></h3>
+<div class="outline-text-3" id="text-Solution%231%20-%20kill%20performance">
 <p>
 (<b>Wrong solution</b>)
 </p>
@@ -126,9 +125,9 @@ page_pool.
 </div>
 </div>
 
-<div id="outline-container-orgef6e0bf" class="outline-3">
-<h3 id="orgef6e0bf">Solution#2</h3>
-<div class="outline-text-3" id="text-orgef6e0bf">
+<div id="outline-container-Solution%232" class="outline-3">
+<h3 id="Solution%232"><a href="#Solution%232">Solution#2</a></h3>
+<div class="outline-text-3" id="text-Solution%232">
 <p>
 Create a smaller object that can be put into rhashtable, that only store the
 <code>struct device</code> pointer, that is the one used for the DMA-unmap call.
@@ -142,9 +141,9 @@ for the lifetime of the kernel)
 </div>
 </div>
 
-<div id="outline-container-org58a4523" class="outline-3">
-<h3 id="org58a4523">Solution#3</h3>
-<div class="outline-text-3" id="text-org58a4523">
+<div id="outline-container-Solution%233" class="outline-3">
+<h3 id="Solution%233"><a href="#Solution%233">Solution#3</a></h3>
+<div class="outline-text-3" id="text-Solution%233">
 <p>
 Keep counters for packets in-flight, or rather outstanding-pages. This will
 allow us to know when it is safe to free (and remove the page_pool object
@@ -215,9 +214,9 @@ and debugging.
 </p>
 </div>
 
-<div id="outline-container-org9971969" class="outline-4">
-<h4 id="org9971969">Complications with solution#3</h4>
-<div class="outline-text-4" id="text-org9971969">
+<div id="outline-container-Complications%20with%20solution%233" class="outline-4">
+<h4 id="Complications%20with%20solution%233"><a href="#Complications%20with%20solution%233">Complications with solution#3</a></h4>
+<div class="outline-text-4" id="text-Complications%20with%20solution%233">
 <p>
 Driver take down procedure need to change. Fortunately only one driver
 (mlx5) uses page_pool.
@@ -257,9 +256,9 @@ can/might help us catch invalid driver use-cases.
 </div>
 </div>
 
-<div id="outline-container-org184acc6" class="outline-4">
-<h4 id="org184acc6">TODO: cleanup/error code-path in drivers</h4>
-<div class="outline-text-4" id="text-org184acc6">
+<div id="outline-container-TODO%3A%20cleanup%2Ferror%20code-path%20in%20drivers" class="outline-4">
+<h4 id="TODO%3A%20cleanup%2Ferror%20code-path%20in%20drivers"><a href="#TODO%3A%20cleanup%2Ferror%20code-path%20in%20drivers">TODO: cleanup/error code-path in drivers</a></h4>
+<div class="outline-text-4" id="text-TODO%3A%20cleanup%2Ferror%20code-path%20in%20drivers">
 <p>
 We cannot completely remove <code>page_pool_destroy()</code> from the API, as drivers
 setup paths can fail, and they might need to free the page_pool resource
@@ -268,8 +267,8 @@ explicitly.  We could export a <code>__page_pool_free()</code> function.
 </div>
 
 <ul class="org-ul">
-<li><a id="orgaa35381"></a>Found bug/issue.<br />
-<div class="outline-text-5" id="text-orgaa35381">
+<li><a id="Found%20bug%2Fissue."></a><a href="#Found%20bug%2Fissue.">Found bug/issue.</a><br />
+<div class="outline-text-5" id="text-Found%20bug%2Fissue.">
 <p>
 xdp: fix leak of IDA cyclic ID if rhashtable_insert_slow fails
 </p>
@@ -311,18 +310,18 @@ index 4b2b194f4f1f..762abeb89847 100644
 
 
 
-<div id="outline-container-orgfe06711" class="outline-2">
-<h2 id="orgfe06711">Notes while cleanup patchset</h2>
-<div class="outline-text-2" id="text-orgfe06711">
+<div id="outline-container-Notes%20while%20cleanup%20patchset" class="outline-2">
+<h2 id="Notes%20while%20cleanup%20patchset"><a href="#Notes%20while%20cleanup%20patchset">Notes while cleanup patchset</a></h2>
+<div class="outline-text-2" id="text-Notes%20while%20cleanup%20patchset">
 <p>
 Keeping some notes while cleaning up patchset. This section might not make
 sense, consider removing this section later.
 </p>
 </div>
 
-<div id="outline-container-orgf98cf63" class="outline-3">
-<h3 id="orgf98cf63">Prepare mlx5</h3>
-<div class="outline-text-3" id="text-orgf98cf63">
+<div id="outline-container-Prepare%20mlx5" class="outline-3">
+<h3 id="Prepare%20mlx5"><a href="#Prepare%20mlx5">Prepare mlx5</a></h3>
+<div class="outline-text-3" id="text-Prepare%20mlx5">
 <p>
 Removed comment.
 </p>
@@ -352,9 +351,9 @@ invocation.
 </div>
 </div>
 
-<div id="outline-container-org340d56c" class="outline-3">
-<h3 id="org340d56c">mlx5: more correct usage of page_pool API</h3>
-<div class="outline-text-3" id="text-org340d56c">
+<div id="outline-container-mlx5%3A%20more%20correct%20usage%20of%20page_pool%20API" class="outline-3">
+<h3 id="mlx5%3A%20more%20correct%20usage%20of%20page_pool%20API"><a href="#mlx5%3A%20more%20correct%20usage%20of%20page_pool%20API">mlx5: more correct usage of page_pool API</a></h3>
+<div class="outline-text-3" id="text-mlx5%3A%20more%20correct%20usage%20of%20page_pool%20API">
 <p>
 The page_pool API states user is responsible for invoking page_pool_put_page
 once. This were not done in mlx5e_page_release() when recycle is false. This
@@ -376,9 +375,9 @@ mlx5e_page_release() calls, as it is more correct.
 </div>
 
 
-<div id="outline-container-orgac5a70a" class="outline-3">
-<h3 id="orgac5a70a">Strange use in i40e</h3>
-<div class="outline-text-3" id="text-orgac5a70a">
+<div id="outline-container-Strange%20use%20in%20i40e" class="outline-3">
+<h3 id="Strange%20use%20in%20i40e"><a href="#Strange%20use%20in%20i40e">Strange use in i40e</a></h3>
+<div class="outline-text-3" id="text-Strange%20use%20in%20i40e">
 <div class="org-src-container">
 <pre class="src src-diff">diff --git a/drivers/net/ethernet/intel/i40e/i40e_main.c b/drivers/net/ethernet/intel/i40e/i40e_main.c
 index 320562b39686..441323ca1464 100644
@@ -400,9 +399,9 @@ index 320562b39686..441323ca1464 100644
 </div>
 
 
-<div id="outline-container-org007930e" class="outline-3">
-<h3 id="org007930e">page_pool: handle in-flight pages and remove page_pool_destroy</h3>
-<div class="outline-text-3" id="text-org007930e">
+<div id="outline-container-page_pool%3A%20handle%20in-flight%20pages%20and%20remove%20page_pool_destroy" class="outline-3">
+<h3 id="page_pool%3A%20handle%20in-flight%20pages%20and%20remove%20page_pool_destroy"><a href="#page_pool%3A%20handle%20in-flight%20pages%20and%20remove%20page_pool_destroy">page_pool: handle in-flight pages and remove page_pool_destroy</a></h3>
+<div class="outline-text-3" id="text-page_pool%3A%20handle%20in-flight%20pages%20and%20remove%20page_pool_destroy">
 <p>
 This patch adds tracking of in-flight pages for page_pool.
 </p>
@@ -447,9 +446,9 @@ used for detecting if it leaks DMA mappings.
 
 
 
-<div id="outline-container-org3ba4ae1" class="outline-3">
-<h3 id="org3ba4ae1">Notes for patchset RFCv1-pre-upstream</h3>
-<div class="outline-text-3" id="text-org3ba4ae1">
+<div id="outline-container-Notes%20for%20patchset%20RFCv1-pre-upstream" class="outline-3">
+<h3 id="Notes%20for%20patchset%20RFCv1-pre-upstream"><a href="#Notes%20for%20patchset%20RFCv1-pre-upstream">Notes for patchset RFCv1-pre-upstream</a></h3>
+<div class="outline-text-3" id="text-Notes%20for%20patchset%20RFCv1-pre-upstream">
 <p>
 stg mail &#x2013;edit-cover &#x2013;version="RFCv1-pre-upstream" &#x2013;to meup \
  &#x2013;to ilias &#x2013;to toke &#x2013;to tariq \
@@ -479,9 +478,9 @@ My notes are here:
 </div>
 </div>
 
-<div id="outline-container-org6e30a3a" class="outline-3">
-<h3 id="org6e30a3a">Notes for patchset RFCv2-pre-upstream</h3>
-<div class="outline-text-3" id="text-org6e30a3a">
+<div id="outline-container-Notes%20for%20patchset%20RFCv2-pre-upstream" class="outline-3">
+<h3 id="Notes%20for%20patchset%20RFCv2-pre-upstream"><a href="#Notes%20for%20patchset%20RFCv2-pre-upstream">Notes for patchset RFCv2-pre-upstream</a></h3>
+<div class="outline-text-3" id="text-Notes%20for%20patchset%20RFCv2-pre-upstream">
 <p>
 stg mail &#x2013;edit-cover &#x2013;version="RFCv2-pre-upstream" &#x2013;to meup \
  &#x2013;to ilias &#x2013;to toke &#x2013;to tariq \
@@ -502,9 +501,9 @@ Just wanted to send out an updated version of the patchset.
 
 
 
-<div id="outline-container-org9d0951b" class="outline-2">
-<h2 id="org9d0951b">Patchset submission</h2>
-<div class="outline-text-2" id="text-org9d0951b">
+<div id="outline-container-Patchset%20submission" class="outline-2">
+<h2 id="Patchset%20submission"><a href="#Patchset%20submission">Patchset submission</a></h2>
+<div class="outline-text-2" id="text-Patchset%20submission">
 <p>
 Reorg order of patches, such that mlx5 and cpumap fixes appear before
 introducing in-flight handling. API page_pool_release_page introduced
@@ -512,9 +511,9 @@ earlier.
 </p>
 </div>
 
-<div id="outline-container-org5a67aa3" class="outline-3">
-<h3 id="org5a67aa3">Cover letter V1 + V2</h3>
-<div class="outline-text-3" id="text-org5a67aa3">
+<div id="outline-container-Cover%20letter%20V1%20%2B%20V2" class="outline-3">
+<h3 id="Cover%20letter%20V1%20%2B%20V2"><a href="#Cover%20letter%20V1%20%2B%20V2">Cover letter V1 + V2</a></h3>
+<div class="outline-text-3" id="text-Cover%20letter%20V1%20%2B%20V2">
 <p>
 xdp: page_pool fixes and in-flight accounting
 </p>
@@ -588,9 +587,9 @@ Link: <a href="https://lore.kernel.org/netdev/156086304827.27760.113397860464656
 </div>
 
 
-<div id="outline-container-orga610e1f" class="outline-3">
-<h3 id="orga610e1f">cpumap issue and fix</h3>
-<div class="outline-text-3" id="text-orga610e1f">
+<div id="outline-container-cpumap%20issue%20and%20fix" class="outline-3">
+<h3 id="cpumap%20issue%20and%20fix"><a href="#cpumap%20issue%20and%20fix">cpumap issue and fix</a></h3>
+<div class="outline-text-3" id="text-cpumap%20issue%20and%20fix">
 <p>
 Patch-desc: xdp: page_pool related fix to cpumap
 </p>
@@ -613,9 +612,9 @@ xdp_release_frame() before xdp_scrub_frame().
 </div>
 </div>
 
-<div id="outline-container-org6bea27e" class="outline-3">
-<h3 id="org6bea27e">Patch-desc: mlx5: more strict use of page_pool API</h3>
-<div class="outline-text-3" id="text-org6bea27e">
+<div id="outline-container-Patch-desc%3A%20mlx5%3A%20more%20strict%20use%20of%20page_pool%20API" class="outline-3">
+<h3 id="Patch-desc%3A%20mlx5%3A%20more%20strict%20use%20of%20page_pool%20API"><a href="#Patch-desc%3A%20mlx5%3A%20more%20strict%20use%20of%20page_pool%20API">Patch-desc: mlx5: more strict use of page_pool API</a></h3>
+<div class="outline-text-3" id="text-Patch-desc%3A%20mlx5%3A%20more%20strict%20use%20of%20page_pool%20API">
 <p>
 The mlx5 driver is using page_pool, but not for DMA-mapping (currently), and
 is a little too relaxed about returning or releasing page resources, as it
@@ -644,9 +643,9 @@ from the page_pool, via page_pool_release_page().
 </div>
 </div>
 
-<div id="outline-container-orge8f221a" class="outline-3">
-<h3 id="orge8f221a">Patch-desc: xdp: tracking page_pool resources and safe removal</h3>
-<div class="outline-text-3" id="text-orge8f221a">
+<div id="outline-container-Patch-desc%3A%20xdp%3A%20tracking%20page_pool%20resources%20and%20safe%20removal" class="outline-3">
+<h3 id="Patch-desc%3A%20xdp%3A%20tracking%20page_pool%20resources%20and%20safe%20removal"><a href="#Patch-desc%3A%20xdp%3A%20tracking%20page_pool%20resources%20and%20safe%20removal">Patch-desc: xdp: tracking page_pool resources and safe removal</a></h3>
+<div class="outline-text-3" id="text-Patch-desc%3A%20xdp%3A%20tracking%20page_pool%20resources%20and%20safe%20removal">
 <p>
 This patch is needed before we can allow drivers to use page_pool for
 DMA-mappings. Today with page_pool and XDP return API, it is possible to
@@ -700,9 +699,9 @@ disconnect for later via delayed workqueue.
 </div>
 
 
-<div id="outline-container-orgcae806b" class="outline-3">
-<h3 id="orgcae806b">Patch-desc: xdp: force mem allocator removal and periodic warning</h3>
-<div class="outline-text-3" id="text-orgcae806b">
+<div id="outline-container-Patch-desc%3A%20xdp%3A%20force%20mem%20allocator%20removal%20and%20periodic%20warning" class="outline-3">
+<h3 id="Patch-desc%3A%20xdp%3A%20force%20mem%20allocator%20removal%20and%20periodic%20warning"><a href="#Patch-desc%3A%20xdp%3A%20force%20mem%20allocator%20removal%20and%20periodic%20warning">Patch-desc: xdp: force mem allocator removal and periodic warning</a></h3>
+<div class="outline-text-3" id="text-Patch-desc%3A%20xdp%3A%20force%20mem%20allocator%20removal%20and%20periodic%20warning">
 <p>
 If bugs exists or are introduced later e.g. by drivers misusing the API,
 then we want to warn about the issue, such that developer notice. This patch
@@ -723,13 +722,13 @@ call stack.
 
 
 
-<div id="outline-container-org5f87e1c" class="outline-2">
-<h2 id="org5f87e1c">Tests</h2>
-<div class="outline-text-2" id="text-org5f87e1c">
+<div id="outline-container-Tests" class="outline-2">
+<h2 id="Tests"><a href="#Tests">Tests</a></h2>
+<div class="outline-text-2" id="text-Tests">
 </div>
-<div id="outline-container-orgc13fd8d" class="outline-3">
-<h3 id="orgc13fd8d">(Established): Test if __xdp_return() can hit no page_pool id issue</h3>
-<div class="outline-text-3" id="text-orgc13fd8d">
+<div id="outline-container-%28Established%29%3A%20Test%20if%20__xdp_return%28%29%20can%20hit%20no%20page_pool%20id%20issue" class="outline-3">
+<h3 id="%28Established%29%3A%20Test%20if%20__xdp_return%28%29%20can%20hit%20no%20page_pool%20id%20issue"><a href="#%28Established%29%3A%20Test%20if%20__xdp_return%28%29%20can%20hit%20no%20page_pool%20id%20issue">(Established): Test if __xdp_return() can hit no page_pool id issue</a></h3>
+<div class="outline-text-3" id="text-%28Established%29%3A%20Test%20if%20__xdp_return%28%29%20can%20hit%20no%20page_pool%20id%20issue">
 <p>
 First establish if this code can be hit:
 </p>
@@ -854,9 +853,9 @@ May 21 16:36:19 broadwell kernel: ixgbe 0000:01:00.1 ixgbe2: NIC Link is Up 10 G
 </div>
 </div>
 
-<div id="outline-container-orgd4a375f" class="outline-3">
-<h3 id="orgd4a375f">Test work-in-progress patch</h3>
-<div class="outline-text-3" id="text-orgd4a375f">
+<div id="outline-container-Test%20work-in-progress%20patch" class="outline-3">
+<h3 id="Test%20work-in-progress%20patch"><a href="#Test%20work-in-progress%20patch">Test work-in-progress patch</a></h3>
+<div class="outline-text-3" id="text-Test%20work-in-progress%20patch">
 <p>
 After fixing mlx5 to call <code>xdp_rxq_info_unreg(&amp;rq-&gt;xdp_rxq)</code> later and let
 the non-recycle path call <code>page_pool_put_page()</code>.  The basics work:
@@ -902,9 +901,9 @@ the non-recycle path call <code>page_pool_put_page()</code>.  The basics work:
 </div>
 
 
-<div id="outline-container-org6ea3100" class="outline-3">
-<h3 id="org6ea3100">Confused mlx5 doesn't fully use ring-size</h3>
-<div class="outline-text-3" id="text-org6ea3100">
+<div id="outline-container-Confused%20mlx5%20doesn%27t%20fully%20use%20ring-size" class="outline-3">
+<h3 id="Confused%20mlx5%20doesn%27t%20fully%20use%20ring-size"><a href="#Confused%20mlx5%20doesn%27t%20fully%20use%20ring-size">Confused mlx5 doesn't fully use ring-size</a></h3>
+<div class="outline-text-3" id="text-Confused%20mlx5%20doesn%27t%20fully%20use%20ring-size">
 <p>
 Summary (TLDR): There was nothing wrong with the in-flight tracking, it was
 just mlx5 driver that only fills it's ring-buffer with page_pool size
@@ -959,9 +958,9 @@ only refill up-to ring-size minus 64.
 </div>
 </div>
 
-<div id="outline-container-org13a26cd" class="outline-3">
-<h3 id="org13a26cd">TCP performance difference with XDP_PASS</h3>
-<div class="outline-text-3" id="text-org13a26cd">
+<div id="outline-container-TCP%20performance%20difference%20with%20XDP_PASS" class="outline-3">
+<h3 id="TCP%20performance%20difference%20with%20XDP_PASS"><a href="#TCP%20performance%20difference%20with%20XDP_PASS">TCP performance difference with XDP_PASS</a></h3>
+<div class="outline-text-3" id="text-TCP%20performance%20difference%20with%20XDP_PASS">
 <p>
 Tom Barbette reported that when loading an XDP_PASS program, then TCP flows
 were slower and cost more CPU, but only for driver mlx5 (not for e.g. i40e).
@@ -1172,9 +1171,9 @@ IpExtInNoECTPkts                7778473            0.0
 </div>
 </div>
 
-<div id="outline-container-org023366e" class="outline-3">
-<h3 id="org023366e">CPUMAP redirect not releasing page_pool pages</h3>
-<div class="outline-text-3" id="text-org023366e">
+<div id="outline-container-CPUMAP%20redirect%20not%20releasing%20page_pool%20pages" class="outline-3">
+<h3 id="CPUMAP%20redirect%20not%20releasing%20page_pool%20pages"><a href="#CPUMAP%20redirect%20not%20releasing%20page_pool%20pages">CPUMAP redirect not releasing page_pool pages</a></h3>
+<div class="outline-text-3" id="text-CPUMAP%20redirect%20not%20releasing%20page_pool%20pages">
 <p>
 <b>Update</b>: this bug was caused by CPUMAP redirect not calling page_pool_unmap_page(),
 should likely have a page_pool_release_page.
@@ -1240,9 +1239,9 @@ Jun 04 17:52:13 broadwell kernel: XXX __mem_id_disconnect() id:61
 </div>
 </div>
 
-<div id="outline-container-orgb833287" class="outline-2">
-<h2 id="orgb833287">Tracepoints</h2>
-<div class="outline-text-2" id="text-orgb833287">
+<div id="outline-container-Tracepoints" class="outline-2">
+<h2 id="Tracepoints"><a href="#Tracepoints">Tracepoints</a></h2>
+<div class="outline-text-2" id="text-Tracepoints">
 <p>
 I got inspired by proof-reading Brendan Gregg's book on BPF, specifically
 the bpftrace tools examples. By adding some tracepoints, we can allow for
@@ -1250,9 +1249,9 @@ debugging and getting stats from page_pool, without adding more kernel code.
 </p>
 </div>
 
-<div id="outline-container-org9f37c58" class="outline-3">
-<h3 id="org9f37c58">Playing with bpftrace</h3>
-<div class="outline-text-3" id="text-org9f37c58">
+<div id="outline-container-Playing%20with%20bpftrace" class="outline-3">
+<h3 id="Playing%20with%20bpftrace"><a href="#Playing%20with%20bpftrace">Playing with bpftrace</a></h3>
+<div class="outline-text-3" id="text-Playing%20with%20bpftrace">
 <p>
 Can I attach to several XDP tracepoints, and then extract only the first two
 struct members, which will be:
@@ -1348,9 +1347,9 @@ Attaching 1 probe...
 </div>
 </div>
 
-<div id="outline-container-org466f025" class="outline-3">
-<h3 id="org466f025">bpftrace for XDP/page_pool disconnect/shutdown</h3>
-<div class="outline-text-3" id="text-org466f025">
+<div id="outline-container-bpftrace%20for%20XDP%2Fpage_pool%20disconnect%2Fshutdown" class="outline-3">
+<h3 id="bpftrace%20for%20XDP%2Fpage_pool%20disconnect%2Fshutdown"><a href="#bpftrace%20for%20XDP%2Fpage_pool%20disconnect%2Fshutdown">bpftrace for XDP/page_pool disconnect/shutdown</a></h3>
+<div class="outline-text-3" id="text-bpftrace%20for%20XDP%2Fpage_pool%20disconnect%2Fshutdown">
 <p>
 sudo bpftrace -e  'kprobe:__mem_id_disconnect { @[kstack] = count(); }'
 </p>
@@ -1476,9 +1475,9 @@ Jun 09 13:06:01 broadwell kernel: ---[ end trace c381db20c024d417 ]---
 </div>
 </div>
 
-<div id="outline-container-org9f22fc0" class="outline-3">
-<h3 id="org9f22fc0">Adding tracepoints for xdp mem_disconnect</h3>
-<div class="outline-text-3" id="text-org9f22fc0">
+<div id="outline-container-Adding%20tracepoints%20for%20xdp%20mem_disconnect" class="outline-3">
+<h3 id="Adding%20tracepoints%20for%20xdp%20mem_disconnect"><a href="#Adding%20tracepoints%20for%20xdp%20mem_disconnect">Adding tracepoints for xdp mem_disconnect</a></h3>
+<div class="outline-text-3" id="text-Adding%20tracepoints%20for%20xdp%20mem_disconnect">
 <p>
 When adding a tracepoint, consider if a kprobe could serve the same purpose.
 </p>
@@ -1591,18 +1590,18 @@ memory.
 </div>
 </div>
 
-<div id="outline-container-org95eb2ea" class="outline-4">
-<h4 id="org95eb2ea">Adding tracepoint for xdp mem_connect</h4>
-<div class="outline-text-4" id="text-org95eb2ea">
+<div id="outline-container-Adding%20tracepoint%20for%20xdp%20mem_connect" class="outline-4">
+<h4 id="Adding%20tracepoint%20for%20xdp%20mem_connect"><a href="#Adding%20tracepoint%20for%20xdp%20mem_connect">Adding tracepoint for xdp mem_connect</a></h4>
+<div class="outline-text-4" id="text-Adding%20tracepoint%20for%20xdp%20mem_connect">
 <p>
 Also add a tracepoint called <code>xdp:mem_connect</code> to pickup ifindex.
 </p>
 </div>
 </div>
 
-<div id="outline-container-org75c12ac" class="outline-4">
-<h4 id="org75c12ac">Patch desc for adding xdp tracepoints</h4>
-<div class="outline-text-4" id="text-org75c12ac">
+<div id="outline-container-Patch%20desc%20for%20adding%20xdp%20tracepoints" class="outline-4">
+<h4 id="Patch%20desc%20for%20adding%20xdp%20tracepoints"><a href="#Patch%20desc%20for%20adding%20xdp%20tracepoints">Patch desc for adding xdp tracepoints</a></h4>
+<div class="outline-text-4" id="text-Patch%20desc%20for%20adding%20xdp%20tracepoints">
 <p>
 xdp: add tracepoints for XDP mem
 </p>
@@ -1627,13 +1626,13 @@ patch will added tracepoints needed at the page_pool layer for this.
 </div>
 </div>
 
-<div id="outline-container-orga56b66a" class="outline-3">
-<h3 id="orga56b66a">Adding tracepoints for page_pool</h3>
-<div class="outline-text-3" id="text-orga56b66a">
+<div id="outline-container-Adding%20tracepoints%20for%20page_pool" class="outline-3">
+<h3 id="Adding%20tracepoints%20for%20page_pool"><a href="#Adding%20tracepoints%20for%20page_pool">Adding tracepoints for page_pool</a></h3>
+<div class="outline-text-3" id="text-Adding%20tracepoints%20for%20page_pool">
 </div>
-<div id="outline-container-org6e08772" class="outline-4">
-<h4 id="org6e08772">Patch desc: page_pool: add tracepoints for page_pool details need by XDP</h4>
-<div class="outline-text-4" id="text-org6e08772">
+<div id="outline-container-Patch%20desc%3A%20page_pool%3A%20add%20tracepoints%20for%20page_pool%20details%20need%20by%20XDP" class="outline-4">
+<h4 id="Patch%20desc%3A%20page_pool%3A%20add%20tracepoints%20for%20page_pool%20details%20need%20by%20XDP"><a href="#Patch%20desc%3A%20page_pool%3A%20add%20tracepoints%20for%20page_pool%20details%20need%20by%20XDP">Patch desc: page_pool: add tracepoints for page_pool details need by XDP</a></h4>
+<div class="outline-text-4" id="text-Patch%20desc%3A%20page_pool%3A%20add%20tracepoints%20for%20page_pool%20details%20need%20by%20XDP">
 <p>
 The xdp tracepoints for mem id disconnect don't carry information about, why
 it was not safe_to_remove.  The tracepoint page_pool:page_pool_inflight in
@@ -1653,13 +1652,13 @@ page pointer and combining this with kprobe for __put_page().
 
 
 
-<div id="outline-container-org447eab5" class="outline-2">
-<h2 id="org447eab5">bpftrace notes</h2>
-<div class="outline-text-2" id="text-org447eab5">
+<div id="outline-container-bpftrace%20notes" class="outline-2">
+<h2 id="bpftrace%20notes"><a href="#bpftrace%20notes">bpftrace notes</a></h2>
+<div class="outline-text-2" id="text-bpftrace%20notes">
 </div>
-<div id="outline-container-org031a979" class="outline-3">
-<h3 id="org031a979">Compile notes</h3>
-<div class="outline-text-3" id="text-org031a979">
+<div id="outline-container-Compile%20notes" class="outline-3">
+<h3 id="Compile%20notes"><a href="#Compile%20notes">Compile notes</a></h3>
+<div class="outline-text-3" id="text-Compile%20notes">
 <p>
 I want build, but install in <i>usr/local/stow</i>
 </p>
@@ -1689,7 +1688,7 @@ sudo stow -D bpftrace-git01/
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="date">Date: 2019-06-18 Tue 19:58</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

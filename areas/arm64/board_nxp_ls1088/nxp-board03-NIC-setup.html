@@ -3,7 +3,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-01-24 Fri 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>NXP LS1088A - NIC setup</title>
@@ -22,21 +21,21 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orga5811e2">Add/setup DPPA2 network interfaces</a>
+<li><a href="#Add%2Fsetup%20DPPA2%20network%20interfaces">Add/setup DPPA2 network interfaces</a>
 <ul>
-<li><a href="#org353e7ea">Manual setup</a></li>
-<li><a href="#org3471c60">DPL (Data Path Layout) file</a>
+<li><a href="#Manual%20setup">Manual setup</a></li>
+<li><a href="#DPL%20%28Data%20Path%20Layout%29%20file">DPL (Data Path Layout) file</a>
 <ul>
-<li><a href="#org438fd44">Compiling DPL/DTS to DTB</a></li>
-<li><a href="#orgf6c5ec4">Loading DPL</a></li>
-<li><a href="#org57e7ede">Saving DPL in SD-card (mmc)</a></li>
+<li><a href="#Compiling%20DPL%2FDTS%20to%20DTB">Compiling DPL/DTS to DTB</a></li>
+<li><a href="#Loading%20DPL">Loading DPL</a></li>
+<li><a href="#Saving%20DPL%20in%20SD-card%20%28mmc%29">Saving DPL in SD-card (mmc)</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#orgbd04d03">Ubuntu network setup</a>
+<li><a href="#Ubuntu%20network%20setup">Ubuntu network setup</a>
 <ul>
-<li><a href="#org4ef6c02">Ubuntu netplan setup</a></li>
+<li><a href="#Ubuntu%20netplan%20setup">Ubuntu netplan setup</a></li>
 </ul>
 </li>
 </ul>
@@ -52,9 +51,9 @@ DPAA2, which shows up as <code>eth0</code>. This document describe howto configu
 hardware to create the network interfaces.
 </p>
 
-<div id="outline-container-orga5811e2" class="outline-2">
-<h2 id="orga5811e2">Add/setup DPPA2 network interfaces</h2>
-<div class="outline-text-2" id="text-orga5811e2">
+<div id="outline-container-Add%2Fsetup%20DPPA2%20network%20interfaces" class="outline-2">
+<h2 id="Add%2Fsetup%20DPPA2%20network%20interfaces"><a href="#Add%2Fsetup%20DPPA2%20network%20interfaces">Add/setup DPPA2 network interfaces</a></h2>
+<div class="outline-text-2" id="text-Add%2Fsetup%20DPPA2%20network%20interfaces">
 <p>
 The default config DPL (Data Path Layout) enables only one network interface
 on DPAA2, which shows up as <code>eth0</code>.
@@ -95,9 +94,9 @@ dprc.1/dpni.0 (interface: eth0, end point: dpmac.5)
 </pre>
 </div>
 
-<div id="outline-container-org353e7ea" class="outline-3">
-<h3 id="org353e7ea">Manual setup</h3>
-<div class="outline-text-3" id="text-org353e7ea">
+<div id="outline-container-Manual%20setup" class="outline-3">
+<h3 id="Manual%20setup"><a href="#Manual%20setup">Manual setup</a></h3>
+<div class="outline-text-3" id="text-Manual%20setup">
 <p>
 Create interface:
 </p>
@@ -150,9 +149,9 @@ egress_confirmed_frames: 0
 </div>
 </div>
 
-<div id="outline-container-org3471c60" class="outline-3">
-<h3 id="org3471c60">DPL (Data Path Layout) file</h3>
-<div class="outline-text-3" id="text-org3471c60">
+<div id="outline-container-DPL%20%28Data%20Path%20Layout%29%20file" class="outline-3">
+<h3 id="DPL%20%28Data%20Path%20Layout%29%20file"><a href="#DPL%20%28Data%20Path%20Layout%29%20file">DPL (Data Path Layout) file</a></h3>
+<div class="outline-text-3" id="text-DPL%20%28Data%20Path%20Layout%29%20file">
 <p>
 The configuration can also be saved into a DPL file, as described in:
 "4.1.7.4.4 Save configuration to a custom DPL file (Optional)"
@@ -175,9 +174,9 @@ Install the compile tool software package:
 </ul>
 </div>
 
-<div id="outline-container-org438fd44" class="outline-4">
-<h4 id="org438fd44">Compiling DPL/DTS to DTB</h4>
-<div class="outline-text-4" id="text-org438fd44">
+<div id="outline-container-Compiling%20DPL%2FDTS%20to%20DTB" class="outline-4">
+<h4 id="Compiling%20DPL%2FDTS%20to%20DTB"><a href="#Compiling%20DPL%2FDTS%20to%20DTB">Compiling DPL/DTS to DTB</a></h4>
+<div class="outline-text-4" id="text-Compiling%20DPL%2FDTS%20to%20DTB">
 <p>
 Compiling the file:
 </p>
@@ -202,9 +201,9 @@ dpl-ls1088-2x10-2x1.dtb: Warning (unit_address_vs_reg): /connections/connection@
 </div>
 </div>
 
-<div id="outline-container-orgf6c5ec4" class="outline-4">
-<h4 id="orgf6c5ec4">Loading DPL</h4>
-<div class="outline-text-4" id="text-orgf6c5ec4">
+<div id="outline-container-Loading%20DPL" class="outline-4">
+<h4 id="Loading%20DPL"><a href="#Loading%20DPL">Loading DPL</a></h4>
+<div class="outline-text-4" id="text-Loading%20DPL">
 <p>
 The DPL file can be flashed onto the board and used to boot to Linux.
 </p>
@@ -280,9 +279,9 @@ fsl-mc: Deploying data path layout ... SUCCESS
 </div>
 </div>
 
-<div id="outline-container-org57e7ede" class="outline-4">
-<h4 id="org57e7ede">Saving DPL in SD-card (mmc)</h4>
-<div class="outline-text-4" id="text-org57e7ede">
+<div id="outline-container-Saving%20DPL%20in%20SD-card%20%28mmc%29" class="outline-4">
+<h4 id="Saving%20DPL%20in%20SD-card%20%28mmc%29"><a href="#Saving%20DPL%20in%20SD-card%20%28mmc%29">Saving DPL in SD-card (mmc)</a></h4>
+<div class="outline-text-4" id="text-Saving%20DPL%20in%20SD-card%20%28mmc%29">
 <p>
 You can load via tftp and apply via <code>fsl_mc</code> as desc above, but it only
 works for a single boot. After reboot/power-cycle the board the DPL setup is
@@ -322,13 +321,13 @@ mmc write 0x80010000 0x06800 0x800
 </div>
 
 
-<div id="outline-container-orgbd04d03" class="outline-2">
-<h2 id="orgbd04d03">Ubuntu network setup</h2>
-<div class="outline-text-2" id="text-orgbd04d03">
+<div id="outline-container-Ubuntu%20network%20setup" class="outline-2">
+<h2 id="Ubuntu%20network%20setup"><a href="#Ubuntu%20network%20setup">Ubuntu network setup</a></h2>
+<div class="outline-text-2" id="text-Ubuntu%20network%20setup">
 </div>
-<div id="outline-container-org4ef6c02" class="outline-3">
-<h3 id="org4ef6c02">Ubuntu netplan setup</h3>
-<div class="outline-text-3" id="text-org4ef6c02">
+<div id="outline-container-Ubuntu%20netplan%20setup" class="outline-3">
+<h3 id="Ubuntu%20netplan%20setup"><a href="#Ubuntu%20netplan%20setup">Ubuntu netplan setup</a></h3>
+<div class="outline-text-3" id="text-Ubuntu%20netplan%20setup">
 <p>
 From: "4.1.7.4.5 Assign IP addresses to network interfaces".
 </p>
@@ -366,7 +365,7 @@ netplan apply
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="date">Date: 2019-05-08 Wed 13:45</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

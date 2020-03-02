@@ -3,7 +3,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-01-24 Fri 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Project management for XDP and Open vSwitch integration</title>
@@ -22,14 +21,14 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org66d270c">Possible approach for re-implement this using XDP</a>
+<li><a href="#Possible%20approach%20for%20re-implement%20this%20using%20XDP">Possible approach for re-implement this using XDP</a>
 <ul>
-<li><a href="#org646d836">Helper for the flow lookup</a></li>
-<li><a href="#orgf0ea673">Action processing</a></li>
-<li><a href="#orgeeb1a9c">Actions required to be implemented in XDP</a></li>
+<li><a href="#Helper%20for%20the%20flow%20lookup">Helper for the flow lookup</a></li>
+<li><a href="#Action%20processing">Action processing</a></li>
+<li><a href="#Actions%20required%20to%20be%20implemented%20in%20XDP">Actions required to be implemented in XDP</a></li>
 </ul>
 </li>
-<li><a href="#orga048188">List of open items</a></li>
+<li><a href="#List%20of%20open%20items">List of open items</a></li>
 </ul>
 </div>
 </div>
@@ -55,13 +54,13 @@ Implementation of Open vSwitch</a>
 </p>
 
 
-<div id="outline-container-org66d270c" class="outline-2">
-<h2 id="org66d270c">Possible approach for re-implement this using XDP</h2>
-<div class="outline-text-2" id="text-org66d270c">
+<div id="outline-container-Possible%20approach%20for%20re-implement%20this%20using%20XDP" class="outline-2">
+<h2 id="Possible%20approach%20for%20re-implement%20this%20using%20XDP"><a href="#Possible%20approach%20for%20re-implement%20this%20using%20XDP">Possible approach for re-implement this using XDP</a></h2>
+<div class="outline-text-2" id="text-Possible%20approach%20for%20re-implement%20this%20using%20XDP">
 </div>
-<div id="outline-container-org646d836" class="outline-3">
-<h3 id="org646d836">Helper for the flow lookup</h3>
-<div class="outline-text-3" id="text-org646d836">
+<div id="outline-container-Helper%20for%20the%20flow%20lookup" class="outline-3">
+<h3 id="Helper%20for%20the%20flow%20lookup"><a href="#Helper%20for%20the%20flow%20lookup">Helper for the flow lookup</a></h3>
+<div class="outline-text-3" id="text-Helper%20for%20the%20flow%20lookup">
 <p>
 To simplify the design it would be beneficial to add a helper function to
 the OVS kernel module which will do the flow lookup and return the set of
@@ -77,9 +76,9 @@ the XDP data space, and keeping it in sync.
 </div>
 
 
-<div id="outline-container-orgf0ea673" class="outline-3">
-<h3 id="orgf0ea673">Action processing</h3>
-<div class="outline-text-3" id="text-orgf0ea673">
+<div id="outline-container-Action%20processing" class="outline-3">
+<h3 id="Action%20processing"><a href="#Action%20processing">Action processing</a></h3>
+<div class="outline-text-3" id="text-Action%20processing">
 <p>
 Actions are processed in a linear fashion, one at a time, where the last
 action can be a recirculation resulting in another lookup and another set of
@@ -129,9 +128,9 @@ currently missing from XDP.
 </div>
 
 
-<div id="outline-container-orgeeb1a9c" class="outline-3">
-<h3 id="orgeeb1a9c">Actions required to be implemented in XDP</h3>
-<div class="outline-text-3" id="text-orgeeb1a9c">
+<div id="outline-container-Actions%20required%20to%20be%20implemented%20in%20XDP" class="outline-3">
+<h3 id="Actions%20required%20to%20be%20implemented%20in%20XDP"><a href="#Actions%20required%20to%20be%20implemented%20in%20XDP">Actions required to be implemented in XDP</a></h3>
+<div class="outline-text-3" id="text-Actions%20required%20to%20be%20implemented%20in%20XDP">
 <p>
 TODO: Add more details on what actions the datapath can/will take. See the
 kernel function <a href="https://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next.git/tree/net/openvswitch/actions.c?h=v5.1#n1217">do_execute_actions()</a> for some  reference.
@@ -141,9 +140,9 @@ kernel function <a href="https://git.kernel.org/pub/scm/linux/kernel/git/davem/n
 </div>
 
 
-<div id="outline-container-orga048188" class="outline-2">
-<h2 id="orga048188">List of open items</h2>
-<div class="outline-text-2" id="text-orga048188">
+<div id="outline-container-List%20of%20open%20items" class="outline-2">
+<h2 id="List%20of%20open%20items"><a href="#List%20of%20open%20items">List of open items</a></h2>
+<div class="outline-text-2" id="text-List%20of%20open%20items">
 <ul class="org-ul">
 <li>Support for Cloning packets, and work on multiple clones in the XDP
 program, and be able to sent the clones to different egress ports.</li>
@@ -158,7 +157,7 @@ program, and be able to sent the clones to different egress ports.</li>
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="date">Date: 2019-06-14 Fri 15:14</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

@@ -3,7 +3,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-01-24 Fri 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Project management for CPUMAP</title>
@@ -22,41 +21,41 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgb646395">Important medium-term tasks</a>
+<li><a href="#Important%20medium-term%20tasks">Important medium-term tasks</a>
 <ul>
-<li><a href="#org3128b1a"><span class="todo TODO">TODO</span> Use-case cpumap: Solving qdisc TX lock congestion for BW shaping</a>
+<li><a href="#Use-case%20cpumap%3A%20Solving%20qdisc%20TX%20lock%20congestion%20for%20BW%20shaping"><span class="todo TODO">TODO</span> Use-case cpumap: Solving qdisc TX lock congestion for BW shaping</a>
 <ul>
-<li><a href="#org80051b5"><span class="done DONE">DONE</span> cpumap: Create script MQ-HTB silo setup</a></li>
-<li><a href="#org173e15a"><span class="done DONE">DONE</span> cpumap: Test cpumap redirect works with MQ-HTB silo setup</a></li>
-<li><a href="#org23e1033"><span class="done DONE">DONE</span> Allow BPF clsact write access to skb-&gt;queue_mapping</a></li>
-<li><a href="#orgc58b9b0"><span class="done DONE">DONE</span> TC-skbedit: possible issue with TC action skbedit</a></li>
-<li><a href="#org2e25134"><span class="done DONE">DONE</span> cpumap: create git project xdp-cpumap-tc</a></li>
-<li><a href="#orgddd9169"><span class="todo TODO">TODO</span> xdp-cpumap-tc: add some documentation</a></li>
-<li><a href="#orgcf05570"><span class="todo TODO">TODO</span> xdp-cpumap-tc: public release of code/repo</a></li>
-<li><a href="#orge513ab7"><span class="todo TODO">TODO</span> cpumap: quantify effect of cpumap (currently) don't transfer RX-csum info</a></li>
+<li><a href="#cpumap%3A%20Create%20script%20MQ-HTB%20silo%20setup"><span class="done DONE">DONE</span> cpumap: Create script MQ-HTB silo setup</a></li>
+<li><a href="#cpumap%3A%20Test%20cpumap%20redirect%20works%20with%20MQ-HTB%20silo%20setup"><span class="done DONE">DONE</span> cpumap: Test cpumap redirect works with MQ-HTB silo setup</a></li>
+<li><a href="#Allow%20BPF%20clsact%20write%20access%20to%20skb-%3Equeue_mapping"><span class="done DONE">DONE</span> Allow BPF clsact write access to skb-&gt;queue_mapping</a></li>
+<li><a href="#TC-skbedit%3A%20possible%20issue%20with%20TC%20action%20skbedit"><span class="done DONE">DONE</span> TC-skbedit: possible issue with TC action skbedit</a></li>
+<li><a href="#cpumap%3A%20create%20git%20project%20xdp-cpumap-tc"><span class="done DONE">DONE</span> cpumap: create git project xdp-cpumap-tc</a></li>
+<li><a href="#xdp-cpumap-tc%3A%20add%20some%20documentation"><span class="todo TODO">TODO</span> xdp-cpumap-tc: add some documentation</a></li>
+<li><a href="#xdp-cpumap-tc%3A%20public%20release%20of%20code%2Frepo"><span class="todo TODO">TODO</span> xdp-cpumap-tc: public release of code/repo</a></li>
+<li><a href="#cpumap%3A%20quantify%20effect%20of%20cpumap%20%28currently%29%20don%27t%20transfer%20RX-csum%20info"><span class="todo TODO">TODO</span> cpumap: quantify effect of cpumap (currently) don't transfer RX-csum info</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org164eb1f">Longer-term preliminary plans</a>
+<li><a href="#Longer-term%20preliminary%20plans">Longer-term preliminary plans</a>
 <ul>
-<li><a href="#orgd3290b7">Allocate SKB outside driver code</a></li>
-<li><a href="#org21448e4"><span class="todo TODO">TODO</span> Various cpumap features</a>
+<li><a href="#Allocate%20SKB%20outside%20driver%20code">Allocate SKB outside driver code</a></li>
+<li><a href="#Various%20cpumap%20features"><span class="todo TODO">TODO</span> Various cpumap features</a>
 <ul>
-<li><a href="#org88d1fc1"><span class="todo TODO">TODO</span> BUG: cpumap not working for generic-XDP</a></li>
-<li><a href="#org44d5919"><span class="todo TODO">TODO</span> Feature: cpumap could use netif_receive_skb_list()</a></li>
-<li><a href="#org71b065f"><span class="todo TODO">TODO</span> Feature: cpumap implement GRO handling</a></li>
-<li><a href="#org4aedf65"><span class="todo TODO">TODO</span> sample xdp_redirect_cpu should output interface-name and ifindex</a></li>
-<li><a href="#orge8e82c1"><span class="todo NEXT">NEXT</span> investigate sample xdp_redirect_cpu counters</a></li>
-<li><a href="#org5d6b09e"><span class="todo TODO">TODO</span> cpumap: implement dynamic load-balancer that is OoO safe</a></li>
+<li><a href="#BUG%3A%20cpumap%20not%20working%20for%20generic-XDP"><span class="todo TODO">TODO</span> BUG: cpumap not working for generic-XDP</a></li>
+<li><a href="#Feature%3A%20cpumap%20could%20use%20netif_receive_skb_list%28%29"><span class="todo TODO">TODO</span> Feature: cpumap could use netif_receive_skb_list()</a></li>
+<li><a href="#Feature%3A%20cpumap%20implement%20GRO%20handling"><span class="todo TODO">TODO</span> Feature: cpumap implement GRO handling</a></li>
+<li><a href="#sample%20xdp_redirect_cpu%20should%20output%20interface-name%20and%20ifindex"><span class="todo TODO">TODO</span> sample xdp_redirect_cpu should output interface-name and ifindex</a></li>
+<li><a href="#investigate%20sample%20xdp_redirect_cpu%20counters"><span class="done DONE">DONE</span> investigate sample xdp_redirect_cpu counters</a></li>
+<li><a href="#cpumap%3A%20implement%20dynamic%20load-balancer%20that%20is%20OoO%20safe"><span class="todo TODO">TODO</span> cpumap: implement dynamic load-balancer that is OoO safe</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org91919fb">Completed tasks</a>
+<li><a href="#Completed%20tasks">Completed tasks</a>
 <ul>
-<li><a href="#org2de9d53"><span class="done DONE">DONE</span> Implement CPUMAP redirect with connection hashing over CPUs</a></li>
-<li><a href="#org4cb4a63"><span class="done DONE">DONE</span> Feature: cpumap bulk alloc SKBs</a></li>
+<li><a href="#Implement%20CPUMAP%20redirect%20with%20connection%20hashing%20over%20CPUs"><span class="done DONE">DONE</span> Implement CPUMAP redirect with connection hashing over CPUs</a></li>
+<li><a href="#Feature%3A%20cpumap%20bulk%20alloc%20SKBs"><span class="done DONE">DONE</span> Feature: cpumap bulk alloc SKBs</a></li>
 </ul>
 </li>
 </ul>
@@ -84,13 +83,13 @@ pre-filtering via bpf, on the serving end-host running Linux.
 Top-level headings indicate category, as explained in <a href="../xdp-project.html">../xdp-project.html</a>.
 </p>
 
-<div id="outline-container-orgb646395" class="outline-2">
-<h2 id="orgb646395">Important medium-term tasks</h2>
-<div class="outline-text-2" id="text-orgb646395">
+<div id="outline-container-Important%20medium-term%20tasks" class="outline-2">
+<h2 id="Important%20medium-term%20tasks"><a href="#Important%20medium-term%20tasks">Important medium-term tasks</a></h2>
+<div class="outline-text-2" id="text-Important%20medium-term%20tasks">
 </div>
-<div id="outline-container-org3128b1a" class="outline-3">
-<h3 id="org3128b1a"><span class="todo TODO">TODO</span> Use-case cpumap: Solving qdisc TX lock congestion for BW shaping</h3>
-<div class="outline-text-3" id="text-org3128b1a">
+<div id="outline-container-Use-case%20cpumap%3A%20Solving%20qdisc%20TX%20lock%20congestion%20for%20BW%20shaping" class="outline-3">
+<h3 id="Use-case%20cpumap%3A%20Solving%20qdisc%20TX%20lock%20congestion%20for%20BW%20shaping"><a href="#Use-case%20cpumap%3A%20Solving%20qdisc%20TX%20lock%20congestion%20for%20BW%20shaping"><span class="todo TODO">TODO</span> Use-case cpumap: Solving qdisc TX lock congestion for BW shaping</a></h3>
+<div class="outline-text-3" id="text-Use-case%20cpumap%3A%20Solving%20qdisc%20TX%20lock%20congestion%20for%20BW%20shaping">
 <p>
 This is a project that verifies and demonstrate how <code>cpumap</code> can be used for
 more complex use-cases like IP-forwarding and bandwidth shaping, while
@@ -122,18 +121,18 @@ the customers/services grouping is maintained and hit the same CPU+MQ TXq.
 </p>
 </div>
 
-<div id="outline-container-org80051b5" class="outline-4">
-<h4 id="org80051b5"><span class="done DONE">DONE</span> cpumap: Create script MQ-HTB silo setup</h4>
-<div class="outline-text-4" id="text-org80051b5">
+<div id="outline-container-cpumap%3A%20Create%20script%20MQ-HTB%20silo%20setup" class="outline-4">
+<h4 id="cpumap%3A%20Create%20script%20MQ-HTB%20silo%20setup"><a href="#cpumap%3A%20Create%20script%20MQ-HTB%20silo%20setup"><span class="done DONE">DONE</span> cpumap: Create script MQ-HTB silo setup</a></h4>
+<div class="outline-text-4" id="text-cpumap%3A%20Create%20script%20MQ-HTB%20silo%20setup">
 <p>
 <a href="https://github.com/netoptimizer/network-testing/blob/master/tc/tc_mq_htb_setup.sh">https://github.com/netoptimizer/network-testing/blob/master/tc/tc_mq_htb_setup.sh</a>
 </p>
 </div>
 </div>
 
-<div id="outline-container-org173e15a" class="outline-4">
-<h4 id="org173e15a"><span class="done DONE">DONE</span> cpumap: Test cpumap redirect works with MQ-HTB silo setup</h4>
-<div class="outline-text-4" id="text-org173e15a">
+<div id="outline-container-cpumap%3A%20Test%20cpumap%20redirect%20works%20with%20MQ-HTB%20silo%20setup" class="outline-4">
+<h4 id="cpumap%3A%20Test%20cpumap%20redirect%20works%20with%20MQ-HTB%20silo%20setup"><a href="#cpumap%3A%20Test%20cpumap%20redirect%20works%20with%20MQ-HTB%20silo%20setup"><span class="done DONE">DONE</span> cpumap: Test cpumap redirect works with MQ-HTB silo setup</a></h4>
+<div class="outline-text-4" id="text-cpumap%3A%20Test%20cpumap%20redirect%20works%20with%20MQ-HTB%20silo%20setup">
 <p>
 Yes, MQ-HTB silo setup (example <a href="https://github.com/netoptimizer/network-testing/blob/master/tc/tc_mq_htb_setup.sh">tc_mq_htb_setup.sh</a>) it works.
 </p>
@@ -152,9 +151,9 @@ Run the script with &#x2013;help.
 </div>
 </div>
 
-<div id="outline-container-org23e1033" class="outline-4">
-<h4 id="org23e1033"><span class="done DONE">DONE</span> Allow BPF clsact write access to skb-&gt;queue_mapping</h4>
-<div class="outline-text-4" id="text-org23e1033">
+<div id="outline-container-Allow%20BPF%20clsact%20write%20access%20to%20skb-%3Equeue_mapping" class="outline-4">
+<h4 id="Allow%20BPF%20clsact%20write%20access%20to%20skb-%3Equeue_mapping"><a href="#Allow%20BPF%20clsact%20write%20access%20to%20skb-%3Equeue_mapping"><span class="done DONE">DONE</span> Allow BPF clsact write access to skb-&gt;queue_mapping</a></h4>
+<div class="outline-text-4" id="text-Allow%20BPF%20clsact%20write%20access%20to%20skb-%3Equeue_mapping">
 <p>
 Summary: Choose NOT to create BPF helper for skb_set_queue_mapping, instead
 we allow BPF TC hook (clsact/cls bpf) write access to <code>skb-&gt;queue_mapping</code>.
@@ -173,8 +172,8 @@ configured. This could be set by e.g. using TC filter/action <code>skbedit</code
 </div>
 
 <ul class="org-ul">
-<li><a id="orgb17f523"></a><span class="done DONE">DONE</span> Code analysis before BPF helper for skb_set_queue_mapping<br />
-<div class="outline-text-5" id="text-orgb17f523">
+<li><a id="Code%20analysis%20before%20BPF%20helper%20for%20skb_set_queue_mapping"></a><a href="#Code%20analysis%20before%20BPF%20helper%20for%20skb_set_queue_mapping"><span class="done DONE">DONE</span> Code analysis before BPF helper for skb_set_queue_mapping</a><br />
+<div class="outline-text-5" id="text-Code%20analysis%20before%20BPF%20helper%20for%20skb_set_queue_mapping">
 <p>
 Following the kernel code is a little tricky, so adding some notes here.
 Invoking skb_set_queue_mapping() <b>directly</b> set <code>skb-&gt;queue_mapping</code> to the
@@ -270,9 +269,9 @@ little tricky to spot. Unless XPS via <code>get_xps_queue</code> overrides by fi
 </ul>
 </div>
 
-<div id="outline-container-orgc58b9b0" class="outline-4">
-<h4 id="orgc58b9b0"><span class="done DONE">DONE</span> TC-skbedit: possible issue with TC action skbedit</h4>
-<div class="outline-text-4" id="text-orgc58b9b0">
+<div id="outline-container-TC-skbedit%3A%20possible%20issue%20with%20TC%20action%20skbedit" class="outline-4">
+<h4 id="TC-skbedit%3A%20possible%20issue%20with%20TC%20action%20skbedit"><a href="#TC-skbedit%3A%20possible%20issue%20with%20TC%20action%20skbedit"><span class="done DONE">DONE</span> TC-skbedit: possible issue with TC action skbedit</a></h4>
+<div class="outline-text-4" id="text-TC-skbedit%3A%20possible%20issue%20with%20TC%20action%20skbedit">
 <p>
 The man page for tc-skbedit(8) does not mention that the queue_mapping is
 1-indexed, but my code analysis says so, report and perhaps test before.
@@ -288,9 +287,9 @@ via mask=00, before their changes via <code>skbedit</code> takes any effect.
 </div>
 </div>
 
-<div id="outline-container-org2e25134" class="outline-4">
-<h4 id="org2e25134"><span class="done DONE">DONE</span> cpumap: create git project xdp-cpumap-tc</h4>
-<div class="outline-text-4" id="text-org2e25134">
+<div id="outline-container-cpumap%3A%20create%20git%20project%20xdp-cpumap-tc" class="outline-4">
+<h4 id="cpumap%3A%20create%20git%20project%20xdp-cpumap-tc"><a href="#cpumap%3A%20create%20git%20project%20xdp-cpumap-tc"><span class="done DONE">DONE</span> cpumap: create git project xdp-cpumap-tc</a></h4>
+<div class="outline-text-4" id="text-cpumap%3A%20create%20git%20project%20xdp-cpumap-tc">
 <p>
 Create git project xdp-cpumap-tc, that demonstrate how XDP cpumap redirect
 can be used together with Linux TC (Traffic Control) for solving the Qdisc
@@ -299,15 +298,15 @@ locking problem.
 </div>
 </div>
 
-<div id="outline-container-orgddd9169" class="outline-4">
-<h4 id="orgddd9169"><span class="todo TODO">TODO</span> xdp-cpumap-tc: add some documentation</h4>
+<div id="outline-container-xdp-cpumap-tc%3A%20add%20some%20documentation" class="outline-4">
+<h4 id="xdp-cpumap-tc%3A%20add%20some%20documentation"><a href="#xdp-cpumap-tc%3A%20add%20some%20documentation"><span class="todo TODO">TODO</span> xdp-cpumap-tc: add some documentation</a></h4>
 </div>
-<div id="outline-container-orgcf05570" class="outline-4">
-<h4 id="orgcf05570"><span class="todo TODO">TODO</span> xdp-cpumap-tc: public release of code/repo</h4>
+<div id="outline-container-xdp-cpumap-tc%3A%20public%20release%20of%20code%2Frepo" class="outline-4">
+<h4 id="xdp-cpumap-tc%3A%20public%20release%20of%20code%2Frepo"><a href="#xdp-cpumap-tc%3A%20public%20release%20of%20code%2Frepo"><span class="todo TODO">TODO</span> xdp-cpumap-tc: public release of code/repo</a></h4>
 </div>
-<div id="outline-container-orge513ab7" class="outline-4">
-<h4 id="orge513ab7"><span class="todo TODO">TODO</span> cpumap: quantify effect of cpumap (currently) don't transfer RX-csum info</h4>
-<div class="outline-text-4" id="text-orge513ab7">
+<div id="outline-container-cpumap%3A%20quantify%20effect%20of%20cpumap%20%28currently%29%20don%27t%20transfer%20RX-csum%20info" class="outline-4">
+<h4 id="cpumap%3A%20quantify%20effect%20of%20cpumap%20%28currently%29%20don%27t%20transfer%20RX-csum%20info"><a href="#cpumap%3A%20quantify%20effect%20of%20cpumap%20%28currently%29%20don%27t%20transfer%20RX-csum%20info"><span class="todo TODO">TODO</span> cpumap: quantify effect of cpumap (currently) don't transfer RX-csum info</a></h4>
+<div class="outline-text-4" id="text-cpumap%3A%20quantify%20effect%20of%20cpumap%20%28currently%29%20don%27t%20transfer%20RX-csum%20info">
 <p>
 Verify csum is recalculated on IP-forward TX path for cpumap redirected
 packets.  Try to asses/measure overhead this cause.
@@ -318,13 +317,13 @@ packets.  Try to asses/measure overhead this cause.
 </div>
 
 
-<div id="outline-container-org164eb1f" class="outline-2">
-<h2 id="org164eb1f">Longer-term preliminary plans</h2>
-<div class="outline-text-2" id="text-org164eb1f">
+<div id="outline-container-Longer-term%20preliminary%20plans" class="outline-2">
+<h2 id="Longer-term%20preliminary%20plans"><a href="#Longer-term%20preliminary%20plans">Longer-term preliminary plans</a></h2>
+<div class="outline-text-2" id="text-Longer-term%20preliminary%20plans">
 </div>
-<div id="outline-container-orgd3290b7" class="outline-3">
-<h3 id="orgd3290b7">Allocate SKB outside driver code</h3>
-<div class="outline-text-3" id="text-orgd3290b7">
+<div id="outline-container-Allocate%20SKB%20outside%20driver%20code" class="outline-3">
+<h3 id="Allocate%20SKB%20outside%20driver%20code"><a href="#Allocate%20SKB%20outside%20driver%20code">Allocate SKB outside driver code</a></h3>
+<div class="outline-text-3" id="text-Allocate%20SKB%20outside%20driver%20code">
 <p>
 The revolutionary and controversial idea with cpumap redirect is to remove
 the SKB allocation inside the drivers RX-path. Instead an <code>xdp_frame</code> is
@@ -345,17 +344,17 @@ generic way to transfer info needed for the SKB-fields, this related to XDP
 </div>
 
 
-<div id="outline-container-org21448e4" class="outline-3">
-<h3 id="org21448e4"><span class="todo TODO">TODO</span> Various cpumap features</h3>
-<div class="outline-text-3" id="text-org21448e4">
+<div id="outline-container-Various%20cpumap%20features" class="outline-3">
+<h3 id="Various%20cpumap%20features"><a href="#Various%20cpumap%20features"><span class="todo TODO">TODO</span> Various cpumap features</a></h3>
+<div class="outline-text-3" id="text-Various%20cpumap%20features">
 <p>
 This section contains various feature ideas related to <code>cpumap</code>.
 </p>
 </div>
 
-<div id="outline-container-org88d1fc1" class="outline-4">
-<h4 id="org88d1fc1"><a id="ID-8f4953c1-a862-46f2-b456-da187008f355"></a><span class="todo TODO">TODO</span> BUG: cpumap not working for generic-XDP</h4>
-<div class="outline-text-4" id="text-org88d1fc1">
+<div id="outline-container-BUG%3A%20cpumap%20not%20working%20for%20generic-XDP" class="outline-4">
+<h4 id="BUG%3A%20cpumap%20not%20working%20for%20generic-XDP"><a href="#BUG%3A%20cpumap%20not%20working%20for%20generic-XDP"><span class="todo TODO">TODO</span> BUG: cpumap not working for generic-XDP</a></h4>
+<div class="outline-text-4" id="text-BUG%3A%20cpumap%20not%20working%20for%20generic-XDP">
 <p>
 The <code>cpumap</code> does not handle redirect for generic-XDP.  This have already
 confused people.  For completeness this should be fixed, but there is also
@@ -364,17 +363,17 @@ an opportunity for performance improvements.
 </div>
 </div>
 
-<div id="outline-container-org44d5919" class="outline-4">
-<h4 id="org44d5919"><span class="todo TODO">TODO</span> Feature: cpumap could use netif_receive_skb_list()</h4>
+<div id="outline-container-Feature%3A%20cpumap%20could%20use%20netif_receive_skb_list%28%29" class="outline-4">
+<h4 id="Feature%3A%20cpumap%20could%20use%20netif_receive_skb_list%28%29"><a href="#Feature%3A%20cpumap%20could%20use%20netif_receive_skb_list%28%29"><span class="todo TODO">TODO</span> Feature: cpumap could use netif_receive_skb_list()</a></h4>
 </div>
 
-<div id="outline-container-org71b065f" class="outline-4">
-<h4 id="org71b065f"><span class="todo TODO">TODO</span> Feature: cpumap implement GRO handling</h4>
+<div id="outline-container-Feature%3A%20cpumap%20implement%20GRO%20handling" class="outline-4">
+<h4 id="Feature%3A%20cpumap%20implement%20GRO%20handling"><a href="#Feature%3A%20cpumap%20implement%20GRO%20handling"><span class="todo TODO">TODO</span> Feature: cpumap implement GRO handling</a></h4>
 </div>
 
-<div id="outline-container-org4aedf65" class="outline-4">
-<h4 id="org4aedf65"><span class="todo TODO">TODO</span> sample xdp_redirect_cpu should output interface-name and ifindex</h4>
-<div class="outline-text-4" id="text-org4aedf65">
+<div id="outline-container-sample%20xdp_redirect_cpu%20should%20output%20interface-name%20and%20ifindex" class="outline-4">
+<h4 id="sample%20xdp_redirect_cpu%20should%20output%20interface-name%20and%20ifindex"><a href="#sample%20xdp_redirect_cpu%20should%20output%20interface-name%20and%20ifindex"><span class="todo TODO">TODO</span> sample xdp_redirect_cpu should output interface-name and ifindex</a></h4>
+<div class="outline-text-4" id="text-sample%20xdp_redirect_cpu%20should%20output%20interface-name%20and%20ifindex">
 <p>
 This is a minor improvement. QA is giving output from xdp_redirect_cpu, but
 forget to say what interface this is loaded on.  Solve by simply outputting
@@ -384,20 +383,25 @@ from corresponding ifindex.
 </div>
 </div>
 
-<div id="outline-container-orge8e82c1" class="outline-4">
-<h4 id="orge8e82c1"><span class="todo NEXT">NEXT</span> investigate sample xdp_redirect_cpu counters</h4>
-<div class="outline-text-4" id="text-orge8e82c1">
+<div id="outline-container-investigate%20sample%20xdp_redirect_cpu%20counters" class="outline-4">
+<h4 id="investigate%20sample%20xdp_redirect_cpu%20counters"><a href="#investigate%20sample%20xdp_redirect_cpu%20counters"><span class="done DONE">DONE</span> investigate sample xdp_redirect_cpu counters</a></h4>
+<div class="outline-text-4" id="text-investigate%20sample%20xdp_redirect_cpu%20counters">
 <p>
 Playing with xdp_redirect_cpu, and the enqueue and kthread counters are not
 getting updated, something in stats reporting looks wrong.  Maybe latest
 upstream changes to libbpf broke something?
 </p>
+
+<p>
+Fixed in: f9e6bfdbaf0c ("samples/bpf: Xdp_redirect_cpu fix missing tracepoint attach")
+</p>
 </div>
 </div>
 
-<div id="outline-container-org5d6b09e" class="outline-4">
-<h4 id="org5d6b09e"><span class="todo TODO">TODO</span> cpumap: implement dynamic load-balancer that is OoO safe</h4>
-<div class="outline-text-4" id="text-org5d6b09e">
+
+<div id="outline-container-cpumap%3A%20implement%20dynamic%20load-balancer%20that%20is%20OoO%20safe" class="outline-4">
+<h4 id="cpumap%3A%20implement%20dynamic%20load-balancer%20that%20is%20OoO%20safe"><a href="#cpumap%3A%20implement%20dynamic%20load-balancer%20that%20is%20OoO%20safe"><span class="todo TODO">TODO</span> cpumap: implement dynamic load-balancer that is OoO safe</a></h4>
+<div class="outline-text-4" id="text-cpumap%3A%20implement%20dynamic%20load-balancer%20that%20is%20OoO%20safe">
 <p>
 This is a project to test the limits of eBPF programming.
 </p>
@@ -429,13 +433,13 @@ dynamically load-balance IP-flows.
 
 
 
-<div id="outline-container-org91919fb" class="outline-2">
-<h2 id="org91919fb">Completed tasks</h2>
-<div class="outline-text-2" id="text-org91919fb">
+<div id="outline-container-Completed%20tasks" class="outline-2">
+<h2 id="Completed%20tasks"><a href="#Completed%20tasks">Completed tasks</a></h2>
+<div class="outline-text-2" id="text-Completed%20tasks">
 </div>
-<div id="outline-container-org2de9d53" class="outline-3">
-<h3 id="org2de9d53"><span class="done DONE">DONE</span> Implement CPUMAP redirect with connection hashing over CPUs</h3>
-<div class="outline-text-3" id="text-org2de9d53">
+<div id="outline-container-Implement%20CPUMAP%20redirect%20with%20connection%20hashing%20over%20CPUs" class="outline-3">
+<h3 id="Implement%20CPUMAP%20redirect%20with%20connection%20hashing%20over%20CPUs"><a href="#Implement%20CPUMAP%20redirect%20with%20connection%20hashing%20over%20CPUs"><span class="done DONE">DONE</span> Implement CPUMAP redirect with connection hashing over CPUs</a></h3>
+<div class="outline-text-3" id="text-Implement%20CPUMAP%20redirect%20with%20connection%20hashing%20over%20CPUs">
 <p>
 The xdp_redirect_cpu code should default distribute packets via IP-flow
 hashing to avoid creating Out-of-Order packets, if someone just runs this
@@ -453,9 +457,9 @@ Upstream in commits:
 </div>
 </div>
 
-<div id="outline-container-org4cb4a63" class="outline-3">
-<h3 id="org4cb4a63"><span class="done DONE">DONE</span> Feature: cpumap bulk alloc SKBs</h3>
-<div class="outline-text-3" id="text-org4cb4a63">
+<div id="outline-container-Feature%3A%20cpumap%20bulk%20alloc%20SKBs" class="outline-3">
+<h3 id="Feature%3A%20cpumap%20bulk%20alloc%20SKBs"><a href="#Feature%3A%20cpumap%20bulk%20alloc%20SKBs"><span class="done DONE">DONE</span> Feature: cpumap bulk alloc SKBs</a></h3>
+<div class="outline-text-3" id="text-Feature%3A%20cpumap%20bulk%20alloc%20SKBs">
 <p>
 Upstream: <a href="https://git.kernel.org/torvalds/c/8f0504a97e1ba6b70">8f0504a97e1b ("bpf: cpumap do bulk allocation of SKBs")</a>
 </p>
@@ -472,7 +476,7 @@ there is of-cause also the performance improvement of bulk alloc.
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="date">Date: 2020-01-24 Fri 10:59</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

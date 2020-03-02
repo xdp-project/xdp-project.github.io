@@ -3,7 +3,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-01-24 Fri 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Project management for XDP-tutorial</title>
@@ -22,36 +21,36 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgeab7d60">Important medium-term tasks</a>
+<li><a href="#Important%20medium-term%20tasks">Important medium-term tasks</a>
 <ul>
-<li><a href="#orgdbeff7f"><span class="todo TODO">TODO</span> XDP-tutorial ideas for assignments/examples</a>
+<li><a href="#XDP-tutorial%20ideas%20for%20assignments%2Fexamples"><span class="todo TODO">TODO</span> XDP-tutorial ideas for assignments/examples</a>
 <ul>
-<li><a href="#org227703f"><span class="done DONE">DONE</span> xdp-tutorial: rebase libbpf to get AF_XDP headers</a></li>
-<li><a href="#orgceef5c4"><span class="done DONE">DONE</span> xdp-tutorial: Add initial AF_XDP tutorial example</a></li>
-<li><a href="#org99977bc"><span class="todo TODO">TODO</span> xdp-tutorial: Work on AF_XDP tutorial example</a></li>
-<li><a href="#org45606ff"><span class="todo TODO">TODO</span> Example of how to use tail calls</a></li>
-<li><a href="#org906e418"><span class="todo TODO">TODO</span> xdp-tutorial: Split packet parsing between two XDP programs</a></li>
+<li><a href="#xdp-tutorial%3A%20rebase%20libbpf%20to%20get%20AF_XDP%20headers"><span class="done DONE">DONE</span> xdp-tutorial: rebase libbpf to get AF_XDP headers</a></li>
+<li><a href="#xdp-tutorial%3A%20Add%20initial%20AF_XDP%20tutorial%20example"><span class="done DONE">DONE</span> xdp-tutorial: Add initial AF_XDP tutorial example</a></li>
+<li><a href="#xdp-tutorial%3A%20Work%20on%20AF_XDP%20tutorial%20example"><span class="todo TODO">TODO</span> xdp-tutorial: Work on AF_XDP tutorial example</a></li>
+<li><a href="#Example%20of%20how%20to%20use%20tail%20calls"><span class="todo TODO">TODO</span> Example of how to use tail calls</a></li>
+<li><a href="#xdp-tutorial%3A%20Split%20packet%20parsing%20between%20two%20XDP%20programs"><span class="todo TODO">TODO</span> xdp-tutorial: Split packet parsing between two XDP programs</a></li>
 </ul>
 </li>
-<li><a href="#org2a11c95"><span class="todo TODO">TODO</span> xdp-tutorial for tracepoints project</a>
+<li><a href="#xdp-tutorial%20for%20tracepoints%20project"><span class="todo TODO">TODO</span> xdp-tutorial for tracepoints project</a>
 <ul>
-<li><a href="#org55df66d"><span class="done DONE">DONE</span> xdp-tutorial: add tracepoint examples for reading XDP tracepoints</a></li>
-<li><a href="#org02cfed6"><span class="done DONE">DONE</span> xdp-tutorial: relate tracing to other assignments</a></li>
-<li><a href="#org909a413"><span class="done DONE">DONE</span> xdp-tutorial: fix bugs for raw_tracepoints</a></li>
+<li><a href="#xdp-tutorial%3A%20add%20tracepoint%20examples%20for%20reading%20XDP%20tracepoints"><span class="done DONE">DONE</span> xdp-tutorial: add tracepoint examples for reading XDP tracepoints</a></li>
+<li><a href="#xdp-tutorial%3A%20relate%20tracing%20to%20other%20assignments"><span class="done DONE">DONE</span> xdp-tutorial: relate tracing to other assignments</a></li>
+<li><a href="#xdp-tutorial%3A%20fix%20bugs%20for%20raw_tracepoints"><span class="done DONE">DONE</span> xdp-tutorial: fix bugs for raw_tracepoints</a></li>
 </ul>
 </li>
-<li><a href="#org0368e90"><span class="todo TODO">TODO</span> xdp-tutorial: selftests project</a></li>
-<li><a href="#org02c4978"><span class="todo TODO">TODO</span> Solution for basic04</a></li>
+<li><a href="#xdp-tutorial%3A%20selftests%20project"><span class="todo TODO">TODO</span> xdp-tutorial: selftests project</a></li>
+<li><a href="#Solution%20for%20basic04"><span class="todo TODO">TODO</span> Solution for basic04</a></li>
 </ul>
 </li>
-<li><a href="#org4430627">Longer-term preliminary plans</a>
+<li><a href="#Longer-term%20preliminary%20plans">Longer-term preliminary plans</a>
 <ul>
-<li><a href="#orgc10acf9"><span class="todo TODO">TODO</span> XDP-tutorial misc assignments</a>
+<li><a href="#XDP-tutorial%20misc%20assignments"><span class="todo TODO">TODO</span> XDP-tutorial misc assignments</a>
 <ul>
-<li><a href="#org932eab1"><span class="todo TODO">TODO</span> XDP-tutorial: Code xdp_stats to use/follow XDP bpf-id to maps</a></li>
-<li><a href="#orge3a922a"><span class="todo TODO">TODO</span> XDP-tutorial: drawing and desc of veth-testlab</a></li>
-<li><a href="#org4af05f4"><span class="todo TODO">TODO</span> Best practices for using multiple programs on the same interface</a></li>
-<li><a href="#org6af6a15"><span class="todo TODO">TODO</span> Tutorial for debugging and introspection</a></li>
+<li><a href="#XDP-tutorial%3A%20Code%20xdp_stats%20to%20use%2Ffollow%20XDP%20bpf-id%20to%20maps"><span class="todo TODO">TODO</span> XDP-tutorial: Code xdp_stats to use/follow XDP bpf-id to maps</a></li>
+<li><a href="#XDP-tutorial%3A%20drawing%20and%20desc%20of%20veth-testlab"><span class="todo TODO">TODO</span> XDP-tutorial: drawing and desc of veth-testlab</a></li>
+<li><a href="#Best%20practices%20for%20using%20multiple%20programs%20on%20the%20same%20interface"><span class="todo TODO">TODO</span> Best practices for using multiple programs on the same interface</a></li>
+<li><a href="#Tutorial%20for%20debugging%20and%20introspection"><span class="todo TODO">TODO</span> Tutorial for debugging and introspection</a></li>
 </ul>
 </li>
 </ul>
@@ -78,17 +77,17 @@ Top-level headings indicate category, as explained in <a href="../xdp-project.ht
 </p>
 
 
-<div id="outline-container-orgeab7d60" class="outline-2">
-<h2 id="orgeab7d60">Important medium-term tasks</h2>
-<div class="outline-text-2" id="text-orgeab7d60">
+<div id="outline-container-Important%20medium-term%20tasks" class="outline-2">
+<h2 id="Important%20medium-term%20tasks"><a href="#Important%20medium-term%20tasks">Important medium-term tasks</a></h2>
+<div class="outline-text-2" id="text-Important%20medium-term%20tasks">
 </div>
-<div id="outline-container-orgdbeff7f" class="outline-3">
-<h3 id="orgdbeff7f"><span class="todo TODO">TODO</span> XDP-tutorial ideas for assignments/examples</h3>
-<div class="outline-text-3" id="text-orgdbeff7f">
+<div id="outline-container-XDP-tutorial%20ideas%20for%20assignments%2Fexamples" class="outline-3">
+<h3 id="XDP-tutorial%20ideas%20for%20assignments%2Fexamples"><a href="#XDP-tutorial%20ideas%20for%20assignments%2Fexamples"><span class="todo TODO">TODO</span> XDP-tutorial ideas for assignments/examples</a></h3>
+<div class="outline-text-3" id="text-XDP-tutorial%20ideas%20for%20assignments%2Fexamples">
 </div>
-<div id="outline-container-org227703f" class="outline-4">
-<h4 id="org227703f"><span class="done DONE">DONE</span> xdp-tutorial: rebase libbpf to get AF_XDP headers</h4>
-<div class="outline-text-4" id="text-org227703f">
+<div id="outline-container-xdp-tutorial%3A%20rebase%20libbpf%20to%20get%20AF_XDP%20headers" class="outline-4">
+<h4 id="xdp-tutorial%3A%20rebase%20libbpf%20to%20get%20AF_XDP%20headers"><a href="#xdp-tutorial%3A%20rebase%20libbpf%20to%20get%20AF_XDP%20headers"><span class="done DONE">DONE</span> xdp-tutorial: rebase libbpf to get AF_XDP headers</a></h4>
+<div class="outline-text-4" id="text-xdp-tutorial%3A%20rebase%20libbpf%20to%20get%20AF_XDP%20headers">
 <p>
 Updated to the latest github libbpf commit 910c475f09e5 ("sync: latest
 libbpf changes from kernel") details see:
@@ -97,31 +96,31 @@ libbpf changes from kernel") details see:
 </div>
 </div>
 
-<div id="outline-container-orgceef5c4" class="outline-4">
-<h4 id="orgceef5c4"><span class="done DONE">DONE</span> xdp-tutorial: Add initial AF_XDP tutorial example</h4>
-<div class="outline-text-4" id="text-orgceef5c4">
+<div id="outline-container-xdp-tutorial%3A%20Add%20initial%20AF_XDP%20tutorial%20example" class="outline-4">
+<h4 id="xdp-tutorial%3A%20Add%20initial%20AF_XDP%20tutorial%20example"><a href="#xdp-tutorial%3A%20Add%20initial%20AF_XDP%20tutorial%20example"><span class="done DONE">DONE</span> xdp-tutorial: Add initial AF_XDP tutorial example</a></h4>
+<div class="outline-text-4" id="text-xdp-tutorial%3A%20Add%20initial%20AF_XDP%20tutorial%20example">
 <p>
 Initial step PR: <a href="https://github.com/xdp-project/xdp-tutorial/pull/35">https://github.com/xdp-project/xdp-tutorial/pull/35</a>
 </p>
 </div>
 </div>
 
-<div id="outline-container-org99977bc" class="outline-4">
-<h4 id="org99977bc"><span class="todo TODO">TODO</span> xdp-tutorial: Work on AF_XDP tutorial example</h4>
-<div class="outline-text-4" id="text-org99977bc">
+<div id="outline-container-xdp-tutorial%3A%20Work%20on%20AF_XDP%20tutorial%20example" class="outline-4">
+<h4 id="xdp-tutorial%3A%20Work%20on%20AF_XDP%20tutorial%20example"><a href="#xdp-tutorial%3A%20Work%20on%20AF_XDP%20tutorial%20example"><span class="todo TODO">TODO</span> xdp-tutorial: Work on AF_XDP tutorial example</a></h4>
+<div class="outline-text-4" id="text-xdp-tutorial%3A%20Work%20on%20AF_XDP%20tutorial%20example">
 <p>
 The <a href="https://github.com/xdp-project/xdp-tutorial/tree/master/advanced03-AF_XDP">advanced03-AF_XDP</a> lesson needs more work.
 </p>
 </div>
 </div>
 
-<div id="outline-container-org45606ff" class="outline-4">
-<h4 id="org45606ff"><span class="todo TODO">TODO</span> Example of how to use tail calls</h4>
+<div id="outline-container-Example%20of%20how%20to%20use%20tail%20calls" class="outline-4">
+<h4 id="Example%20of%20how%20to%20use%20tail%20calls"><a href="#Example%20of%20how%20to%20use%20tail%20calls"><span class="todo TODO">TODO</span> Example of how to use tail calls</a></h4>
 </div>
 
-<div id="outline-container-org906e418" class="outline-4">
-<h4 id="org906e418"><span class="todo TODO">TODO</span> xdp-tutorial: Split packet parsing between two XDP programs</h4>
-<div class="outline-text-4" id="text-org906e418">
+<div id="outline-container-xdp-tutorial%3A%20Split%20packet%20parsing%20between%20two%20XDP%20programs" class="outline-4">
+<h4 id="xdp-tutorial%3A%20Split%20packet%20parsing%20between%20two%20XDP%20programs"><a href="#xdp-tutorial%3A%20Split%20packet%20parsing%20between%20two%20XDP%20programs"><span class="todo TODO">TODO</span> xdp-tutorial: Split packet parsing between two XDP programs</a></h4>
+<div class="outline-text-4" id="text-xdp-tutorial%3A%20Split%20packet%20parsing%20between%20two%20XDP%20programs">
 <p>
 This exercise/lesson is also meant to show how XDP hardware offloading can
 interact with regular XDP programs (software mode running driver level).
@@ -144,8 +143,8 @@ metadata area structure.
 </div>
 
 <ul class="org-ul">
-<li><a id="org4f4b168"></a><span class="todo TODO">TODO</span> xdp-tutorial: Extend to HW-offload: Split packet parsing between two XDP programs<br />
-<div class="outline-text-5" id="text-org4f4b168">
+<li><a id="xdp-tutorial%3A%20Extend%20to%20HW-offload%3A%20Split%20packet%20parsing%20between%20two%20XDP%20programs"></a><a href="#xdp-tutorial%3A%20Extend%20to%20HW-offload%3A%20Split%20packet%20parsing%20between%20two%20XDP%20programs"><span class="todo TODO">TODO</span> xdp-tutorial: Extend to HW-offload: Split packet parsing between two XDP programs</a><br />
+<div class="outline-text-5" id="text-xdp-tutorial%3A%20Extend%20to%20HW-offload%3A%20Split%20packet%20parsing%20between%20two%20XDP%20programs">
 <p>
 When above assignment is complete. Then extend to HW-offload the first
 XDP-prog that does the parsing and storing in metadata area. It doesn't BPF
@@ -167,9 +166,9 @@ BTF considerations, how can we transfer BTF info from HW-offloaded XDP-prog?
 </div>
 </div>
 
-<div id="outline-container-org2a11c95" class="outline-3">
-<h3 id="org2a11c95"><span class="todo TODO">TODO</span> xdp-tutorial for tracepoints project</h3>
-<div class="outline-text-3" id="text-org2a11c95">
+<div id="outline-container-xdp-tutorial%20for%20tracepoints%20project" class="outline-3">
+<h3 id="xdp-tutorial%20for%20tracepoints%20project"><a href="#xdp-tutorial%20for%20tracepoints%20project"><span class="todo TODO">TODO</span> xdp-tutorial for tracepoints project</a></h3>
+<div class="outline-text-3" id="text-xdp-tutorial%20for%20tracepoints%20project">
 <p>
 Tutorial sub-project for teaching people about using tracepoints.
 </p>
@@ -183,9 +182,9 @@ xdp_monitor (and other trace samples) use another ELF loader than libbpf
 </p>
 </div>
 
-<div id="outline-container-org55df66d" class="outline-4">
-<h4 id="org55df66d"><span class="done DONE">DONE</span> xdp-tutorial: add tracepoint examples for reading XDP tracepoints</h4>
-<div class="outline-text-4" id="text-org55df66d">
+<div id="outline-container-xdp-tutorial%3A%20add%20tracepoint%20examples%20for%20reading%20XDP%20tracepoints" class="outline-4">
+<h4 id="xdp-tutorial%3A%20add%20tracepoint%20examples%20for%20reading%20XDP%20tracepoints"><a href="#xdp-tutorial%3A%20add%20tracepoint%20examples%20for%20reading%20XDP%20tracepoints"><span class="done DONE">DONE</span> xdp-tutorial: add tracepoint examples for reading XDP tracepoints</a></h4>
+<div class="outline-text-4" id="text-xdp-tutorial%3A%20add%20tracepoint%20examples%20for%20reading%20XDP%20tracepoints">
 <p>
 (This was merged as part of <a href="https://github.com/xdp-project/xdp-tutorial/pull/42">PR#42</a>)
 </p>
@@ -217,9 +216,9 @@ have much less overhead for getting info that BPF need.
 </div>
 </div>
 
-<div id="outline-container-org02cfed6" class="outline-4">
-<h4 id="org02cfed6"><span class="done DONE">DONE</span> xdp-tutorial: relate tracing to other assignments</h4>
-<div class="outline-text-4" id="text-org02cfed6">
+<div id="outline-container-xdp-tutorial%3A%20relate%20tracing%20to%20other%20assignments" class="outline-4">
+<h4 id="xdp-tutorial%3A%20relate%20tracing%20to%20other%20assignments"><a href="#xdp-tutorial%3A%20relate%20tracing%20to%20other%20assignments"><span class="done DONE">DONE</span> xdp-tutorial: relate tracing to other assignments</a></h4>
+<div class="outline-text-4" id="text-xdp-tutorial%3A%20relate%20tracing%20to%20other%20assignments">
 <p>
 (This was merged as part of <a href="https://github.com/xdp-project/xdp-tutorial/pull/42">PR#42</a>)
 </p>
@@ -237,9 +236,9 @@ this tracepoint.
 </div>
 </div>
 
-<div id="outline-container-org909a413" class="outline-4">
-<h4 id="org909a413"><span class="done DONE">DONE</span> xdp-tutorial: fix bugs for raw_tracepoints</h4>
-<div class="outline-text-4" id="text-org909a413">
+<div id="outline-container-xdp-tutorial%3A%20fix%20bugs%20for%20raw_tracepoints" class="outline-4">
+<h4 id="xdp-tutorial%3A%20fix%20bugs%20for%20raw_tracepoints"><a href="#xdp-tutorial%3A%20fix%20bugs%20for%20raw_tracepoints"><span class="done DONE">DONE</span> xdp-tutorial: fix bugs for raw_tracepoints</a></h4>
+<div class="outline-text-4" id="text-xdp-tutorial%3A%20fix%20bugs%20for%20raw_tracepoints">
 <p>
 The <a href="https://github.com/xdp-project/xdp-tutorial/pull/42">PR#42</a> contained some bugs for <a href="https://github.com/xdp-project/xdp-tutorial/tree/master/tracing02-xdp-monitor">tracing02-xdp-monitor</a>.
 The bug is tracked by <a href="https://github.com/xdp-project/xdp-tutorial/issues/48">issue#48</a>.
@@ -252,9 +251,9 @@ Deadline: This must be fixed before talk at <a href="https://bornhack.dk/bornhac
 </div>
 </div>
 
-<div id="outline-container-org0368e90" class="outline-3">
-<h3 id="org0368e90"><span class="todo TODO">TODO</span> xdp-tutorial: selftests project</h3>
-<div class="outline-text-3" id="text-org0368e90">
+<div id="outline-container-xdp-tutorial%3A%20selftests%20project" class="outline-3">
+<h3 id="xdp-tutorial%3A%20selftests%20project"><a href="#xdp-tutorial%3A%20selftests%20project"><span class="todo TODO">TODO</span> xdp-tutorial: selftests project</a></h3>
+<div class="outline-text-3" id="text-xdp-tutorial%3A%20selftests%20project">
 <p>
 We would like to have a system that (integrated with Makefile) that can run
 a selftest per assignment directory.
@@ -263,9 +262,9 @@ a selftest per assignment directory.
 </div>
 
 
-<div id="outline-container-org02c4978" class="outline-3">
-<h3 id="org02c4978"><span class="todo TODO">TODO</span> Solution for basic04</h3>
-<div class="outline-text-3" id="text-org02c4978">
+<div id="outline-container-Solution%20for%20basic04" class="outline-3">
+<h3 id="Solution%20for%20basic04"><a href="#Solution%20for%20basic04"><span class="todo TODO">TODO</span> Solution for basic04</a></h3>
+<div class="outline-text-3" id="text-Solution%20for%20basic04">
 <p>
 <span class="timestamp-wrapper"><span class="timestamp">[2019-06-04 Tue 14:52]</span></span>
 <a href="https://github.com/xdp-project/xdp-tutorial/issues/46">[xdp-project/xdp-tutorial] A solution for basic04 would be helpful (#46)</a>
@@ -273,33 +272,33 @@ a selftest per assignment directory.
 </div>
 </div>
 </div>
-<div id="outline-container-org4430627" class="outline-2">
-<h2 id="org4430627">Longer-term preliminary plans</h2>
-<div class="outline-text-2" id="text-org4430627">
+<div id="outline-container-Longer-term%20preliminary%20plans" class="outline-2">
+<h2 id="Longer-term%20preliminary%20plans"><a href="#Longer-term%20preliminary%20plans">Longer-term preliminary plans</a></h2>
+<div class="outline-text-2" id="text-Longer-term%20preliminary%20plans">
 </div>
-<div id="outline-container-orgc10acf9" class="outline-3">
-<h3 id="orgc10acf9"><span class="todo TODO">TODO</span> XDP-tutorial misc assignments</h3>
-<div class="outline-text-3" id="text-orgc10acf9">
+<div id="outline-container-XDP-tutorial%20misc%20assignments" class="outline-3">
+<h3 id="XDP-tutorial%20misc%20assignments"><a href="#XDP-tutorial%20misc%20assignments"><span class="todo TODO">TODO</span> XDP-tutorial misc assignments</a></h3>
+<div class="outline-text-3" id="text-XDP-tutorial%20misc%20assignments">
 </div>
-<div id="outline-container-org932eab1" class="outline-4">
-<h4 id="org932eab1"><span class="todo TODO">TODO</span> XDP-tutorial: Code xdp_stats to use/follow XDP bpf-id to maps</h4>
-<div class="outline-text-4" id="text-org932eab1">
+<div id="outline-container-XDP-tutorial%3A%20Code%20xdp_stats%20to%20use%2Ffollow%20XDP%20bpf-id%20to%20maps" class="outline-4">
+<h4 id="XDP-tutorial%3A%20Code%20xdp_stats%20to%20use%2Ffollow%20XDP%20bpf-id%20to%20maps"><a href="#XDP-tutorial%3A%20Code%20xdp_stats%20to%20use%2Ffollow%20XDP%20bpf-id%20to%20maps"><span class="todo TODO">TODO</span> XDP-tutorial: Code xdp_stats to use/follow XDP bpf-id to maps</a></h4>
+<div class="outline-text-4" id="text-XDP-tutorial%3A%20Code%20xdp_stats%20to%20use%2Ffollow%20XDP%20bpf-id%20to%20maps">
 <p>
 Update basic04 xdp_stats via XDP-id
 </p>
 </div>
 </div>
 
-<div id="outline-container-orge3a922a" class="outline-4">
-<h4 id="orge3a922a"><span class="todo TODO">TODO</span> XDP-tutorial: drawing and desc of veth-testlab</h4>
+<div id="outline-container-XDP-tutorial%3A%20drawing%20and%20desc%20of%20veth-testlab" class="outline-4">
+<h4 id="XDP-tutorial%3A%20drawing%20and%20desc%20of%20veth-testlab"><a href="#XDP-tutorial%3A%20drawing%20and%20desc%20of%20veth-testlab"><span class="todo TODO">TODO</span> XDP-tutorial: drawing and desc of veth-testlab</a></h4>
 </div>
-<div id="outline-container-org4af05f4" class="outline-4">
-<h4 id="org4af05f4"><span class="todo TODO">TODO</span> Best practices for using multiple programs on the same interface</h4>
+<div id="outline-container-Best%20practices%20for%20using%20multiple%20programs%20on%20the%20same%20interface" class="outline-4">
+<h4 id="Best%20practices%20for%20using%20multiple%20programs%20on%20the%20same%20interface"><a href="#Best%20practices%20for%20using%20multiple%20programs%20on%20the%20same%20interface"><span class="todo TODO">TODO</span> Best practices for using multiple programs on the same interface</a></h4>
 </div>
 
-<div id="outline-container-org6af6a15" class="outline-4">
-<h4 id="org6af6a15"><span class="todo TODO">TODO</span> Tutorial for debugging and introspection</h4>
-<div class="outline-text-4" id="text-org6af6a15">
+<div id="outline-container-Tutorial%20for%20debugging%20and%20introspection" class="outline-4">
+<h4 id="Tutorial%20for%20debugging%20and%20introspection"><a href="#Tutorial%20for%20debugging%20and%20introspection"><span class="todo TODO">TODO</span> Tutorial for debugging and introspection</a></h4>
+<div class="outline-text-4" id="text-Tutorial%20for%20debugging%20and%20introspection">
 <p>
 Things like
 </p>
@@ -314,7 +313,7 @@ Things like
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="date">Date: 2020-01-23 Thu 16:38</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

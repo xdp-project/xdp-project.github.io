@@ -3,7 +3,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-01-24 Fri 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>V2: Setup notes for board espressobin</title>
@@ -22,65 +21,66 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgc3807d0">Why Fedora 31</a></li>
-<li><a href="#org1f5cdce">Board info in U-Boot</a>
+<li><a href="#Why%20Fedora%2031">Why Fedora 31</a></li>
+<li><a href="#Board%20info%20in%20U-Boot">Board info in U-Boot</a>
 <ul>
-<li><a href="#org51a2d26">original printenv</a></li>
+<li><a href="#original%20printenv">original printenv</a></li>
 </ul>
 </li>
-<li><a href="#org3952857">Creating Fedora 31 rootfs.tar</a>
+<li><a href="#Creating%20Fedora%2031%20rootfs.tar">Creating Fedora 31 rootfs.tar</a>
 <ul>
-<li><a href="#org56df516">Official fedora approach</a></li>
-<li><a href="#org7dcf107">Download F31 image for aarch64</a></li>
-<li><a href="#org3334b22">Mounting raw image</a>
+<li><a href="#Official%20fedora%20approach">Official fedora approach</a></li>
+<li><a href="#Download%20F31%20image%20for%20aarch64">Download F31 image for aarch64</a></li>
+<li><a href="#Mounting%20raw%20image">Mounting raw image</a>
 <ul>
-<li><a href="#org4d3c98a">LVM tricks</a></li>
-<li><a href="#orgc0c5c7a">Mounting /dev/fedora/root</a></li>
+<li><a href="#LVM%20tricks">LVM tricks</a></li>
+<li><a href="#Mounting%20%2Fdev%2Ffedora%2Froot">Mounting /dev/fedora/root</a></li>
 </ul>
 </li>
-<li><a href="#org378fe26">Prepare and modify rootfs</a></li>
-<li><a href="#orgd4ddf0a">Create tarball</a></li>
+<li><a href="#Prepare%20and%20modify%20rootfs">Prepare and modify rootfs</a></li>
+<li><a href="#Create%20tarball">Create tarball</a></li>
 </ul>
 </li>
-<li><a href="#org8c7032a">Create SDcard</a>
+<li><a href="#Create%20SDcard">Create SDcard</a>
 <ul>
-<li><a href="#org21f82d2">sdcard: Partition</a></li>
-<li><a href="#org5b5df8d">sdcard: rootfs data</a></li>
-<li><a href="#orgf1bb093">sdcard: Update kernel</a></li>
+<li><a href="#sdcard%3A%20Partition">sdcard: Partition</a></li>
+<li><a href="#sdcard%3A%20rootfs%20data">sdcard: rootfs data</a></li>
+<li><a href="#sdcard%3A%20Update%20kernel">sdcard: Update kernel</a></li>
 </ul>
 </li>
-<li><a href="#org9e62c54">Setup U-Boot on Espressobin</a>
+<li><a href="#Setup%20U-Boot%20on%20Espressobin">Setup U-Boot on Espressobin</a>
 <ul>
-<li><a href="#org39f8f03">Initial failed boot</a></li>
-<li><a href="#org8618716">Setting U-Boot parameters</a></li>
-<li><a href="#org9e985ca">Update kernel on SDcard</a></li>
-<li><a href="#org81d8463">Populating /dev</a></li>
-<li><a href="#org4015b88">Fixing etc/fstab and etc/shadow</a></li>
+<li><a href="#Initial%20failed%20boot">Initial failed boot</a></li>
+<li><a href="#Setting%20U-Boot%20parameters">Setting U-Boot parameters</a></li>
+<li><a href="#Update%20kernel%20on%20SDcard">Update kernel on SDcard</a></li>
+<li><a href="#Populating%20%2Fdev">Populating /dev</a></li>
+<li><a href="#Fixing%20etc%2Ffstab%20and%20etc%2Fshadow">Fixing etc/fstab and etc/shadow</a></li>
 </ul>
 </li>
-<li><a href="#org99590db">Network setup</a>
+<li><a href="#Network%20setup">Network setup</a>
 <ul>
-<li><a href="#orgf7ccf31">Network interfaces</a></li>
-<li><a href="#org71d0105">Setup network old style (failed)</a></li>
-<li><a href="#orgcb8b362">Setup network new style (NetworkManager)</a>
+<li><a href="#Network%20interfaces">Network interfaces</a></li>
+<li><a href="#Setup%20network%20old%20style%20%28failed%29">Setup network old style (failed)</a></li>
+<li><a href="#Setup%20network%20new%20style%20%28NetworkManager%29">Setup network new style (NetworkManager)</a>
 <ul>
-<li><a href="#orgb1637f8">List current setup via nmcli</a></li>
-<li><a href="#org6a2f059">Task: Setup static IP-address in 'wan'</a></li>
+<li><a href="#List%20current%20setup%20via%20nmcli">List current setup via nmcli</a></li>
+<li><a href="#Task%3A%20Setup%20static%20IP-address%20in%20%27wan%27">Task: Setup static IP-address in 'wan'</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org7bf2031">Installing extra software</a>
+<li><a href="#Installing%20extra%20software">Installing extra software</a>
 <ul>
-<li><a href="#orgace7271">Installing LLVM version 9</a></li>
-<li><a href="#org0be1da1">Developer packages</a></li>
-<li><a href="#org0ff688e">Extra software packages</a></li>
-<li><a href="#org3b51c61">BCC and bpftrace</a></li>
+<li><a href="#Installing%20LLVM%20version%209">Installing LLVM version 9</a></li>
+<li><a href="#Developer%20packages">Developer packages</a></li>
+<li><a href="#Extra%20software%20packages">Extra software packages</a></li>
+<li><a href="#Dependencies%20for%20compiling%20bpftool">Dependencies for compiling bpftool</a></li>
+<li><a href="#BCC%20and%20bpftrace">BCC and bpftrace</a></li>
 </ul>
 </li>
-<li><a href="#org703f4ce">Setup adjustments</a>
+<li><a href="#Setup%20adjustments">Setup adjustments</a>
 <ul>
-<li><a href="#orgc902955">Disable audit</a></li>
+<li><a href="#Disable%20audit">Disable audit</a></li>
 </ul>
 </li>
 </ul>
@@ -102,9 +102,9 @@ The Espressobin board homepage:
 <li><a href="http://espressobin.net/tech-spec/">http://espressobin.net/tech-spec/</a></li>
 </ul>
 
-<div id="outline-container-orgc3807d0" class="outline-2">
-<h2 id="orgc3807d0">Why Fedora 31</h2>
-<div class="outline-text-2" id="text-orgc3807d0">
+<div id="outline-container-Why%20Fedora%2031" class="outline-2">
+<h2 id="Why%20Fedora%2031"><a href="#Why%20Fedora%2031">Why Fedora 31</a></h2>
+<div class="outline-text-2" id="text-Why%20Fedora%2031">
 <p>
 The main reason for choosing Fedora 31, is that this distro include LLVM9.
 This is connected with LLVM9 can produce BTF (BPF Type Format).
@@ -112,9 +112,9 @@ This is connected with LLVM9 can produce BTF (BPF Type Format).
 </div>
 </div>
 
-<div id="outline-container-org1f5cdce" class="outline-2">
-<h2 id="org1f5cdce">Board info in U-Boot</h2>
-<div class="outline-text-2" id="text-org1f5cdce">
+<div id="outline-container-Board%20info%20in%20U-Boot" class="outline-2">
+<h2 id="Board%20info%20in%20U-Boot"><a href="#Board%20info%20in%20U-Boot">Board info in U-Boot</a></h2>
+<div class="outline-text-2" id="text-Board%20info%20in%20U-Boot">
 <p>
 Jesper's new board:
 </p>
@@ -134,9 +134,9 @@ Comphy-2: SATA0         6 Gbps
 </pre>
 </div>
 
-<div id="outline-container-org51a2d26" class="outline-3">
-<h3 id="org51a2d26">original printenv</h3>
-<div class="outline-text-3" id="text-org51a2d26">
+<div id="outline-container-original%20printenv" class="outline-3">
+<h3 id="original%20printenv"><a href="#original%20printenv">original printenv</a></h3>
+<div class="outline-text-3" id="text-original%20printenv">
 <p>
 List existing env via printenv:
 </p>
@@ -186,18 +186,18 @@ Environment size: 1477/65532 bytes
 </div>
 </div>
 
-<div id="outline-container-org3952857" class="outline-2">
-<h2 id="org3952857">Creating Fedora 31 rootfs.tar</h2>
-<div class="outline-text-2" id="text-org3952857">
+<div id="outline-container-Creating%20Fedora%2031%20rootfs.tar" class="outline-2">
+<h2 id="Creating%20Fedora%2031%20rootfs.tar"><a href="#Creating%20Fedora%2031%20rootfs.tar">Creating Fedora 31 rootfs.tar</a></h2>
+<div class="outline-text-2" id="text-Creating%20Fedora%2031%20rootfs.tar">
 <p>
 This section describe the manual process of creating a rootfs for ARM64,
 based off the Fedora 31 aarch64 "raw" image.
 </p>
 </div>
 
-<div id="outline-container-org56df516" class="outline-3">
-<h3 id="org56df516">Official fedora approach</h3>
-<div class="outline-text-3" id="text-org56df516">
+<div id="outline-container-Official%20fedora%20approach" class="outline-3">
+<h3 id="Official%20fedora%20approach"><a href="#Official%20fedora%20approach">Official fedora approach</a></h3>
+<div class="outline-text-3" id="text-Official%20fedora%20approach">
 <p>
 We are not using this official fedora approach.
 The Fedora project do have ARM install wiki here:
@@ -214,9 +214,9 @@ ARM-32 bit boards (although I think I spotted a 64-bit board).
 </div>
 </div>
 
-<div id="outline-container-org7dcf107" class="outline-3">
-<h3 id="org7dcf107">Download F31 image for aarch64</h3>
-<div class="outline-text-3" id="text-org7dcf107">
+<div id="outline-container-Download%20F31%20image%20for%20aarch64" class="outline-3">
+<h3 id="Download%20F31%20image%20for%20aarch64"><a href="#Download%20F31%20image%20for%20aarch64">Download F31 image for aarch64</a></h3>
+<div class="outline-text-3" id="text-Download%20F31%20image%20for%20aarch64">
 <p>
 Download the <b>server edition</b> of "Fedora 31: Raw image for aarch64"
 </p>
@@ -234,9 +234,9 @@ All the Fedora Alternate Architectures image variants are here:
 </div>
 </div>
 
-<div id="outline-container-org3334b22" class="outline-3">
-<h3 id="org3334b22">Mounting raw image</h3>
-<div class="outline-text-3" id="text-org3334b22">
+<div id="outline-container-Mounting%20raw%20image" class="outline-3">
+<h3 id="Mounting%20raw%20image"><a href="#Mounting%20raw%20image">Mounting raw image</a></h3>
+<div class="outline-text-3" id="text-Mounting%20raw%20image">
 <p>
 It requires some tricks to mount the 'raw' file. Via using the <code>losetup</code>
 command:
@@ -271,9 +271,9 @@ mount: /mnt/raw: unknown filesystem type <span style="font-style: italic;">'LVM2
 </div>
 </div>
 
-<div id="outline-container-org4d3c98a" class="outline-4">
-<h4 id="org4d3c98a">LVM tricks</h4>
-<div class="outline-text-4" id="text-org4d3c98a">
+<div id="outline-container-LVM%20tricks" class="outline-4">
+<h4 id="LVM%20tricks"><a href="#LVM%20tricks">LVM tricks</a></h4>
+<div class="outline-text-4" id="text-LVM%20tricks">
 <p>
 Getting LVM help from guide:
 </p>
@@ -304,9 +304,9 @@ Activate it via: <code>vgchange -ay</code>
 </div>
 </div>
 
-<div id="outline-container-orgc0c5c7a" class="outline-4">
-<h4 id="orgc0c5c7a">Mounting /dev/fedora/root</h4>
-<div class="outline-text-4" id="text-orgc0c5c7a">
+<div id="outline-container-Mounting%20%2Fdev%2Ffedora%2Froot" class="outline-4">
+<h4 id="Mounting%20%2Fdev%2Ffedora%2Froot"><a href="#Mounting%20%2Fdev%2Ffedora%2Froot">Mounting /dev/fedora/root</a></h4>
+<div class="outline-text-4" id="text-Mounting%20%2Fdev%2Ffedora%2Froot">
 <p>
 Now <code>/dev/fedora/root</code> have appeared, lets mount it. Mounting the RAW image
 as root is important to get the file ownership permissions correct.
@@ -320,9 +320,9 @@ sudo mount /dev/fedora/root /mnt/fedora-rootfs
 </div>
 </div>
 
-<div id="outline-container-org378fe26" class="outline-3">
-<h3 id="org378fe26">Prepare and modify rootfs</h3>
-<div class="outline-text-3" id="text-org378fe26">
+<div id="outline-container-Prepare%20and%20modify%20rootfs" class="outline-3">
+<h3 id="Prepare%20and%20modify%20rootfs"><a href="#Prepare%20and%20modify%20rootfs">Prepare and modify rootfs</a></h3>
+<div class="outline-text-3" id="text-Prepare%20and%20modify%20rootfs">
 <p>
 The ARM64/aarch64 rootfs (<code>/dev/fedora/root</code>) is now mounted at
 <code>/mnt/fedora-rootfs</code>.
@@ -362,9 +362,9 @@ with e.g.:
 </div>
 </div>
 
-<div id="outline-container-orgd4ddf0a" class="outline-3">
-<h3 id="orgd4ddf0a">Create tarball</h3>
-<div class="outline-text-3" id="text-orgd4ddf0a">
+<div id="outline-container-Create%20tarball" class="outline-3">
+<h3 id="Create%20tarball"><a href="#Create%20tarball">Create tarball</a></h3>
+<div class="outline-text-3" id="text-Create%20tarball">
 <p>
 Create the tarball, with <code>-p</code> to preserves the permissions of the files put
 in the archive for restoration later:
@@ -379,9 +379,9 @@ sudo tar -cvpzf ../rootfs.tar.gz --one-file-system .
 </div>
 </div>
 
-<div id="outline-container-org8c7032a" class="outline-2">
-<h2 id="org8c7032a">Create SDcard</h2>
-<div class="outline-text-2" id="text-org8c7032a">
+<div id="outline-container-Create%20SDcard" class="outline-2">
+<h2 id="Create%20SDcard"><a href="#Create%20SDcard">Create SDcard</a></h2>
+<div class="outline-text-2" id="text-Create%20SDcard">
 <p>
 Given <a href="http://espressobin.net/tech-spec/">Espressobin download</a> doesn't have Fedora 31, we have to create a boot
 image from scratch.
@@ -395,9 +395,9 @@ Follow the instructions here:
 </ul>
 </div>
 
-<div id="outline-container-org21f82d2" class="outline-3">
-<h3 id="org21f82d2">sdcard: Partition</h3>
-<div class="outline-text-3" id="text-org21f82d2">
+<div id="outline-container-sdcard%3A%20Partition" class="outline-3">
+<h3 id="sdcard%3A%20Partition"><a href="#sdcard%3A%20Partition">sdcard: Partition</a></h3>
+<div class="outline-text-3" id="text-sdcard%3A%20Partition">
 <p>
 On my system, sdcard device name was also /dev/sdb. Created partition
 /dev/sdb1 and <code>ext4</code> formatted it like this:
@@ -422,9 +422,9 @@ mount /dev/sdb1 /mnt/sdcard
 </div>
 </div>
 
-<div id="outline-container-org5b5df8d" class="outline-3">
-<h3 id="org5b5df8d">sdcard: rootfs data</h3>
-<div class="outline-text-3" id="text-org5b5df8d">
+<div id="outline-container-sdcard%3A%20rootfs%20data" class="outline-3">
+<h3 id="sdcard%3A%20rootfs%20data"><a href="#sdcard%3A%20rootfs%20data">sdcard: rootfs data</a></h3>
+<div class="outline-text-3" id="text-sdcard%3A%20rootfs%20data">
 <p>
 Now it's time to use the 'rootfs.tar.gz' file that we created above.
 </p>
@@ -441,9 +441,9 @@ sudo tar -xpvf rootfs.tar.gz -C /mnt/sdcard --numeric-owner
 </div>
 </div>
 
-<div id="outline-container-orgf1bb093" class="outline-3">
-<h3 id="orgf1bb093">sdcard: Update kernel</h3>
-<div class="outline-text-3" id="text-orgf1bb093">
+<div id="outline-container-sdcard%3A%20Update%20kernel" class="outline-3">
+<h3 id="sdcard%3A%20Update%20kernel"><a href="#sdcard%3A%20Update%20kernel">sdcard: Update kernel</a></h3>
+<div class="outline-text-3" id="text-sdcard%3A%20Update%20kernel">
 <p>
 The contents in <i>mnt/sdcard/boot</i> is empty.  Thus, upload a kernel.
 </p>
@@ -497,9 +497,9 @@ Remember to unmount:
 </div>
 </div>
 
-<div id="outline-container-org9e62c54" class="outline-2">
-<h2 id="org9e62c54">Setup U-Boot on Espressobin</h2>
-<div class="outline-text-2" id="text-org9e62c54">
+<div id="outline-container-Setup%20U-Boot%20on%20Espressobin" class="outline-2">
+<h2 id="Setup%20U-Boot%20on%20Espressobin"><a href="#Setup%20U-Boot%20on%20Espressobin">Setup U-Boot on Espressobin</a></h2>
+<div class="outline-text-2" id="text-Setup%20U-Boot%20on%20Espressobin">
 <p>
 Again follow
 </p>
@@ -508,9 +508,9 @@ Again follow
 </ul>
 </div>
 
-<div id="outline-container-org39f8f03" class="outline-3">
-<h3 id="org39f8f03">Initial failed boot</h3>
-<div class="outline-text-3" id="text-org39f8f03">
+<div id="outline-container-Initial%20failed%20boot" class="outline-3">
+<h3 id="Initial%20failed%20boot"><a href="#Initial%20failed%20boot">Initial failed boot</a></h3>
+<div class="outline-text-3" id="text-Initial%20failed%20boot">
 <p>
 Without any setup boards fails to boot with following output:
 </p>
@@ -550,9 +550,9 @@ Marvell&gt;&gt;
 </div>
 </div>
 
-<div id="outline-container-org8618716" class="outline-3">
-<h3 id="org8618716">Setting U-Boot parameters</h3>
-<div class="outline-text-3" id="text-org8618716">
+<div id="outline-container-Setting%20U-Boot%20parameters" class="outline-3">
+<h3 id="Setting%20U-Boot%20parameters"><a href="#Setting%20U-Boot%20parameters">Setting U-Boot parameters</a></h3>
+<div class="outline-text-3" id="text-Setting%20U-Boot%20parameters">
 <p>
 Listing contents of mmc:
 </p>
@@ -598,9 +598,9 @@ Bad Linux ARM64 Image magic!
 </div>
 </div>
 
-<div id="outline-container-org9e985ca" class="outline-3">
-<h3 id="org9e985ca">Update kernel on SDcard</h3>
-<div class="outline-text-3" id="text-org9e985ca">
+<div id="outline-container-Update%20kernel%20on%20SDcard" class="outline-3">
+<h3 id="Update%20kernel%20on%20SDcard"><a href="#Update%20kernel%20on%20SDcard">Update kernel on SDcard</a></h3>
+<div class="outline-text-3" id="text-Update%20kernel%20on%20SDcard">
 <p>
 The kernel on SDcard seems be broken, try to update it.
 Follow compile instruction in <a href="arm02_cross_compile_setup.html">arm02_cross_compile_setup.html</a>.
@@ -639,9 +639,9 @@ Press Enter to continue.
 </div>
 </div>
 
-<div id="outline-container-org81d8463" class="outline-3">
-<h3 id="org81d8463">Populating /dev</h3>
-<div class="outline-text-3" id="text-org81d8463">
+<div id="outline-container-Populating%20%2Fdev" class="outline-3">
+<h3 id="Populating%20%2Fdev"><a href="#Populating%20%2Fdev">Populating /dev</a></h3>
+<div class="outline-text-3" id="text-Populating%20%2Fdev">
 <p>
 The rootfs was extracted as root, but it seems that come files in <code>/dev</code>
 have not been created correctly.
@@ -688,9 +688,9 @@ Issue: System still doesn't boot.
 </div>
 </div>
 
-<div id="outline-container-org4015b88" class="outline-3">
-<h3 id="org4015b88">Fixing etc/fstab and etc/shadow</h3>
-<div class="outline-text-3" id="text-org4015b88">
+<div id="outline-container-Fixing%20etc%2Ffstab%20and%20etc%2Fshadow" class="outline-3">
+<h3 id="Fixing%20etc%2Ffstab%20and%20etc%2Fshadow"><a href="#Fixing%20etc%2Ffstab%20and%20etc%2Fshadow">Fixing etc/fstab and etc/shadow</a></h3>
+<div class="outline-text-3" id="text-Fixing%20etc%2Ffstab%20and%20etc%2Fshadow">
 <p>
 Real issue seems to be related to not mounting rootfs:
 </p>
@@ -731,18 +731,18 @@ Do remember to set a password after boot!
 
 
 
-<div id="outline-container-org99590db" class="outline-2">
-<h2 id="org99590db">Network setup</h2>
-<div class="outline-text-2" id="text-org99590db">
+<div id="outline-container-Network%20setup" class="outline-2">
+<h2 id="Network%20setup"><a href="#Network%20setup">Network setup</a></h2>
+<div class="outline-text-2" id="text-Network%20setup">
 <p>
 Keeping network simple via old-style <code>/etc/sysconfig/network-scripts/</code>
 files.
 </p>
 </div>
 
-<div id="outline-container-orgf7ccf31" class="outline-3">
-<h3 id="orgf7ccf31">Network interfaces</h3>
-<div class="outline-text-3" id="text-orgf7ccf31">
+<div id="outline-container-Network%20interfaces" class="outline-3">
+<h3 id="Network%20interfaces"><a href="#Network%20interfaces">Network interfaces</a></h3>
+<div class="outline-text-3" id="text-Network%20interfaces">
 <p>
 Network interfaces available:
 </p>
@@ -769,9 +769,9 @@ driver: dsa
 </div>
 </div>
 
-<div id="outline-container-org71d0105" class="outline-3">
-<h3 id="org71d0105">Setup network old style (failed)</h3>
-<div class="outline-text-3" id="text-org71d0105">
+<div id="outline-container-Setup%20network%20old%20style%20%28failed%29" class="outline-3">
+<h3 id="Setup%20network%20old%20style%20%28failed%29"><a href="#Setup%20network%20old%20style%20%28failed%29">Setup network old style (failed)</a></h3>
+<div class="outline-text-3" id="text-Setup%20network%20old%20style%20%28failed%29">
 <p>
 File: /etc/sysconfig/network-scripts/ifcfg-wan
 </p>
@@ -809,18 +809,18 @@ Error: unknown connection '/etc/sysconfig/network-scripts/ifcfg-wan'.
 </div>
 </div>
 
-<div id="outline-container-orgcb8b362" class="outline-3">
-<h3 id="orgcb8b362">Setup network new style (NetworkManager)</h3>
-<div class="outline-text-3" id="text-orgcb8b362">
+<div id="outline-container-Setup%20network%20new%20style%20%28NetworkManager%29" class="outline-3">
+<h3 id="Setup%20network%20new%20style%20%28NetworkManager%29"><a href="#Setup%20network%20new%20style%20%28NetworkManager%29">Setup network new style (NetworkManager)</a></h3>
+<div class="outline-text-3" id="text-Setup%20network%20new%20style%20%28NetworkManager%29">
 <p>
 Still want/need to strictly use cmdline tools for network setup, given the
 access is over USB serial cable (via minicom).
 </p>
 </div>
 
-<div id="outline-container-orgb1637f8" class="outline-4">
-<h4 id="orgb1637f8">List current setup via nmcli</h4>
-<div class="outline-text-4" id="text-orgb1637f8">
+<div id="outline-container-List%20current%20setup%20via%20nmcli" class="outline-4">
+<h4 id="List%20current%20setup%20via%20nmcli"><a href="#List%20current%20setup%20via%20nmcli">List current setup via nmcli</a></h4>
+<div class="outline-text-4" id="text-List%20current%20setup%20via%20nmcli">
 <p>
 Trying out <code>nmcli</code> command:
 </p>
@@ -853,9 +853,9 @@ lan1: unavailable
 </div>
 </div>
 
-<div id="outline-container-org6a2f059" class="outline-4">
-<h4 id="org6a2f059">Task: Setup static IP-address in 'wan'</h4>
-<div class="outline-text-4" id="text-org6a2f059">
+<div id="outline-container-Task%3A%20Setup%20static%20IP-address%20in%20%27wan%27" class="outline-4">
+<h4 id="Task%3A%20Setup%20static%20IP-address%20in%20%27wan%27"><a href="#Task%3A%20Setup%20static%20IP-address%20in%20%27wan%27">Task: Setup static IP-address in 'wan'</a></h4>
+<div class="outline-text-4" id="text-Task%3A%20Setup%20static%20IP-address%20in%20%27wan%27">
 <p>
 List connections:
 </p>
@@ -896,13 +896,13 @@ nmcli connection up   7b62939e-5b3c-3876-84f6-87aa08be43f3
 </div>
 
 
-<div id="outline-container-org7bf2031" class="outline-2">
-<h2 id="org7bf2031">Installing extra software</h2>
-<div class="outline-text-2" id="text-org7bf2031">
+<div id="outline-container-Installing%20extra%20software" class="outline-2">
+<h2 id="Installing%20extra%20software"><a href="#Installing%20extra%20software">Installing extra software</a></h2>
+<div class="outline-text-2" id="text-Installing%20extra%20software">
 </div>
-<div id="outline-container-orgace7271" class="outline-3">
-<h3 id="orgace7271">Installing LLVM version 9</h3>
-<div class="outline-text-3" id="text-orgace7271">
+<div id="outline-container-Installing%20LLVM%20version%209" class="outline-3">
+<h3 id="Installing%20LLVM%20version%209"><a href="#Installing%20LLVM%20version%209">Installing LLVM version 9</a></h3>
+<div class="outline-text-3" id="text-Installing%20LLVM%20version%209">
 <p>
 It is a priority to get LLVM9 working on arm64.
 </p>
@@ -989,9 +989,9 @@ dnf install -y clang
 </div>
 </div>
 
-<div id="outline-container-org0be1da1" class="outline-3">
-<h3 id="org0be1da1">Developer packages</h3>
-<div class="outline-text-3" id="text-org0be1da1">
+<div id="outline-container-Developer%20packages" class="outline-3">
+<h3 id="Developer%20packages"><a href="#Developer%20packages">Developer packages</a></h3>
+<div class="outline-text-3" id="text-Developer%20packages">
 <p>
 Installing devel packages for building the kernel. We usually cross compile
 kernel on a faster build host and push/rsync it to target host (see
@@ -1010,9 +1010,9 @@ avail on the ARM64/aarch64 target system.
 </div>
 </div>
 
-<div id="outline-container-org0ff688e" class="outline-3">
-<h3 id="org0ff688e">Extra software packages</h3>
-<div class="outline-text-3" id="text-org0ff688e">
+<div id="outline-container-Extra%20software%20packages" class="outline-3">
+<h3 id="Extra%20software%20packages"><a href="#Extra%20software%20packages">Extra software packages</a></h3>
+<div class="outline-text-3" id="text-Extra%20software%20packages">
 <p>
 For building xdp-tcpdump install: <code>libpcap-devel</code>
 </p>
@@ -1023,12 +1023,32 @@ dnf install -y perf
 dnf install -y vim
 </pre>
 </div>
+
+<p>
+Getting pahole:
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">dnf install -y dwarves
+</pre>
+</div>
 </div>
 </div>
 
-<div id="outline-container-org3b51c61" class="outline-3">
-<h3 id="org3b51c61">BCC and bpftrace</h3>
-<div class="outline-text-3" id="text-org3b51c61">
+<div id="outline-container-Dependencies%20for%20compiling%20bpftool" class="outline-3">
+<h3 id="Dependencies%20for%20compiling%20bpftool"><a href="#Dependencies%20for%20compiling%20bpftool">Dependencies for compiling bpftool</a></h3>
+<div class="outline-text-3" id="text-Dependencies%20for%20compiling%20bpftool">
+<pre class="example">
+dnf install binutils-devel  # bfd.h
+dnf builddep -y bpftool
+dnf install -y readline-devel  # readline/readline.h
+</pre>
+</div>
+</div>
+
+
+<div id="outline-container-BCC%20and%20bpftrace" class="outline-3">
+<h3 id="BCC%20and%20bpftrace"><a href="#BCC%20and%20bpftrace">BCC and bpftrace</a></h3>
+<div class="outline-text-3" id="text-BCC%20and%20bpftrace">
 <pre class="example">
 dnf install -y bcc
 
@@ -1075,13 +1095,17 @@ Installing dependencies:
  ncurses-c++-libs                 aarch64                6.1-12.20190803.fc31                   fedora                  37 k
  ncurses-devel                    aarch64                6.1-12.20190803.fc31                   fedora                 503 k
 </pre>
+
+<p>
+Also install F31 version: <code>dnf install -y bpftrace</code>
+</p>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org703f4ce" class="outline-2">
-<h2 id="org703f4ce">Setup adjustments</h2>
-<div class="outline-text-2" id="text-org703f4ce">
+<div id="outline-container-Setup%20adjustments" class="outline-2">
+<h2 id="Setup%20adjustments"><a href="#Setup%20adjustments">Setup adjustments</a></h2>
+<div class="outline-text-2" id="text-Setup%20adjustments">
 <p>
 Notes about some setup adjustments.
 </p>
@@ -1104,9 +1128,9 @@ Loading libs from <i>usr/local</i>
 </div>
 </div>
 
-<div id="outline-container-orgc902955" class="outline-3">
-<h3 id="orgc902955">Disable audit</h3>
-<div class="outline-text-3" id="text-orgc902955">
+<div id="outline-container-Disable%20audit" class="outline-3">
+<h3 id="Disable%20audit"><a href="#Disable%20audit">Disable audit</a></h3>
+<div class="outline-text-3" id="text-Disable%20audit">
 <pre class="example">
 systemctl disable auditd.service
 systemctl mask systemd-journald-audit.socket
@@ -1116,7 +1140,7 @@ systemctl mask systemd-journald-audit.socket
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="date">Date: 2020-01-24 Fri 10:58</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

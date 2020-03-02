@@ -3,7 +3,6 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-01-24 Fri 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>&lrm;</title>
@@ -21,15 +20,15 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org11d527e">XDP for TSN (Time-Sensitive Networking)</a></li>
-<li><a href="#orgf98d5e4">Measuring on armv8</a></li>
-<li><a href="#orgda260d3">Caveats and future improvements/testcases</a></li>
+<li><a href="#XDP%20for%20TSN%20%28Time-Sensitive%20Networking%29">XDP for TSN (Time-Sensitive Networking)</a></li>
+<li><a href="#Measuring%20on%20armv8">Measuring on armv8</a></li>
+<li><a href="#Caveats%20and%20future%20improvements%2Ftestcases">Caveats and future improvements/testcases</a></li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org11d527e" class="outline-2">
-<h2 id="org11d527e">XDP for TSN (Time-Sensitive Networking)</h2>
-<div class="outline-text-2" id="text-org11d527e">
+<div id="outline-container-XDP%20for%20TSN%20%28Time-Sensitive%20Networking%29" class="outline-2">
+<h2 id="XDP%20for%20TSN%20%28Time-Sensitive%20Networking%29"><a href="#XDP%20for%20TSN%20%28Time-Sensitive%20Networking%29">XDP for TSN (Time-Sensitive Networking)</a></h2>
+<div class="outline-text-2" id="text-XDP%20for%20TSN%20%28Time-Sensitive%20Networking%29">
 <p>
 TSN requires low latency and bounded jitter. 
 Although XDP doesn't offer bounded jitter the latency is greatly improved
@@ -41,9 +40,9 @@ jitter on the Rx path.
 </div>
 </div>
 
-<div id="outline-container-orgf98d5e4" class="outline-2">
-<h2 id="orgf98d5e4">Measuring on armv8</h2>
-<div class="outline-text-2" id="text-orgf98d5e4">
+<div id="outline-container-Measuring%20on%20armv8" class="outline-2">
+<h2 id="Measuring%20on%20armv8"><a href="#Measuring%20on%20armv8">Measuring on armv8</a></h2>
+<div class="outline-text-2" id="text-Measuring%20on%20armv8">
 <p>
 An easy way of measuring latency from the napi Rx poller down to user-space
 is piggyback on XDP data_meta of the xdp_buff struct.
@@ -69,18 +68,24 @@ completes at EL0 without the need of any system calls.
 </p>
 
 <p>
+If CNTFRQ_EL0 does not offer a decent granularity (i.e at least 1ns)
+use ktime_get_ns()
+</p>
+
+<p>
 pseudo code can look line this:
 </p>
 <div class="org-src-container">
 <pre class="src src-C">- kernel driver:
 
+<span style="font-weight: bold;">#define</span> <span style="font-weight: bold;">isb</span>() <span style="font-weight: bold;">asm</span> <span style="font-weight: bold;">volatile</span>(<span style="font-style: italic;">"isb"</span> : : : <span style="font-style: italic;">"memory"</span>)
 napi_poller(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">netsec_priv</span> *<span style="font-weight: bold; font-style: italic;">priv</span>, <span style="font-weight: bold; text-decoration: underline;">int</span> <span style="font-weight: bold; font-style: italic;">budget</span>)
 {
       <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">xdp_buff</span> <span style="font-weight: bold; font-style: italic;">xdp</span>;
       <span style="font-weight: bold; text-decoration: underline;">u64</span> <span style="font-weight: bold; font-style: italic;">ts</span>;
 
+      isb();
         <span style="font-weight: bold;">asm</span> <span style="font-weight: bold;">volatile</span>(<span style="font-style: italic;">"mrs %0, CNTVCT_EL0"</span> : <span style="font-style: italic;">"=r"</span> (ts));
-      <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">asm volatile ("isb sy"); </span><span style="font-weight: bold; font-style: italic;">*/</span>
 
       <span style="font-weight: bold;">while</span> (done &lt; budget) {
             <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">place timestamp ahead of the packet </span><span style="font-weight: bold; font-style: italic;">*/</span>
@@ -169,9 +174,9 @@ account for possibly missed packets etc.
 </div>
 </div>
 
-<div id="outline-container-orgda260d3" class="outline-2">
-<h2 id="orgda260d3">Caveats and future improvements/testcases</h2>
-<div class="outline-text-2" id="text-orgda260d3">
+<div id="outline-container-Caveats%20and%20future%20improvements%2Ftestcases" class="outline-2">
+<h2 id="Caveats%20and%20future%20improvements%2Ftestcases"><a href="#Caveats%20and%20future%20improvements%2Ftestcases">Caveats and future improvements/testcases</a></h2>
+<div class="outline-text-2" id="text-Caveats%20and%20future%20improvements%2Ftestcases">
 <p>
 This approach will <b>not</b> offer absolute timings and can't serve as a
 guarantee. 
@@ -198,7 +203,7 @@ latencies and compare them with the default linux network stack.
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2020-01-24 Fri 16:09</p>
+<p class="date">Date: 2020-01-30 Thu 17:55</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
