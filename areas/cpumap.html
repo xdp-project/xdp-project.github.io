@@ -32,7 +32,11 @@
 <ul>
 <li><a href="#cpumap--Create-script-MQ-HTB-silo-setup"><span class="done DONE">DONE</span> cpumap: Create script MQ-HTB silo setup</a></li>
 <li><a href="#cpumap--Test-cpumap-redirect-works-with-MQ-HTB-silo-setup"><span class="done DONE">DONE</span> cpumap: Test cpumap redirect works with MQ-HTB silo setup</a></li>
-<li><a href="#Allow-BPF-clsact-write-access-to-skb--queue_mapping"><span class="done DONE">DONE</span> Allow BPF clsact write access to skb-&gt;queue_mapping</a></li>
+<li><a href="#Allow-BPF-clsact-write-access-to-skb--queue_mapping"><span class="done DONE">DONE</span> Allow BPF clsact write access to skb-&gt;queue_mapping</a>
+<ul>
+<li><a href="#Code-analysis-before-BPF-helper-for-skb_set_queue_mapping"><span class="done DONE">DONE</span> Code analysis before BPF helper for skb_set_queue_mapping</a></li>
+</ul>
+</li>
 <li><a href="#TC-skbedit--possible-issue-with-TC-action-skbedit"><span class="done DONE">DONE</span> TC-skbedit: possible issue with TC action skbedit</a></li>
 <li><a href="#cpumap--create-git-project-xdp-cpumap-tc"><span class="done DONE">DONE</span> cpumap: create git project xdp-cpumap-tc</a></li>
 <li><a href="#xdp-cpumap-tc--add-some-documentation"><span class="todo TODO">TODO</span> xdp-cpumap-tc: add some documentation</a></li>
@@ -176,8 +180,8 @@ configured. This could be set by e.g. using TC filter/action <code>skbedit</code
 </p>
 </div>
 
-<ul class="org-ul">
-<li><a id="Code-analysis-before-BPF-helper-for-skb_set_queue_mapping"></a><a href="#Code-analysis-before-BPF-helper-for-skb_set_queue_mapping"><span class="done DONE">DONE</span> Code analysis before BPF helper for skb_set_queue_mapping</a><br />
+<div id="outline-container-Code-analysis-before-BPF-helper-for-skb_set_queue_mapping" class="outline-5">
+<h5 id="Code-analysis-before-BPF-helper-for-skb_set_queue_mapping"><a href="#Code-analysis-before-BPF-helper-for-skb_set_queue_mapping"><span class="done DONE">DONE</span> Code analysis before BPF helper for skb_set_queue_mapping</a></h5>
 <div class="outline-text-5" id="text-Code-analysis-before-BPF-helper-for-skb_set_queue_mapping">
 <p>
 Following the kernel code is a little tricky, so adding some notes here.
@@ -270,8 +274,7 @@ little tricky to spot. Unless XPS via <code>get_xps_queue</code> overrides by fi
 (And for IP-forwarding there is not <code>sk</code> socket).
 </p>
 </div>
-</li>
-</ul>
+</div>
 </div>
 
 <div id="outline-container-TC-skbedit--possible-issue-with-TC-action-skbedit" class="outline-4">

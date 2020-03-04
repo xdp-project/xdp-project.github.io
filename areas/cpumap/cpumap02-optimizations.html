@@ -37,41 +37,96 @@
 </li>
 <li><a href="#baseline">baseline</a>
 <ul>
-<li><a href="#NIC--i40e1---Kernel--5.1.0-rc2-bpf-next-cpumap-baseline-">NIC: i40e1 - Kernel: 5.1.0-rc2-bpf-next-cpumap-baseline+</a></li>
-<li><a href="#NIC--i40e1---UDP-socket-baseline">NIC: i40e1 - UDP socket baseline</a></li>
-<li><a href="#NIC--i40e1---baseline-cpumap-redirect">NIC: i40e1 - baseline cpumap redirect</a></li>
+<li><a href="#NIC--i40e1---Kernel--5.1.0-rc2-bpf-next-cpumap-baseline-">NIC: i40e1 - Kernel: 5.1.0-rc2-bpf-next-cpumap-baseline+</a>
+<ul>
+<li><a href="#baseline--UdpNoPorts--3-326-983-pps">baseline: UdpNoPorts: 3,326,983 pps</a></li>
+<li><a href="#baseline--iptables-raw-drop--5-705-245-pps--GRO-enabled-">baseline: iptables-raw drop: 5,705,245 pps (GRO-enabled)</a></li>
+<li><a href="#baseline--iptables-raw-drop--6-701-692-pps--GRO-disabled-">baseline: iptables-raw drop: 6,701,692 pps (GRO-disabled)</a></li>
+</ul>
+</li>
+<li><a href="#NIC--i40e1---UDP-socket-baseline">NIC: i40e1 - UDP socket baseline</a>
+<ul>
+<li><a href="#udp_sink--same-CPU-as-RX---718-135-pps">udp_sink: same CPU as RX = 718,135 pps</a></li>
+<li><a href="#udp_sink--another-CPU-than-RX---2-311-585-pps">udp_sink: another CPU than RX = 2,311,585 pps</a></li>
+</ul>
+</li>
+<li><a href="#NIC--i40e1---baseline-cpumap-redirect">NIC: i40e1 - baseline cpumap redirect</a>
+<ul>
+<li><a href="#baseline-redirect--UdpNoPorts--2-727-840-pps">baseline-redirect: UdpNoPorts: 2,727,840 pps</a></li>
+<li><a href="#baseline-redirect--iptables-raw-drop--6-166-709-pps">baseline-redirect: iptables-raw drop: 6,166,709 pps</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#Patch--bpf--cpumap-use-ptr_ring_consume_batched">Patch: bpf: cpumap use ptr_ring_consume_batched</a>
 <ul>
-<li><a href="#benchmarks-on-this-patch">benchmarks on this patch</a></li>
+<li><a href="#benchmarks-on-this-patch">benchmarks on this patch</a>
+<ul>
+<li><a href="#redirect--UdpNoPorts--2-817-054">redirect: UdpNoPorts: 2,817,054</a></li>
+<li><a href="#redirect--iptables-raw-drop--6-328-978">redirect: iptables-raw drop: 6,328,978</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#Patch--bpf--cpumap-send-a-SKB-list-towards-network-stack.">Patch: bpf: cpumap send a SKB-list towards network stack.</a>
 <ul>
-<li><a href="#benchmark01-on-this-patch">benchmark01 on this patch</a></li>
-<li><a href="#benchmark02-on-this-patch">benchmark02 on this patch</a></li>
+<li><a href="#benchmark01-on-this-patch">benchmark01 on this patch</a>
+<ul>
+<li><a href="#redirect--UdpNoPorts--2-846-583">redirect: UdpNoPorts: 2,846,583</a></li>
+<li><a href="#redirect--iptables-raw-drop--5-535-958">redirect: iptables-raw drop: 5,535,958</a></li>
+<li><a href="#iptables-raw-drop--5-378-828-pps--GRO-enabled-">iptables-raw drop: 5,378,828 pps (GRO-enabled)</a></li>
+</ul>
+</li>
+<li><a href="#benchmark02-on-this-patch">benchmark02 on this patch</a>
+<ul>
+<li><a href="#redirect--UdpNoPorts--2-829-666">redirect: UdpNoPorts: 2,829,666</a></li>
+<li><a href="#redirect--iptables-raw-drop--5-529-818">redirect: iptables-raw drop: 5,529,818</a></li>
+<li><a href="#iptables-raw-drop--5-420-909">iptables-raw drop: 5,420,909</a></li>
+</ul>
+</li>
 <li><a href="#benchmark03-more-reorg">benchmark03 more reorg</a></li>
 </ul>
 </li>
 <li><a href="#Patch--net--core--introduce-build_skb_around">Patch: net: core: introduce build_skb_around</a>
 <ul>
-<li><a href="#Patch--net--core--introduce-build_skb_around--benchmarks-on-this-patch">benchmarks on this patch</a></li>
+<li><a href="#Patch--net--core--introduce-build_skb_around--benchmarks-on-this-patch">benchmarks on this patch</a>
+<ul>
+<li><a href="#redirect--UdpNoPorts--2-832-411">redirect: UdpNoPorts: 2,832,411</a></li>
+<li><a href="#redirect--iptables-raw-drop--5-522-555">redirect: iptables-raw drop: 5,522,555</a></li>
+<li><a href="#iptables-raw-drop--5-396-717">iptables-raw drop: 5,396,717</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#Patch--bpf--cpumap-do-bulk-allocation-of-SKBs">Patch: bpf: cpumap do bulk allocation of SKBs</a>
 <ul>
-<li><a href="#Patch--bpf--cpumap-do-bulk-allocation-of-SKBs--benchmarks-on-this-patch">benchmarks on this patch</a></li>
+<li><a href="#Patch--bpf--cpumap-do-bulk-allocation-of-SKBs--benchmarks-on-this-patch">benchmarks on this patch</a>
+<ul>
+<li><a href="#redirect--UdpNoPorts--2-943-928">redirect: UdpNoPorts: 2,943,928</a></li>
+<li><a href="#redirect--iptables-raw-drop--5-908-032">redirect: iptables-raw drop: 5,908,032</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#Patch--bpf--cpumap-memory-prefetchw-optimizations-for-struct-page">Patch: bpf: cpumap memory prefetchw optimizations for struct page</a>
 <ul>
-<li><a href="#Patch--bpf--cpumap-memory-prefetchw-optimizations-for-struct-page--benchmarks-on-this-patch">benchmarks on this patch</a></li>
+<li><a href="#Patch--bpf--cpumap-memory-prefetchw-optimizations-for-struct-page--benchmarks-on-this-patch">benchmarks on this patch</a>
+<ul>
+<li><a href="#redirect--UdpNoPorts--3-270-640">redirect: UdpNoPorts: 3,270,640</a></li>
+<li><a href="#redirect--iptables-raw-drop--6-882-973">redirect: iptables-raw drop: 6,882,973</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#test-reorg">test reorg</a>
 <ul>
-<li><a href="#benchmarks-on-experimental-patch">benchmarks on experimental patch</a></li>
+<li><a href="#benchmarks-on-experimental-patch">benchmarks on experimental patch</a>
+<ul>
+<li><a href="#redirect--UdpNoPorts--3-060-774">redirect: UdpNoPorts: 3,060,774</a></li>
+<li><a href="#redirect--iptables-raw-drop--7-035-517">redirect: iptables-raw drop: 7,035,517</a></li>
+<li><a href="#iptables-raw-drop--5-412-097--GRO-enabled-">iptables-raw drop: 5,412,097 (GRO-enabled)</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -233,8 +288,8 @@ supports-priv-flags: yes
 </pre>
 </div>
 
-<ul class="org-ul">
-<li><a id="baseline--UdpNoPorts--3-326-983-pps"></a><a href="#baseline--UdpNoPorts--3-326-983-pps">baseline: UdpNoPorts: 3,326,983 pps</a><br />
+<div id="outline-container-baseline--UdpNoPorts--3-326-983-pps" class="outline-5">
+<h5 id="baseline--UdpNoPorts--3-326-983-pps"><a href="#baseline--UdpNoPorts--3-326-983-pps">baseline: UdpNoPorts: 3,326,983 pps</a></h5>
 <div class="outline-text-5" id="text-baseline--UdpNoPorts--3-326-983-pps">
 <p>
 Unloaded all netfilter/iptables modules.
@@ -255,9 +310,10 @@ IpExtOutOctets                  74                 0.0
 IpExtInNoECTPkts                3327010            0.0
 </pre>
 </div>
-</li>
+</div>
 
-<li><a id="baseline--iptables-raw-drop--5-705-245-pps--GRO-enabled-"></a><a href="#baseline--iptables-raw-drop--5-705-245-pps--GRO-enabled-">baseline: iptables-raw drop: 5,705,245 pps (GRO-enabled)</a><br />
+<div id="outline-container-baseline--iptables-raw-drop--5-705-245-pps--GRO-enabled-" class="outline-5">
+<h5 id="baseline--iptables-raw-drop--5-705-245-pps--GRO-enabled-"><a href="#baseline--iptables-raw-drop--5-705-245-pps--GRO-enabled-">baseline: iptables-raw drop: 5,705,245 pps (GRO-enabled)</a></h5>
 <div class="outline-text-5" id="text-baseline--iptables-raw-drop--5-705-245-pps--GRO-enabled-">
 <p>
 Command used to drop packets:
@@ -277,9 +333,10 @@ IpExtInOctets                   262445778          0.0
 IpExtInNoECTPkts                5705343            0.0
 </pre>
 </div>
-</li>
+</div>
 
-<li><a id="baseline--iptables-raw-drop--6-701-692-pps--GRO-disabled-"></a><a href="#baseline--iptables-raw-drop--6-701-692-pps--GRO-disabled-">baseline: iptables-raw drop: 6,701,692 pps (GRO-disabled)</a><br />
+<div id="outline-container-baseline--iptables-raw-drop--6-701-692-pps--GRO-disabled-" class="outline-5">
+<h5 id="baseline--iptables-raw-drop--6-701-692-pps--GRO-disabled-"><a href="#baseline--iptables-raw-drop--6-701-692-pps--GRO-disabled-">baseline: iptables-raw drop: 6,701,692 pps (GRO-disabled)</a></h5>
 <div class="outline-text-5" id="text-baseline--iptables-raw-drop--6-701-692-pps--GRO-disabled-">
 <p>
 Command to disable GRO:
@@ -296,8 +353,7 @@ IpExtInOctets                   308276958          0.0
 IpExtInNoECTPkts                6701673            0.0
 </pre>
 </div>
-</li>
-</ul>
+</div>
 </div>
 
 <div id="outline-container-NIC--i40e1---UDP-socket-baseline" class="outline-4">
@@ -320,8 +376,8 @@ stealing CPU-time-slices from).
 </p>
 </div>
 
-<ul class="org-ul">
-<li><a id="udp_sink--same-CPU-as-RX---718-135-pps"></a><a href="#udp_sink--same-CPU-as-RX---718-135-pps">udp_sink: same CPU as RX = 718,135 pps</a><br />
+<div id="outline-container-udp_sink--same-CPU-as-RX---718-135-pps" class="outline-5">
+<h5 id="udp_sink--same-CPU-as-RX---718-135-pps"><a href="#udp_sink--same-CPU-as-RX---718-135-pps">udp_sink: same CPU as RX = 718,135 pps</a></h5>
 <div class="outline-text-5" id="text-udp_sink--same-CPU-as-RX---718-135-pps">
 <pre class="example">
 [jbrouer@broadwell src]$ sudo taskset -c 1 ./udp_sink --port 9 --recvmsg --repeat 1000 --reuse
@@ -337,9 +393,10 @@ recvmsg   	run:  7	 1000000	1398.32	715144.81	5033	18	 demux:1
 recvmsg   	run:  8	 1000000	1392.27	718250.94	5012	18	 demux:1
 </pre>
 </div>
-</li>
+</div>
 
-<li><a id="udp_sink--another-CPU-than-RX---2-311-585-pps"></a><a href="#udp_sink--another-CPU-than-RX---2-311-585-pps">udp_sink: another CPU than RX = 2,311,585 pps</a><br />
+<div id="outline-container-udp_sink--another-CPU-than-RX---2-311-585-pps" class="outline-5">
+<h5 id="udp_sink--another-CPU-than-RX---2-311-585-pps"><a href="#udp_sink--another-CPU-than-RX---2-311-585-pps">udp_sink: another CPU than RX = 2,311,585 pps</a></h5>
 <div class="outline-text-5" id="text-udp_sink--another-CPU-than-RX---2-311-585-pps">
 <pre class="example">
 [jbrouer@broadwell src]$ sudo taskset -c 3 ./udp_sink --port 9 --recvmsg --repeat 1000 --reuse
@@ -356,8 +413,7 @@ recvmsg   	run:  8	 1000000	432.54	2311903.29	1557	18	 demux:1
 recvmsg   	run:  9	 1000000	432.62	2311479.47	1557	18	 demux:1
 </pre>
 </div>
-</li>
-</ul>
+</div>
 </div>
 
 <div id="outline-container-NIC--i40e1---baseline-cpumap-redirect" class="outline-4">
@@ -368,8 +424,8 @@ What is the baseline CPUMAP redirect performance.
 </p>
 </div>
 
-<ul class="org-ul">
-<li><a id="baseline-redirect--UdpNoPorts--2-727-840-pps"></a><a href="#baseline-redirect--UdpNoPorts--2-727-840-pps">baseline-redirect: UdpNoPorts: 2,727,840 pps</a><br />
+<div id="outline-container-baseline-redirect--UdpNoPorts--2-727-840-pps" class="outline-5">
+<h5 id="baseline-redirect--UdpNoPorts--2-727-840-pps"><a href="#baseline-redirect--UdpNoPorts--2-727-840-pps">baseline-redirect: UdpNoPorts: 2,727,840 pps</a></h5>
 <div class="outline-text-5" id="text-baseline-redirect--UdpNoPorts--2-727-840-pps">
 <pre class="example">
 sudo ./xdp_redirect_cpu --dev i40e1 --qsize 128 --cpu 4 --prog xdp_cpu_map0
@@ -400,9 +456,10 @@ IpExtOutOctets                  74                 0.0
 IpExtInNoECTPkts                2701820            0.0
 </pre>
 </div>
-</li>
+</div>
 
-<li><a id="baseline-redirect--iptables-raw-drop--6-166-709-pps"></a><a href="#baseline-redirect--iptables-raw-drop--6-166-709-pps">baseline-redirect: iptables-raw drop: 6,166,709 pps</a><br />
+<div id="outline-container-baseline-redirect--iptables-raw-drop--6-166-709-pps" class="outline-5">
+<h5 id="baseline-redirect--iptables-raw-drop--6-166-709-pps"><a href="#baseline-redirect--iptables-raw-drop--6-166-709-pps">baseline-redirect: iptables-raw drop: 6,166,709 pps</a></h5>
 <div class="outline-text-5" id="text-baseline-redirect--iptables-raw-drop--6-166-709-pps">
 <pre class="example">
 sudo ./xdp_redirect_cpu --dev i40e1 --qsize 128 --cpu 4 --prog xdp_cpu_map0
@@ -426,8 +483,7 @@ IpExtInOctets                   283689544          0.0
 IpExtInNoECTPkts                6167164            0.0
 </pre>
 </div>
-</li>
-</ul>
+</div>
 </div>
 </div>
 
@@ -458,8 +514,8 @@ size being active.
 <h4 id="benchmarks-on-this-patch"><a href="#benchmarks-on-this-patch">benchmarks on this patch</a></h4>
 <div class="outline-text-4" id="text-benchmarks-on-this-patch">
 </div>
-<ul class="org-ul">
-<li><a id="redirect--UdpNoPorts--2-817-054"></a><a href="#redirect--UdpNoPorts--2-817-054">redirect: UdpNoPorts: 2,817,054</a><br />
+<div id="outline-container-redirect--UdpNoPorts--2-817-054" class="outline-5">
+<h5 id="redirect--UdpNoPorts--2-817-054"><a href="#redirect--UdpNoPorts--2-817-054">redirect: UdpNoPorts: 2,817,054</a></h5>
 <div class="outline-text-5" id="text-redirect--UdpNoPorts--2-817-054">
 <pre class="example">
 Running XDP/eBPF prog_num:0
@@ -489,9 +545,10 @@ IpExtOutOctets                  74                 0.0
 IpExtInNoECTPkts                2829076            0.0
 </pre>
 </div>
-</li>
+</div>
 
-<li><a id="redirect--iptables-raw-drop--6-328-978"></a><a href="#redirect--iptables-raw-drop--6-328-978">redirect: iptables-raw drop: 6,328,978</a><br />
+<div id="outline-container-redirect--iptables-raw-drop--6-328-978" class="outline-5">
+<h5 id="redirect--iptables-raw-drop--6-328-978"><a href="#redirect--iptables-raw-drop--6-328-978">redirect: iptables-raw drop: 6,328,978</a></h5>
 <div class="outline-text-5" id="text-redirect--iptables-raw-drop--6-328-978">
 <pre class="example">
 Running XDP/eBPF prog_num:0
@@ -522,8 +579,7 @@ IpExtOutOctets                  680                0.0
 IpExtInNoECTPkts                6358232            0.0
 </pre>
 </div>
-</li>
-</ul>
+</div>
 </div>
 </div>
 
@@ -549,8 +605,8 @@ netif_receive_skb_list_core().
 <h4 id="benchmark01-on-this-patch"><a href="#benchmark01-on-this-patch">benchmark01 on this patch</a></h4>
 <div class="outline-text-4" id="text-benchmark01-on-this-patch">
 </div>
-<ul class="org-ul">
-<li><a id="redirect--UdpNoPorts--2-846-583"></a><a href="#redirect--UdpNoPorts--2-846-583">redirect: UdpNoPorts: 2,846,583</a><br />
+<div id="outline-container-redirect--UdpNoPorts--2-846-583" class="outline-5">
+<h5 id="redirect--UdpNoPorts--2-846-583"><a href="#redirect--UdpNoPorts--2-846-583">redirect: UdpNoPorts: 2,846,583</a></h5>
 <div class="outline-text-5" id="text-redirect--UdpNoPorts--2-846-583">
 <pre class="example">
 sudo ./xdp_redirect_cpu --dev i40e1 --qsize 128 --cpu 4 --prog xdp_cpu_map0 --sec 3
@@ -566,9 +622,10 @@ redirect_err    total   0              0
 xdp_exception   total   0              0          
 </pre>
 </div>
-</li>
+</div>
 
-<li><a id="redirect--iptables-raw-drop--5-535-958"></a><a href="#redirect--iptables-raw-drop--5-535-958">redirect: iptables-raw drop: 5,535,958</a><br />
+<div id="outline-container-redirect--iptables-raw-drop--5-535-958" class="outline-5">
+<h5 id="redirect--iptables-raw-drop--5-535-958"><a href="#redirect--iptables-raw-drop--5-535-958">redirect: iptables-raw drop: 5,535,958</a></h5>
 <div class="outline-text-5" id="text-redirect--iptables-raw-drop--5-535-958">
 <p>
 Strange performance drop.
@@ -587,9 +644,10 @@ redirect_err    total   0              0
 xdp_exception   total   0              0          
 </pre>
 </div>
-</li>
+</div>
 
-<li><a id="iptables-raw-drop--5-378-828-pps--GRO-enabled-"></a><a href="#iptables-raw-drop--5-378-828-pps--GRO-enabled-">iptables-raw drop: 5,378,828 pps (GRO-enabled)</a><br />
+<div id="outline-container-iptables-raw-drop--5-378-828-pps--GRO-enabled-" class="outline-5">
+<h5 id="iptables-raw-drop--5-378-828-pps--GRO-enabled-"><a href="#iptables-raw-drop--5-378-828-pps--GRO-enabled-">iptables-raw drop: 5,378,828 pps (GRO-enabled)</a></h5>
 <div class="outline-text-5" id="text-iptables-raw-drop--5-378-828-pps--GRO-enabled-">
 <p>
 Command used to drop packets:
@@ -626,8 +684,7 @@ IpExtInOctets                   288405556          0.0
 IpExtInNoECTPkts                6269686            0.0
 </pre>
 </div>
-</li>
-</ul>
+</div>
 </div>
 
 <div id="outline-container-benchmark02-on-this-patch" class="outline-4">
@@ -638,8 +695,8 @@ Re-organize code in net/core/dev.c.
 </p>
 </div>
 
-<ul class="org-ul">
-<li><a id="redirect--UdpNoPorts--2-829-666"></a><a href="#redirect--UdpNoPorts--2-829-666">redirect: UdpNoPorts: 2,829,666</a><br />
+<div id="outline-container-redirect--UdpNoPorts--2-829-666" class="outline-5">
+<h5 id="redirect--UdpNoPorts--2-829-666"><a href="#redirect--UdpNoPorts--2-829-666">redirect: UdpNoPorts: 2,829,666</a></h5>
 <div class="outline-text-5" id="text-redirect--UdpNoPorts--2-829-666">
 <pre class="example">
 Running XDP/eBPF prog_num:0
@@ -654,9 +711,10 @@ redirect_err    total   0              0
 xdp_exception   total   0              0          
 </pre>
 </div>
-</li>
+</div>
 
-<li><a id="redirect--iptables-raw-drop--5-529-818"></a><a href="#redirect--iptables-raw-drop--5-529-818">redirect: iptables-raw drop: 5,529,818</a><br />
+<div id="outline-container-redirect--iptables-raw-drop--5-529-818" class="outline-5">
+<h5 id="redirect--iptables-raw-drop--5-529-818"><a href="#redirect--iptables-raw-drop--5-529-818">redirect: iptables-raw drop: 5,529,818</a></h5>
 <div class="outline-text-5" id="text-redirect--iptables-raw-drop--5-529-818">
 <pre class="example">
 Running XDP/eBPF prog_num:0
@@ -671,9 +729,10 @@ redirect_err    total   0              0
 xdp_exception   total   0              0          
 </pre>
 </div>
-</li>
+</div>
 
-<li><a id="iptables-raw-drop--5-420-909"></a><a href="#iptables-raw-drop--5-420-909">iptables-raw drop: 5,420,909</a><br />
+<div id="outline-container-iptables-raw-drop--5-420-909" class="outline-5">
+<h5 id="iptables-raw-drop--5-420-909"><a href="#iptables-raw-drop--5-420-909">iptables-raw drop: 5,420,909</a></h5>
 <div class="outline-text-5" id="text-iptables-raw-drop--5-420-909">
 <p>
 Using standard Linux kernel and NAPI-RX iptables-raw drop.
@@ -686,8 +745,7 @@ IpExtInOctets                   249361032          0.0
 IpExtInNoECTPkts                5420892            0.0
 </pre>
 </div>
-</li>
-</ul>
+</div>
 </div>
 
 <div id="outline-container-benchmark03-more-reorg" class="outline-4">
@@ -725,8 +783,8 @@ Next patch use this function combined with kmem_cache_alloc_bulk.
 <h4 id="Patch--net--core--introduce-build_skb_around--benchmarks-on-this-patch"><a href="#Patch--net--core--introduce-build_skb_around--benchmarks-on-this-patch">benchmarks on this patch</a></h4>
 <div class="outline-text-4" id="text-Patch--net--core--introduce-build_skb_around--benchmarks-on-this-patch">
 </div>
-<ul class="org-ul">
-<li><a id="redirect--UdpNoPorts--2-832-411"></a><a href="#redirect--UdpNoPorts--2-832-411">redirect: UdpNoPorts: 2,832,411</a><br />
+<div id="outline-container-redirect--UdpNoPorts--2-832-411" class="outline-5">
+<h5 id="redirect--UdpNoPorts--2-832-411"><a href="#redirect--UdpNoPorts--2-832-411">redirect: UdpNoPorts: 2,832,411</a></h5>
 <div class="outline-text-5" id="text-redirect--UdpNoPorts--2-832-411">
 <pre class="example">
 Running XDP/eBPF prog_num:0
@@ -741,9 +799,10 @@ redirect_err    total   0              0
 xdp_exception   total   0              0          
 </pre>
 </div>
-</li>
+</div>
 
-<li><a id="redirect--iptables-raw-drop--5-522-555"></a><a href="#redirect--iptables-raw-drop--5-522-555">redirect: iptables-raw drop: 5,522,555</a><br />
+<div id="outline-container-redirect--iptables-raw-drop--5-522-555" class="outline-5">
+<h5 id="redirect--iptables-raw-drop--5-522-555"><a href="#redirect--iptables-raw-drop--5-522-555">redirect: iptables-raw drop: 5,522,555</a></h5>
 <div class="outline-text-5" id="text-redirect--iptables-raw-drop--5-522-555">
 <pre class="example">
 Running XDP/eBPF prog_num:0
@@ -758,9 +817,10 @@ redirect_err    total   0              0
 xdp_exception   total   0              0          
 </pre>
 </div>
-</li>
+</div>
 
-<li><a id="iptables-raw-drop--5-396-717"></a><a href="#iptables-raw-drop--5-396-717">iptables-raw drop: 5,396,717</a><br />
+<div id="outline-container-iptables-raw-drop--5-396-717" class="outline-5">
+<h5 id="iptables-raw-drop--5-396-717"><a href="#iptables-raw-drop--5-396-717">iptables-raw drop: 5,396,717</a></h5>
 <div class="outline-text-5" id="text-iptables-raw-drop--5-396-717">
 <pre class="example">
 $ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
@@ -770,8 +830,7 @@ IpExtInOctets                   248249120          0.0
 IpExtInNoECTPkts                5396720            0.0
 </pre>
 </div>
-</li>
-</ul>
+</div>
 </div>
 </div>
 
@@ -800,8 +859,8 @@ then the Intel CPU memset rep stos will have a real performance gain.)
 <h4 id="Patch--bpf--cpumap-do-bulk-allocation-of-SKBs--benchmarks-on-this-patch"><a href="#Patch--bpf--cpumap-do-bulk-allocation-of-SKBs--benchmarks-on-this-patch">benchmarks on this patch</a></h4>
 <div class="outline-text-4" id="text-Patch--bpf--cpumap-do-bulk-allocation-of-SKBs--benchmarks-on-this-patch">
 </div>
-<ul class="org-ul">
-<li><a id="redirect--UdpNoPorts--2-943-928"></a><a href="#redirect--UdpNoPorts--2-943-928">redirect: UdpNoPorts: 2,943,928</a><br />
+<div id="outline-container-redirect--UdpNoPorts--2-943-928" class="outline-5">
+<h5 id="redirect--UdpNoPorts--2-943-928"><a href="#redirect--UdpNoPorts--2-943-928">redirect: UdpNoPorts: 2,943,928</a></h5>
 <div class="outline-text-5" id="text-redirect--UdpNoPorts--2-943-928">
 <pre class="example">
 Running XDP/eBPF prog_num:0
@@ -816,9 +875,10 @@ redirect_err    total   0              0
 xdp_exception   total   0              0          
 </pre>
 </div>
-</li>
+</div>
 
-<li><a id="redirect--iptables-raw-drop--5-908-032"></a><a href="#redirect--iptables-raw-drop--5-908-032">redirect: iptables-raw drop: 5,908,032</a><br />
+<div id="outline-container-redirect--iptables-raw-drop--5-908-032" class="outline-5">
+<h5 id="redirect--iptables-raw-drop--5-908-032"><a href="#redirect--iptables-raw-drop--5-908-032">redirect: iptables-raw drop: 5,908,032</a></h5>
 <div class="outline-text-5" id="text-redirect--iptables-raw-drop--5-908-032">
 <pre class="example">
 Running XDP/eBPF prog_num:0
@@ -863,8 +923,7 @@ $ perf stat -C5 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.f
        806.293.783      l1d_pend_miss.pending_cycles                                     ( +-  0,29% )  (16,62%)
 </pre>
 </div>
-</li>
-</ul>
+</div>
 </div>
 </div>
 
@@ -896,8 +955,8 @@ prefetch into L2 will have the same benefit.
 <h4 id="Patch--bpf--cpumap-memory-prefetchw-optimizations-for-struct-page--benchmarks-on-this-patch"><a href="#Patch--bpf--cpumap-memory-prefetchw-optimizations-for-struct-page--benchmarks-on-this-patch">benchmarks on this patch</a></h4>
 <div class="outline-text-4" id="text-Patch--bpf--cpumap-memory-prefetchw-optimizations-for-struct-page--benchmarks-on-this-patch">
 </div>
-<ul class="org-ul">
-<li><a id="redirect--UdpNoPorts--3-270-640"></a><a href="#redirect--UdpNoPorts--3-270-640">redirect: UdpNoPorts: 3,270,640</a><br />
+<div id="outline-container-redirect--UdpNoPorts--3-270-640" class="outline-5">
+<h5 id="redirect--UdpNoPorts--3-270-640"><a href="#redirect--UdpNoPorts--3-270-640">redirect: UdpNoPorts: 3,270,640</a></h5>
 <div class="outline-text-5" id="text-redirect--UdpNoPorts--3-270-640">
 <pre class="example">
 unning XDP/eBPF prog_num:0
@@ -912,9 +971,10 @@ redirect_err    total   0              0
 xdp_exception   total   0              0          
 </pre>
 </div>
-</li>
+</div>
 
-<li><a id="redirect--iptables-raw-drop--6-882-973"></a><a href="#redirect--iptables-raw-drop--6-882-973">redirect: iptables-raw drop: 6,882,973</a><br />
+<div id="outline-container-redirect--iptables-raw-drop--6-882-973" class="outline-5">
+<h5 id="redirect--iptables-raw-drop--6-882-973"><a href="#redirect--iptables-raw-drop--6-882-973">redirect: iptables-raw drop: 6,882,973</a></h5>
 <div class="outline-text-5" id="text-redirect--iptables-raw-drop--6-882-973">
 <pre class="example">
 Running XDP/eBPF prog_num:0
@@ -929,8 +989,7 @@ redirect_err    total   0              0
 xdp_exception   total   0              0          
 </pre>
 </div>
-</li>
-</ul>
+</div>
 </div>
 </div>
 
@@ -949,8 +1008,8 @@ effected by iptables-filter being loaded or not.
 </p>
 </div>
 
-<ul class="org-ul">
-<li><a id="redirect--UdpNoPorts--3-060-774"></a><a href="#redirect--UdpNoPorts--3-060-774">redirect: UdpNoPorts: 3,060,774</a><br />
+<div id="outline-container-redirect--UdpNoPorts--3-060-774" class="outline-5">
+<h5 id="redirect--UdpNoPorts--3-060-774"><a href="#redirect--UdpNoPorts--3-060-774">redirect: UdpNoPorts: 3,060,774</a></h5>
 <div class="outline-text-5" id="text-redirect--UdpNoPorts--3-060-774">
 <pre class="example">
 Running XDP/eBPF prog_num:0
@@ -965,9 +1024,10 @@ redirect_err    total   0              0
 xdp_exception   total   0              0          
 </pre>
 </div>
-</li>
+</div>
 
-<li><a id="redirect--iptables-raw-drop--7-035-517"></a><a href="#redirect--iptables-raw-drop--7-035-517">redirect: iptables-raw drop: 7,035,517</a><br />
+<div id="outline-container-redirect--iptables-raw-drop--7-035-517" class="outline-5">
+<h5 id="redirect--iptables-raw-drop--7-035-517"><a href="#redirect--iptables-raw-drop--7-035-517">redirect: iptables-raw drop: 7,035,517</a></h5>
 <div class="outline-text-5" id="text-redirect--iptables-raw-drop--7-035-517">
 <pre class="example">
 Running XDP/eBPF prog_num:0
@@ -1017,9 +1077,10 @@ $ perf stat -C5 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.f
         1,00107125 +- 0,00000745 seconds time elapsed  ( +-  0,00% )
 </pre>
 </div>
-</li>
+</div>
 
-<li><a id="iptables-raw-drop--5-412-097--GRO-enabled-"></a><a href="#iptables-raw-drop--5-412-097--GRO-enabled-">iptables-raw drop: 5,412,097 (GRO-enabled)</a><br />
+<div id="outline-container-iptables-raw-drop--5-412-097--GRO-enabled-" class="outline-5">
+<h5 id="iptables-raw-drop--5-412-097--GRO-enabled-"><a href="#iptables-raw-drop--5-412-097--GRO-enabled-">iptables-raw drop: 5,412,097 (GRO-enabled)</a></h5>
 <div class="outline-text-5" id="text-iptables-raw-drop--5-412-097--GRO-enabled-">
 <p>
 Command used to drop packets:
@@ -1043,8 +1104,7 @@ IpExtInNoECTPkts                5412085            0.0
 *
 </p>
 </div>
-</li>
-</ul>
+</div>
 </div>
 </div>
 </div>
