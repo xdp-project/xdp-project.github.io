@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Evolving the page_pool API</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,41 +26,41 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#The%20page_pool%20is%20NOT%20finished">The page_pool is NOT finished</a></li>
-<li><a href="#Overall%20goals%20of%20page_pool">Overall goals of page_pool</a>
+<li><a href="#The-page_pool-is-NOT-finished">The page_pool is NOT finished</a></li>
+<li><a href="#Overall-goals-of-page_pool">Overall goals of page_pool</a>
 <ul>
-<li><a href="#mlx5%20today">mlx5 today</a></li>
+<li><a href="#mlx5-today">mlx5 today</a></li>
 </ul>
 </li>
 <li><a href="#History">History</a></li>
-<li><a href="#The%20XDP%20dream%20scenario">The XDP dream scenario</a></li>
-<li><a href="#Status%20today%3A%20lost%20reliable%20return%20hook">Status today: lost reliable return hook</a></li>
-<li><a href="#Regaining%20the%20return%20hook%20or%20tracking%20pages">Regaining the return hook or tracking pages</a>
+<li><a href="#The-XDP-dream-scenario">The XDP dream scenario</a></li>
+<li><a href="#Status-today--lost-reliable-return-hook">Status today: lost reliable return hook</a></li>
+<li><a href="#Regaining-the-return-hook-or-tracking-pages">Regaining the return hook or tracking pages</a>
 <ul>
-<li><a href="#Return-hook%3A%20put_page">Return-hook: put_page</a></li>
-<li><a href="#Return-hook%3A%20via%20SKB">Return-hook: via SKB</a></li>
-<li><a href="#Keep%20track%20of%20pages">Keep track of pages</a></li>
+<li><a href="#Return-hook--put_page">Return-hook: put_page</a></li>
+<li><a href="#Return-hook--via-SKB">Return-hook: via SKB</a></li>
+<li><a href="#Keep-track-of-pages">Keep track of pages</a></li>
 </ul>
 </li>
-<li><a href="#Understanding%20page_pool%20details">Understanding page_pool details</a>
+<li><a href="#Understanding-page_pool-details">Understanding page_pool details</a>
 <ul>
-<li><a href="#Extremely%20fast%20alloc%20page">Extremely fast alloc page</a></li>
-<li><a href="#Extremely%20fast%20recycle%20direct">Extremely fast recycle direct</a></li>
-<li><a href="#Fast%20rhashtable%20lookup%20in%20__xdp_return">Fast rhashtable lookup in __xdp_return</a></li>
+<li><a href="#Extremely-fast-alloc-page">Extremely fast alloc page</a></li>
+<li><a href="#Extremely-fast-recycle-direct">Extremely fast recycle direct</a></li>
+<li><a href="#Fast-rhashtable-lookup-in-__xdp_return">Fast rhashtable lookup in __xdp_return</a></li>
 </ul>
 </li>
-<li><a href="#Warning%3A%20missing%20pieces%20in%20page_pool">Warning: missing pieces in page_pool</a>
+<li><a href="#Warning--missing-pieces-in-page_pool">Warning: missing pieces in page_pool</a>
 <ul>
-<li><a href="#Currently%3A%20fully-locked%20page-recycle%20call">Currently: fully-locked page-recycle call</a></li>
+<li><a href="#Currently--fully-locked-page-recycle-call">Currently: fully-locked page-recycle call</a></li>
 </ul>
 </li>
-<li><a href="#Benchmark%20based%20development">Benchmark based development</a>
+<li><a href="#Benchmark-based-development">Benchmark based development</a>
 <ul>
-<li><a href="#What%20is%20the%20overhead%20of%20%22fully-locked%20page-recycle%20call%22">What is the overhead of "fully-locked page-recycle call"</a></li>
-<li><a href="#What%20is%20the%20overhead%20of%20page%20order-0%20allocations">What is the overhead of page order-0 allocations</a></li>
+<li><a href="#What-is-the-overhead-of--fully-locked-page-recycle-call-">What is the overhead of "fully-locked page-recycle call"</a></li>
+<li><a href="#What-is-the-overhead-of-page-order-0-allocations">What is the overhead of page order-0 allocations</a></li>
 </ul>
 </li>
-<li><a href="#XDP%20optimization%20for%20ndo_xdp_xmit">XDP optimization for ndo_xdp_xmit</a></li>
+<li><a href="#XDP-optimization-for-ndo_xdp_xmit">XDP optimization for ndo_xdp_xmit</a></li>
 </ul>
 </div>
 </div>
@@ -70,9 +75,9 @@ what memory allocator type the driver (per) RX-queue is using, via xdp_rxq_info
 and info in xdp_frame.  This opens up for innovation in this area.
 </p>
 
-<div id="outline-container-The%20page_pool%20is%20NOT%20finished" class="outline-2">
-<h2 id="The%20page_pool%20is%20NOT%20finished"><a href="#The%20page_pool%20is%20NOT%20finished">The page_pool is NOT finished</a></h2>
-<div class="outline-text-2" id="text-The%20page_pool%20is%20NOT%20finished">
+<div id="outline-container-The-page_pool-is-NOT-finished" class="outline-2">
+<h2 id="The-page_pool-is-NOT-finished"><a href="#The-page_pool-is-NOT-finished">The page_pool is NOT finished</a></h2>
+<div class="outline-text-2" id="text-The-page_pool-is-NOT-finished">
 <p>
 Lets be clear upfront: <b>The page_pool API is not finished</b>
 (As of this writing <span class="timestamp-wrapper"><span class="timestamp">&lt;2018-11-28 Wed&gt; </span></span> and kernel release v4.19).
@@ -91,24 +96,24 @@ choices for the direction of the page_pool API.
 </div>
 
 
-<div id="outline-container-Overall%20goals%20of%20page_pool" class="outline-2">
-<h2 id="Overall%20goals%20of%20page_pool"><a href="#Overall%20goals%20of%20page_pool">Overall goals of page_pool</a></h2>
-<div class="outline-text-2" id="text-Overall%20goals%20of%20page_pool">
+<div id="outline-container-Overall-goals-of-page_pool" class="outline-2">
+<h2 id="Overall-goals-of-page_pool"><a href="#Overall-goals-of-page_pool">Overall goals of page_pool</a></h2>
+<div class="outline-text-2" id="text-Overall-goals-of-page_pool">
 <p>
 The overall goals of the page_pool is:
 </p>
 
 <p>
 (1) Keep pages DMA-mapped (driver only use DMA-sync where needed).
-(2) Faster recycle API than page-allocator (see <a href="#orgd8dbe4d">No description for this link</a>)
+(2) Faster recycle API than page-allocator (see <a href="#orgef30620">No description for this link</a>)
 (3) Common allocator API for simplifying NIC drivers.
 (4) Better integration with network stack, not just XDP usage.
 </p>
 </div>
 
-<div id="outline-container-mlx5%20today" class="outline-3">
-<h3 id="mlx5%20today"><a href="#mlx5%20today">mlx5 today</a></h3>
-<div class="outline-text-3" id="text-mlx5%20today">
+<div id="outline-container-mlx5-today" class="outline-3">
+<h3 id="mlx5-today"><a href="#mlx5-today">mlx5 today</a></h3>
+<div class="outline-text-3" id="text-mlx5-today">
 <p>
 Today mlx5 is not using the DMA-mapping part and is basically using page_pool
 as a fast alloc-side cache (see later why it is fast), and a return point for
@@ -157,9 +162,9 @@ Basic idea:
 </div>
 </div>
 
-<div id="outline-container-The%20XDP%20dream%20scenario" class="outline-2">
-<h2 id="The%20XDP%20dream%20scenario"><a href="#The%20XDP%20dream%20scenario">The XDP dream scenario</a></h2>
-<div class="outline-text-2" id="text-The%20XDP%20dream%20scenario">
+<div id="outline-container-The-XDP-dream-scenario" class="outline-2">
+<h2 id="The-XDP-dream-scenario"><a href="#The-XDP-dream-scenario">The XDP dream scenario</a></h2>
+<div class="outline-text-2" id="text-The-XDP-dream-scenario">
 <p>
 The XDP dream scenario is about returning frame-pages, with no refcnt changes
 to the struct-page.  The optimal XDP case is 1-page per frame/packet with page
@@ -189,9 +194,9 @@ memory vs speed optimization.
 </div>
 
 
-<div id="outline-container-Status%20today%3A%20lost%20reliable%20return%20hook" class="outline-2">
-<h2 id="Status%20today%3A%20lost%20reliable%20return%20hook"><a href="#Status%20today%3A%20lost%20reliable%20return%20hook">Status today: lost reliable return hook</a></h2>
-<div class="outline-text-2" id="text-Status%20today%3A%20lost%20reliable%20return%20hook">
+<div id="outline-container-Status-today--lost-reliable-return-hook" class="outline-2">
+<h2 id="Status-today--lost-reliable-return-hook"><a href="#Status-today--lost-reliable-return-hook">Status today: lost reliable return hook</a></h2>
+<div class="outline-text-2" id="text-Status-today--lost-reliable-return-hook">
 <p>
 The big difference today is the page_pool is not hooked into <code>put_page</code> and the
 MM-layer.  This means we <b>lost the reliable return hook point</b>, which made it
@@ -212,9 +217,9 @@ reliable return hook, as the netstack returns the pages based refcnt.
 </div>
 
 
-<div id="outline-container-Regaining%20the%20return%20hook%20or%20tracking%20pages" class="outline-2">
-<h2 id="Regaining%20the%20return%20hook%20or%20tracking%20pages"><a href="#Regaining%20the%20return%20hook%20or%20tracking%20pages">Regaining the return hook or tracking pages</a></h2>
-<div class="outline-text-2" id="text-Regaining%20the%20return%20hook%20or%20tracking%20pages">
+<div id="outline-container-Regaining-the-return-hook-or-tracking-pages" class="outline-2">
+<h2 id="Regaining-the-return-hook-or-tracking-pages"><a href="#Regaining-the-return-hook-or-tracking-pages">Regaining the return hook or tracking pages</a></h2>
+<div class="outline-text-2" id="text-Regaining-the-return-hook-or-tracking-pages">
 <p>
 When wanting to keep pages DMA mapped, how to make sure:
  (1) that DMA mapped frames are not leaked, but
@@ -248,9 +253,9 @@ memory area, or pages already mapped into userspace.
 </p>
 </div>
 
-<div id="outline-container-Return-hook%3A%20put_page" class="outline-3">
-<h3 id="Return-hook%3A%20put_page"><a href="#Return-hook%3A%20put_page">Return-hook: put_page</a></h3>
-<div class="outline-text-3" id="text-Return-hook%3A%20put_page">
+<div id="outline-container-Return-hook--put_page" class="outline-3">
+<h3 id="Return-hook--put_page"><a href="#Return-hook--put_page">Return-hook: put_page</a></h3>
+<div class="outline-text-3" id="text-Return-hook--put_page">
 <p>
 The original idea was to modify put_page() to catch pages with refcnt==1 and
 recycle those.  This was rejected upstream, but meanwhile a hook have been
@@ -329,9 +334,9 @@ the ZONE_DEVICE and page-&gt;pgmap share page-&gt;mapping area.
 </div>
 </div>
 
-<div id="outline-container-Return-hook%3A%20via%20SKB" class="outline-3">
-<h3 id="Return-hook%3A%20via%20SKB"><a href="#Return-hook%3A%20via%20SKB">Return-hook: via SKB</a></h3>
-<div class="outline-text-3" id="text-Return-hook%3A%20via%20SKB">
+<div id="outline-container-Return-hook--via-SKB" class="outline-3">
+<h3 id="Return-hook--via-SKB"><a href="#Return-hook--via-SKB">Return-hook: via SKB</a></h3>
+<div class="outline-text-3" id="text-Return-hook--via-SKB">
 <p>
 Another possible return hook is when the SKB (sk_buff) is freed.
 </p>
@@ -409,9 +414,9 @@ struct xdp_mem_info, and return frame like/via xdp_return_frame() API.
 </div>
 
 
-<div id="outline-container-Keep%20track%20of%20pages" class="outline-3">
-<h3 id="Keep%20track%20of%20pages"><a href="#Keep%20track%20of%20pages">Keep track of pages</a></h3>
-<div class="outline-text-3" id="text-Keep%20track%20of%20pages">
+<div id="outline-container-Keep-track-of-pages" class="outline-3">
+<h3 id="Keep-track-of-pages"><a href="#Keep-track-of-pages">Keep track of pages</a></h3>
+<div class="outline-text-3" id="text-Keep-track-of-pages">
 <p>
 The network stack current handling of packet-data pages is refcnt based.
 </p>
@@ -464,17 +469,17 @@ integrating this would allow page_pool to keep the DMA-mapping.
 </div>
 
 
-<div id="outline-container-Understanding%20page_pool%20details" class="outline-2">
-<h2 id="Understanding%20page_pool%20details"><a href="#Understanding%20page_pool%20details">Understanding page_pool details</a></h2>
-<div class="outline-text-2" id="text-Understanding%20page_pool%20details">
+<div id="outline-container-Understanding-page_pool-details" class="outline-2">
+<h2 id="Understanding-page_pool-details"><a href="#Understanding-page_pool-details">Understanding page_pool details</a></h2>
+<div class="outline-text-2" id="text-Understanding-page_pool-details">
 <p>
 Some details about the page_pool API that might not be obvious.
 </p>
 </div>
 
-<div id="outline-container-Extremely%20fast%20alloc%20page" class="outline-3">
-<h3 id="Extremely%20fast%20alloc%20page"><a href="#Extremely%20fast%20alloc%20page">Extremely fast alloc page</a></h3>
-<div class="outline-text-3" id="text-Extremely%20fast%20alloc%20page">
+<div id="outline-container-Extremely-fast-alloc-page" class="outline-3">
+<h3 id="Extremely-fast-alloc-page"><a href="#Extremely-fast-alloc-page">Extremely fast alloc page</a></h3>
+<div class="outline-text-3" id="text-Extremely-fast-alloc-page">
 <p>
 The page_pool leverage the knowledge/requirement, that allocations MUST happen
 from NAPI context. (During driver init of RX ring, not in NAPI context, it is
@@ -503,9 +508,9 @@ Code from: __page_pool_get_cached()
 </div>
 </div>
 
-<div id="outline-container-Extremely%20fast%20recycle%20direct" class="outline-3">
-<h3 id="Extremely%20fast%20recycle%20direct"><a href="#Extremely%20fast%20recycle%20direct">Extremely fast recycle direct</a></h3>
-<div class="outline-text-3" id="text-Extremely%20fast%20recycle%20direct">
+<div id="outline-container-Extremely-fast-recycle-direct" class="outline-3">
+<h3 id="Extremely-fast-recycle-direct"><a href="#Extremely-fast-recycle-direct">Extremely fast recycle direct</a></h3>
+<div class="outline-text-3" id="text-Extremely-fast-recycle-direct">
 <p>
 Another optimization leveraged by page_pool is that, for frames that needs to
 be dropped while still running under the RX NAPI context, either for error
@@ -523,9 +528,9 @@ to drop frames and see almost the same drop performance as driver level code
 </div>
 
 
-<div id="outline-container-Fast%20rhashtable%20lookup%20in%20__xdp_return" class="outline-3">
-<h3 id="Fast%20rhashtable%20lookup%20in%20__xdp_return"><a href="#Fast%20rhashtable%20lookup%20in%20__xdp_return">Fast rhashtable lookup in __xdp_return</a></h3>
-<div class="outline-text-3" id="text-Fast%20rhashtable%20lookup%20in%20__xdp_return">
+<div id="outline-container-Fast-rhashtable-lookup-in-__xdp_return" class="outline-3">
+<h3 id="Fast-rhashtable-lookup-in-__xdp_return"><a href="#Fast-rhashtable-lookup-in-__xdp_return">Fast rhashtable lookup in __xdp_return</a></h3>
+<div class="outline-text-3" id="text-Fast-rhashtable-lookup-in-__xdp_return">
 <p>
 In __xdp_return there is a rhashtable_lookup() call on the xdp_mem_info-&gt;id,
 which looks like a performance issue, but it isn't. While we would like to
@@ -543,13 +548,13 @@ as a key.  Given we use a cyclic increasing ID, the key/id is unique and
 </div>
 </div>
 
-<div id="outline-container-Warning%3A%20missing%20pieces%20in%20page_pool" class="outline-2">
-<h2 id="Warning%3A%20missing%20pieces%20in%20page_pool"><a href="#Warning%3A%20missing%20pieces%20in%20page_pool">Warning: missing pieces in page_pool</a></h2>
-<div class="outline-text-2" id="text-Warning%3A%20missing%20pieces%20in%20page_pool">
+<div id="outline-container-Warning--missing-pieces-in-page_pool" class="outline-2">
+<h2 id="Warning--missing-pieces-in-page_pool"><a href="#Warning--missing-pieces-in-page_pool">Warning: missing pieces in page_pool</a></h2>
+<div class="outline-text-2" id="text-Warning--missing-pieces-in-page_pool">
 </div>
-<div id="outline-container-Currently%3A%20fully-locked%20page-recycle%20call" class="outline-3">
-<h3 id="Currently%3A%20fully-locked%20page-recycle%20call"><a href="#Currently%3A%20fully-locked%20page-recycle%20call">Currently: fully-locked page-recycle call</a></h3>
-<div class="outline-text-3" id="text-Currently%3A%20fully-locked%20page-recycle%20call">
+<div id="outline-container-Currently--fully-locked-page-recycle-call" class="outline-3">
+<h3 id="Currently--fully-locked-page-recycle-call"><a href="#Currently--fully-locked-page-recycle-call">Currently: fully-locked page-recycle call</a></h3>
+<div class="outline-text-3" id="text-Currently--fully-locked-page-recycle-call">
 <p>
 When the RFC page_pool got ripped out and converted it to be used in network
 stack, the ALF (Array-based Lock Free) queue was dropped.  Instead the ptr_ring
@@ -567,7 +572,7 @@ same RX-queue.
 </p>
 
 <p>
-See <a href="#orgd8dbe4d">No description for this link</a> for benchmarks showing this is still very fast, in the non-lock
+See <a href="#orgef30620">No description for this link</a> for benchmarks showing this is still very fast, in the non-lock
 congested case.
 </p>
 
@@ -587,11 +592,11 @@ kernel is running in (softirq/bh, hardirq, process-context).
 </div>
 </div>
 
-<div id="outline-container-Benchmark%20based%20development" class="outline-2">
-<h2 id="Benchmark%20based%20development"><a href="#Benchmark%20based%20development">Benchmark based development</a></h2>
-<div class="outline-text-2" id="text-Benchmark%20based%20development">
+<div id="outline-container-Benchmark-based-development" class="outline-2">
+<h2 id="Benchmark-based-development"><a href="#Benchmark-based-development">Benchmark based development</a></h2>
+<div class="outline-text-2" id="text-Benchmark-based-development">
 <p>
-<a id="orgd8dbe4d"></a>
+<a id="orgef30620"></a>
 </p>
 
 <p>
@@ -602,9 +607,9 @@ evaluate the performance, for every step.
 </p>
 </div>
 
-<div id="outline-container-What%20is%20the%20overhead%20of%20%22fully-locked%20page-recycle%20call%22" class="outline-3">
-<h3 id="What%20is%20the%20overhead%20of%20%22fully-locked%20page-recycle%20call%22"><a href="#What%20is%20the%20overhead%20of%20%22fully-locked%20page-recycle%20call%22">What is the overhead of "fully-locked page-recycle call"</a></h3>
-<div class="outline-text-3" id="text-What%20is%20the%20overhead%20of%20%22fully-locked%20page-recycle%20call%22">
+<div id="outline-container-What-is-the-overhead-of--fully-locked-page-recycle-call-" class="outline-3">
+<h3 id="What-is-the-overhead-of--fully-locked-page-recycle-call-"><a href="#What-is-the-overhead-of--fully-locked-page-recycle-call-">What is the overhead of "fully-locked page-recycle call"</a></h3>
+<div class="outline-text-3" id="text-What-is-the-overhead-of--fully-locked-page-recycle-call-">
 <p>
 Benchmark based development notes: Proof-of-Concept (PoC) modified mlx5 driver
 and bq_xmit_all (devmap.c) to call xdp_return_frame (vs normally calling
@@ -623,9 +628,9 @@ Thus, in a non-lock congested case, the performance is still very good.
 </div>
 </div>
 
-<div id="outline-container-What%20is%20the%20overhead%20of%20page%20order-0%20allocations" class="outline-3">
-<h3 id="What%20is%20the%20overhead%20of%20page%20order-0%20allocations"><a href="#What%20is%20the%20overhead%20of%20page%20order-0%20allocations">What is the overhead of page order-0 allocations</a></h3>
-<div class="outline-text-3" id="text-What%20is%20the%20overhead%20of%20page%20order-0%20allocations">
+<div id="outline-container-What-is-the-overhead-of-page-order-0-allocations" class="outline-3">
+<h3 id="What-is-the-overhead-of-page-order-0-allocations"><a href="#What-is-the-overhead-of-page-order-0-allocations">What is the overhead of page order-0 allocations</a></h3>
+<div class="outline-text-3" id="text-What-is-the-overhead-of-page-order-0-allocations">
 <p>
 The base overhead of allocating and freeing an order-0 page in a tight loop,
 always hitting the PCP fast-path, measured with prototype kernel module
@@ -651,9 +656,9 @@ doesn't represent any real pps (just to relate this to pps numbers).
 </div>
 
 
-<div id="outline-container-XDP%20optimization%20for%20ndo_xdp_xmit" class="outline-2">
-<h2 id="XDP%20optimization%20for%20ndo_xdp_xmit"><a href="#XDP%20optimization%20for%20ndo_xdp_xmit">XDP optimization for ndo_xdp_xmit</a></h2>
-<div class="outline-text-2" id="text-XDP%20optimization%20for%20ndo_xdp_xmit">
+<div id="outline-container-XDP-optimization-for-ndo_xdp_xmit" class="outline-2">
+<h2 id="XDP-optimization-for-ndo_xdp_xmit"><a href="#XDP-optimization-for-ndo_xdp_xmit">XDP optimization for ndo_xdp_xmit</a></h2>
+<div class="outline-text-2" id="text-XDP-optimization-for-ndo_xdp_xmit">
 <p>
 When xdp_frames are redirected and send out a remote-device via ndo_xdp_xmit,
 then TX frame is again DMA-mapped for transmit on this remote-device, and at

@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Implementing page_pool return-hook via SKB</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,33 +26,33 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#Basic%20idea">Basic idea</a></li>
-<li><a href="#New%20RFC%20patchset%28ongoing%20work%29">New RFC patchset(ongoing work)</a>
+<li><a href="#Basic-idea">Basic idea</a></li>
+<li><a href="#New-RFC-patchset-ongoing-work-">New RFC patchset(ongoing work)</a>
 <ul>
-<li><a href="#pp_recycle%20semantics">pp_recycle semantics</a>
+<li><a href="#pp_recycle-semantics">pp_recycle semantics</a>
 <ul>
-<li><a href="#What%20can%20go%20wrong%20if%20this%20doesn%27t%20happen%3A">What can go wrong if this doesn't happen:</a></li>
+<li><a href="#What-can-go-wrong-if-this-doesn-t-happen-">What can go wrong if this doesn't happen:</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#Different%20ideas%20on%20skb%20marking">Different ideas on skb marking</a></li>
+<li><a href="#Different-ideas-on-skb-marking">Different ideas on skb marking</a></li>
 </ul>
 </div>
 </div>
 
 
-<div id="outline-container-Basic%20idea" class="outline-2">
-<h2 id="Basic%20idea"><a href="#Basic%20idea">Basic idea</a></h2>
-<div class="outline-text-2" id="text-Basic%20idea">
+<div id="outline-container-Basic-idea" class="outline-2">
+<h2 id="Basic-idea"><a href="#Basic-idea">Basic idea</a></h2>
+<div class="outline-text-2" id="text-Basic-idea">
 <p>
 Initial design ideas can be found at <a href="page_pool02_SKB_return_callback.html">page_pool02_SKB_return_callback.html</a>
 </p>
 </div>
 </div>
-<div id="outline-container-New%20RFC%20patchset%28ongoing%20work%29" class="outline-2">
-<h2 id="New%20RFC%20patchset%28ongoing%20work%29"><a href="#New%20RFC%20patchset%28ongoing%20work%29">New RFC patchset(ongoing work)</a></h2>
-<div class="outline-text-2" id="text-New%20RFC%20patchset%28ongoing%20work%29">
+<div id="outline-container-New-RFC-patchset-ongoing-work-" class="outline-2">
+<h2 id="New-RFC-patchset-ongoing-work-"><a href="#New-RFC-patchset-ongoing-work-">New RFC patchset(ongoing work)</a></h2>
+<div class="outline-text-2" id="text-New-RFC-patchset-ongoing-work-">
 <p>
 This patchset corresponds to:
 </p>
@@ -81,9 +86,9 @@ the page into the pool, without unmapping the associated DMA addresses.
 </p>
 </div>
 
-<div id="outline-container-pp_recycle%20semantics" class="outline-3">
-<h3 id="pp_recycle%20semantics"><a href="#pp_recycle%20semantics">pp_recycle semantics</a></h3>
-<div class="outline-text-3" id="text-pp_recycle%20semantics">
+<div id="outline-container-pp_recycle-semantics" class="outline-3">
+<h3 id="pp_recycle-semantics"><a href="#pp_recycle-semantics">pp_recycle semantics</a></h3>
+<div class="outline-text-3" id="text-pp_recycle-semantics">
 <p>
 On skb cloning we replicate the pp_recycle bit on the clone, since we have no
 idea if the original skb or it's clone will be freed first.
@@ -97,9 +102,9 @@ sure the skb holds a page_pool allocated skb-&gt;data
 </p>
 </div>
 
-<div id="outline-container-What%20can%20go%20wrong%20if%20this%20doesn%27t%20happen%3A" class="outline-4">
-<h4 id="What%20can%20go%20wrong%20if%20this%20doesn%27t%20happen%3A"><a href="#What%20can%20go%20wrong%20if%20this%20doesn%27t%20happen%3A">What can go wrong if this doesn't happen:</a></h4>
-<div class="outline-text-4" id="text-What%20can%20go%20wrong%20if%20this%20doesn%27t%20happen%3A">
+<div id="outline-container-What-can-go-wrong-if-this-doesn-t-happen-" class="outline-4">
+<h4 id="What-can-go-wrong-if-this-doesn-t-happen-"><a href="#What-can-go-wrong-if-this-doesn-t-happen-">What can go wrong if this doesn't happen:</a></h4>
+<div class="outline-text-4" id="text-What-can-go-wrong-if-this-doesn-t-happen-">
 <ul class="org-ul">
 <li>The pp_recycle bit on the skb gets set when marking fragments for
 recycling. (skb_mark_for_recycle should NEVER be used on skb-&gt;head that are
@@ -121,9 +126,9 @@ page_pool and we'll crash.</li>
 </div>
 </div>
 </div>
-<div id="outline-container-Different%20ideas%20on%20skb%20marking" class="outline-2">
-<h2 id="Different%20ideas%20on%20skb%20marking"><a href="#Different%20ideas%20on%20skb%20marking">Different ideas on skb marking</a></h2>
-<div class="outline-text-2" id="text-Different%20ideas%20on%20skb%20marking">
+<div id="outline-container-Different-ideas-on-skb-marking" class="outline-2">
+<h2 id="Different-ideas-on-skb-marking"><a href="#Different-ideas-on-skb-marking">Different ideas on skb marking</a></h2>
+<div class="outline-text-2" id="text-Different-ideas-on-skb-marking">
 <p>
 Right now we are using an skb bit for that. This is nice because the overhead
 on the free path is going to be minimal, since the bit we need to access for

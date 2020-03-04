@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Installing bpftrace and manage with stow</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,11 +26,11 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#Guide%3A%20Step-by-step">Guide: Step-by-step</a>
+<li><a href="#Guide--Step-by-step">Guide: Step-by-step</a>
 <ul>
-<li><a href="#Clone%20git-repo">Clone git-repo</a></li>
-<li><a href="#Compile%20and%20install">Compile and install</a></li>
-<li><a href="#Use%20stow">Use stow</a></li>
+<li><a href="#Clone-git-repo">Clone git-repo</a></li>
+<li><a href="#Compile-and-install">Compile and install</a></li>
+<li><a href="#Use-stow">Use stow</a></li>
 </ul>
 </li>
 </ul>
@@ -40,13 +45,13 @@ This document is mostly a guide, howto make <code>cmake</code> install the files
 <code>/usr/local/stow/</code>, to ease management of different versions via <a href="https://www.gnu.org/software/stow/">GNU stow</a>.
 </p>
 
-<div id="outline-container-Guide%3A%20Step-by-step" class="outline-2">
-<h2 id="Guide%3A%20Step-by-step"><a href="#Guide%3A%20Step-by-step">Guide: Step-by-step</a></h2>
-<div class="outline-text-2" id="text-Guide%3A%20Step-by-step">
+<div id="outline-container-Guide--Step-by-step" class="outline-2">
+<h2 id="Guide--Step-by-step"><a href="#Guide--Step-by-step">Guide: Step-by-step</a></h2>
+<div class="outline-text-2" id="text-Guide--Step-by-step">
 </div>
-<div id="outline-container-Clone%20git-repo" class="outline-3">
-<h3 id="Clone%20git-repo"><a href="#Clone%20git-repo">Clone git-repo</a></h3>
-<div class="outline-text-3" id="text-Clone%20git-repo">
+<div id="outline-container-Clone-git-repo" class="outline-3">
+<h3 id="Clone-git-repo"><a href="#Clone-git-repo">Clone git-repo</a></h3>
+<div class="outline-text-3" id="text-Clone-git-repo">
 <div class="org-src-container">
 <pre class="src src-sh">git clone https://github.com/iovisor/bpftrace
 </pre>
@@ -54,9 +59,9 @@ This document is mostly a guide, howto make <code>cmake</code> install the files
 </div>
 </div>
 
-<div id="outline-container-Compile%20and%20install" class="outline-3">
-<h3 id="Compile%20and%20install"><a href="#Compile%20and%20install">Compile and install</a></h3>
-<div class="outline-text-3" id="text-Compile%20and%20install">
+<div id="outline-container-Compile-and-install" class="outline-3">
+<h3 id="Compile-and-install"><a href="#Compile-and-install">Compile and install</a></h3>
+<div class="outline-text-3" id="text-Compile-and-install">
 <p>
 Control the <code>cmake</code> install path via <code>CMAKE_INSTALL_PREFIX</code>.
 </p>
@@ -82,9 +87,9 @@ make install
 </div>
 </div>
 
-<div id="outline-container-Use%20stow" class="outline-3">
-<h3 id="Use%20stow"><a href="#Use%20stow">Use stow</a></h3>
-<div class="outline-text-3" id="text-Use%20stow">
+<div id="outline-container-Use-stow" class="outline-3">
+<h3 id="Use-stow"><a href="#Use-stow">Use stow</a></h3>
+<div class="outline-text-3" id="text-Use-stow">
 <p>
 The bpftrace binaries have been installed into direcory
 <code>/usr/local/stow/bpftrace-git01</code> (from above procedure).

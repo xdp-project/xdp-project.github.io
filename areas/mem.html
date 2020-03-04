@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Project management for areas/mem</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,26 +26,26 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#Important%20medium-term%20tasks">Important medium-term tasks</a>
+<li><a href="#Important-medium-term-tasks">Important medium-term tasks&#xa0;&#xa0;&#xa0;<span class="tag"><span class="_medium">@medium</span></span></a>
 <ul>
-<li><a href="#Implementing%20page_pool%20return-hook%20via%20SKB"><span class="todo TODO">TODO</span> Implementing page_pool return-hook via SKB</a>
+<li><a href="#Implementing-page_pool-return-hook-via-SKB"><span class="todo TODO">TODO</span> Implementing page_pool return-hook via SKB</a>
 <ul>
-<li><a href="#Post%20RFC-patchset%20for%20page_pool%20recycle%20with%20mvneta%20use-case"><span class="done DONE">DONE</span> Post RFC-patchset for page_pool recycle with mvneta use-case</a></li>
-<li><a href="#Prioritize%20page_pool%20options%20for%20skb_try_coalesce"><span class="done DONE">DONE</span> Prioritize page_pool options for skb_try_coalesce</a></li>
-<li><a href="#Doc%20code%20where%20netstack%20manipulate%20skb-%3Ehead%20page"><span class="todo TODO">TODO</span> Doc code where netstack manipulate skb-&gt;head page</a></li>
-<li><a href="#Add%20testing%20procedures%20actvating%20TCP%20coalesce%20code"><span class="todo TODO">TODO</span> Add testing procedures actvating TCP coalesce code</a></li>
+<li><a href="#Post-RFC-patchset-for-page_pool-recycle-with-mvneta-use-case"><span class="done DONE">DONE</span> Post RFC-patchset for page_pool recycle with mvneta use-case</a></li>
+<li><a href="#Prioritize-page_pool-options-for-skb_try_coalesce"><span class="done DONE">DONE</span> Prioritize page_pool options for skb_try_coalesce</a></li>
+<li><a href="#Doc-code-where-netstack-manipulate-skb--head-page"><span class="todo TODO">TODO</span> Doc code where netstack manipulate skb-&gt;head page</a></li>
+<li><a href="#Add-testing-procedures-actvating-TCP-coalesce-code"><span class="todo TODO">TODO</span> Add testing procedures actvating TCP coalesce code</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#page_pool%20handling%20in-flight%20frames%20during%20shutdown"><span class="todo TODO">TODO</span> page_pool handling in-flight frames during shutdown</a>
+<li><a href="#page_pool-handling-in-flight-frames-during-shutdown"><span class="todo TODO">TODO</span> page_pool handling in-flight frames during shutdown</a>
 <ul>
-<li><a href="#Test%20if%20__xdp_return%28%29%20can%20hit%20no%20page_pool%20id%20issue"><span class="done DONE">DONE</span> Test if __xdp_return() can hit no page_pool id issue</a></li>
-<li><a href="#xdp_rxq_info_unreg_mem_model%20take%20over%20calling%20page_pool_destroy"><span class="done DONE">DONE</span> xdp_rxq_info_unreg_mem_model take over calling page_pool_destroy</a></li>
-<li><a href="#page_pool%20inflight%3A%20howto%20delay%2Fpostpone%20work%20in%20kernel"><span class="todo TODO">TODO</span> page_pool inflight: howto delay/postpone work in kernel</a></li>
-<li><a href="#page_pool%20inflight%3A%20Code%20solution%233"><span class="todo NEXT">NEXT</span> page_pool inflight: Code solution#3</a></li>
-<li><a href="#Create%20tracepoints%20for%20page_pool"><span class="todo TODO">TODO</span> Create tracepoints for page_pool</a></li>
-<li><a href="#Create%20bpftrace%20scripts%20monitoring%20page_pool%20stats%20%28via%20tracepoints%29"><span class="todo TODO">TODO</span> Create bpftrace scripts monitoring page_pool stats (via tracepoints)</a></li>
+<li><a href="#Test-if-__xdp_return---can-hit-no-page_pool-id-issue"><span class="done DONE">DONE</span> Test if __xdp_return() can hit no page_pool id issue</a></li>
+<li><a href="#xdp_rxq_info_unreg_mem_model-take-over-calling-page_pool_destroy"><span class="done DONE">DONE</span> xdp_rxq_info_unreg_mem_model take over calling page_pool_destroy</a></li>
+<li><a href="#page_pool-inflight--howto-delay-postpone-work-in-kernel"><span class="todo TODO">TODO</span> page_pool inflight: howto delay/postpone work in kernel</a></li>
+<li><a href="#page_pool-inflight--Code-solution-3"><span class="todo NEXT">NEXT</span> page_pool inflight: Code solution#3</a></li>
+<li><a href="#Create-tracepoints-for-page_pool"><span class="todo TODO">TODO</span> Create tracepoints for page_pool</a></li>
+<li><a href="#Create-bpftrace-scripts-monitoring-page_pool-stats--via-tracepoints-"><span class="todo TODO">TODO</span> Create bpftrace scripts monitoring page_pool stats (via tracepoints)</a></li>
 </ul>
 </li>
 </ul>
@@ -57,21 +62,21 @@ Top-level headings indicate category, as explained in <a href="../xdp-project.ht
 </p>
 
 
-<div id="outline-container-Important%20medium-term%20tasks" class="outline-2">
-<h2 id="Important%20medium-term%20tasks"><a href="#Important%20medium-term%20tasks">Important medium-term tasks</a></h2>
-<div class="outline-text-2" id="text-Important%20medium-term%20tasks">
+<div id="outline-container-Important-medium-term-tasks" class="outline-2">
+<h2 id="Important-medium-term-tasks"><a href="#Important-medium-term-tasks">Important medium-term tasks&#xa0;&#xa0;&#xa0;<span class="tag"><span class="_medium">@medium</span></span></a></h2>
+<div class="outline-text-2" id="text-Important-medium-term-tasks">
 </div>
-<div id="outline-container-Implementing%20page_pool%20return-hook%20via%20SKB" class="outline-3">
-<h3 id="Implementing%20page_pool%20return-hook%20via%20SKB"><a href="#Implementing%20page_pool%20return-hook%20via%20SKB"><span class="todo TODO">TODO</span> Implementing page_pool return-hook via SKB</a></h3>
-<div class="outline-text-3" id="text-Implementing%20page_pool%20return-hook%20via%20SKB">
+<div id="outline-container-Implementing-page_pool-return-hook-via-SKB" class="outline-3">
+<h3 id="Implementing-page_pool-return-hook-via-SKB"><a href="#Implementing-page_pool-return-hook-via-SKB"><span class="todo TODO">TODO</span> Implementing page_pool return-hook via SKB</a></h3>
+<div class="outline-text-3" id="text-Implementing-page_pool-return-hook-via-SKB">
 <p>
 The work is recorded in <a href="mem/page_pool02_SKB_return_callback.html">mem/page_pool02_SKB_return_callback.html</a>
 </p>
 </div>
 
-<div id="outline-container-Post%20RFC-patchset%20for%20page_pool%20recycle%20with%20mvneta%20use-case" class="outline-4">
-<h4 id="Post%20RFC-patchset%20for%20page_pool%20recycle%20with%20mvneta%20use-case"><a href="#Post%20RFC-patchset%20for%20page_pool%20recycle%20with%20mvneta%20use-case"><span class="done DONE">DONE</span> Post RFC-patchset for page_pool recycle with mvneta use-case</a></h4>
-<div class="outline-text-4" id="text-Post%20RFC-patchset%20for%20page_pool%20recycle%20with%20mvneta%20use-case">
+<div id="outline-container-Post-RFC-patchset-for-page_pool-recycle-with-mvneta-use-case" class="outline-4">
+<h4 id="Post-RFC-patchset-for-page_pool-recycle-with-mvneta-use-case"><a href="#Post-RFC-patchset-for-page_pool-recycle-with-mvneta-use-case"><span class="done DONE">DONE</span> Post RFC-patchset for page_pool recycle with mvneta use-case</a></h4>
+<div class="outline-text-4" id="text-Post-RFC-patchset-for-page_pool-recycle-with-mvneta-use-case">
 <p>
 Org-link to section:
 <a href="mem/page_pool02_SKB_return_callback.html#RFC-patchset">mem/page_pool02_SKB_return_callback.html#RFC-patchset</a>
@@ -79,42 +84,42 @@ Org-link to section:
 </div>
 </div>
 
-<div id="outline-container-Prioritize%20page_pool%20options%20for%20skb_try_coalesce" class="outline-4">
-<h4 id="Prioritize%20page_pool%20options%20for%20skb_try_coalesce"><a href="#Prioritize%20page_pool%20options%20for%20skb_try_coalesce"><span class="done DONE">DONE</span> Prioritize page_pool options for skb_try_coalesce</a></h4>
-<div class="outline-text-4" id="text-Prioritize%20page_pool%20options%20for%20skb_try_coalesce">
+<div id="outline-container-Prioritize-page_pool-options-for-skb_try_coalesce" class="outline-4">
+<h4 id="Prioritize-page_pool-options-for-skb_try_coalesce"><a href="#Prioritize-page_pool-options-for-skb_try_coalesce"><span class="done DONE">DONE</span> Prioritize page_pool options for skb_try_coalesce</a></h4>
+<div class="outline-text-4" id="text-Prioritize-page_pool-options-for-skb_try_coalesce">
 </div>
 </div>
 
-<div id="outline-container-Doc%20code%20where%20netstack%20manipulate%20skb-%3Ehead%20page" class="outline-4">
-<h4 id="Doc%20code%20where%20netstack%20manipulate%20skb-%3Ehead%20page"><a href="#Doc%20code%20where%20netstack%20manipulate%20skb-%3Ehead%20page"><span class="todo TODO">TODO</span> Doc code where netstack manipulate skb-&gt;head page</a></h4>
+<div id="outline-container-Doc-code-where-netstack-manipulate-skb--head-page" class="outline-4">
+<h4 id="Doc-code-where-netstack-manipulate-skb--head-page"><a href="#Doc-code-where-netstack-manipulate-skb--head-page"><span class="todo TODO">TODO</span> Doc code where netstack manipulate skb-&gt;head page</a></h4>
 </div>
 
-<div id="outline-container-Add%20testing%20procedures%20actvating%20TCP%20coalesce%20code" class="outline-4">
-<h4 id="Add%20testing%20procedures%20actvating%20TCP%20coalesce%20code"><a href="#Add%20testing%20procedures%20actvating%20TCP%20coalesce%20code"><span class="todo TODO">TODO</span> Add testing procedures actvating TCP coalesce code</a></h4>
+<div id="outline-container-Add-testing-procedures-actvating-TCP-coalesce-code" class="outline-4">
+<h4 id="Add-testing-procedures-actvating-TCP-coalesce-code"><a href="#Add-testing-procedures-actvating-TCP-coalesce-code"><span class="todo TODO">TODO</span> Add testing procedures actvating TCP coalesce code</a></h4>
 </div>
 </div>
 </div>
 
-<div id="outline-container-page_pool%20handling%20in-flight%20frames%20during%20shutdown" class="outline-2">
-<h2 id="page_pool%20handling%20in-flight%20frames%20during%20shutdown"><a href="#page_pool%20handling%20in-flight%20frames%20during%20shutdown"><span class="todo TODO">TODO</span> page_pool handling in-flight frames during shutdown</a></h2>
-<div class="outline-text-2" id="text-page_pool%20handling%20in-flight%20frames%20during%20shutdown">
+<div id="outline-container-page_pool-handling-in-flight-frames-during-shutdown" class="outline-2">
+<h2 id="page_pool-handling-in-flight-frames-during-shutdown"><a href="#page_pool-handling-in-flight-frames-during-shutdown"><span class="todo TODO">TODO</span> page_pool handling in-flight frames during shutdown</a></h2>
+<div class="outline-text-2" id="text-page_pool-handling-in-flight-frames-during-shutdown">
 <p>
 See <a href="mem/page_pool03_shutdown_inflight.html">mem/page_pool03_shutdown_inflight.html</a>
 </p>
 </div>
 
-<div id="outline-container-Test%20if%20__xdp_return%28%29%20can%20hit%20no%20page_pool%20id%20issue" class="outline-3">
-<h3 id="Test%20if%20__xdp_return%28%29%20can%20hit%20no%20page_pool%20id%20issue"><a href="#Test%20if%20__xdp_return%28%29%20can%20hit%20no%20page_pool%20id%20issue"><span class="done DONE">DONE</span> Test if __xdp_return() can hit no page_pool id issue</a></h3>
-<div class="outline-text-3" id="text-Test%20if%20__xdp_return%28%29%20can%20hit%20no%20page_pool%20id%20issue">
+<div id="outline-container-Test-if-__xdp_return---can-hit-no-page_pool-id-issue" class="outline-3">
+<h3 id="Test-if-__xdp_return---can-hit-no-page_pool-id-issue"><a href="#Test-if-__xdp_return---can-hit-no-page_pool-id-issue"><span class="done DONE">DONE</span> Test if __xdp_return() can hit no page_pool id issue</a></h3>
+<div class="outline-text-3" id="text-Test-if-__xdp_return---can-hit-no-page_pool-id-issue">
 <p>
 Confirmed this can happen.
 </p>
 </div>
 </div>
 
-<div id="outline-container-xdp_rxq_info_unreg_mem_model%20take%20over%20calling%20page_pool_destroy" class="outline-3">
-<h3 id="xdp_rxq_info_unreg_mem_model%20take%20over%20calling%20page_pool_destroy"><a href="#xdp_rxq_info_unreg_mem_model%20take%20over%20calling%20page_pool_destroy"><span class="done DONE">DONE</span> xdp_rxq_info_unreg_mem_model take over calling page_pool_destroy</a></h3>
-<div class="outline-text-3" id="text-xdp_rxq_info_unreg_mem_model%20take%20over%20calling%20page_pool_destroy">
+<div id="outline-container-xdp_rxq_info_unreg_mem_model-take-over-calling-page_pool_destroy" class="outline-3">
+<h3 id="xdp_rxq_info_unreg_mem_model-take-over-calling-page_pool_destroy"><a href="#xdp_rxq_info_unreg_mem_model-take-over-calling-page_pool_destroy"><span class="done DONE">DONE</span> xdp_rxq_info_unreg_mem_model take over calling page_pool_destroy</a></h3>
+<div class="outline-text-3" id="text-xdp_rxq_info_unreg_mem_model-take-over-calling-page_pool_destroy">
 <p>
 When delaying freeing the registered XDP memory model, then we cannot have
 drivers calling page_pool_destroy() directly. Figure out a clean code way to do
@@ -123,9 +128,9 @@ this.
 </div>
 </div>
 
-<div id="outline-container-page_pool%20inflight%3A%20howto%20delay%2Fpostpone%20work%20in%20kernel" class="outline-3">
-<h3 id="page_pool%20inflight%3A%20howto%20delay%2Fpostpone%20work%20in%20kernel"><a href="#page_pool%20inflight%3A%20howto%20delay%2Fpostpone%20work%20in%20kernel"><span class="todo TODO">TODO</span> page_pool inflight: howto delay/postpone work in kernel</a></h3>
-<div class="outline-text-3" id="text-page_pool%20inflight%3A%20howto%20delay%2Fpostpone%20work%20in%20kernel">
+<div id="outline-container-page_pool-inflight--howto-delay-postpone-work-in-kernel" class="outline-3">
+<h3 id="page_pool-inflight--howto-delay-postpone-work-in-kernel"><a href="#page_pool-inflight--howto-delay-postpone-work-in-kernel"><span class="todo TODO">TODO</span> page_pool inflight: howto delay/postpone work in kernel</a></h3>
+<div class="outline-text-3" id="text-page_pool-inflight--howto-delay-postpone-work-in-kernel">
 <p>
 What is the best way to delay taking down page_pool object when driver calls
 xdp_rxq_info_unreg_mem_model(), in the case page_pool detect/have in-flight
@@ -168,16 +173,16 @@ the work-queue function from itself via <code>schedule_delayed_work</code>.
 </div>
 
 
-<div id="outline-container-page_pool%20inflight%3A%20Code%20solution%233" class="outline-3">
-<h3 id="page_pool%20inflight%3A%20Code%20solution%233"><a href="#page_pool%20inflight%3A%20Code%20solution%233"><span class="todo NEXT">NEXT</span> page_pool inflight: Code solution#3</a></h3>
+<div id="outline-container-page_pool-inflight--Code-solution-3" class="outline-3">
+<h3 id="page_pool-inflight--Code-solution-3"><a href="#page_pool-inflight--Code-solution-3"><span class="todo NEXT">NEXT</span> page_pool inflight: Code solution#3</a></h3>
 </div>
 
-<div id="outline-container-Create%20tracepoints%20for%20page_pool" class="outline-3">
-<h3 id="Create%20tracepoints%20for%20page_pool"><a href="#Create%20tracepoints%20for%20page_pool"><span class="todo TODO">TODO</span> Create tracepoints for page_pool</a></h3>
+<div id="outline-container-Create-tracepoints-for-page_pool" class="outline-3">
+<h3 id="Create-tracepoints-for-page_pool"><a href="#Create-tracepoints-for-page_pool"><span class="todo TODO">TODO</span> Create tracepoints for page_pool</a></h3>
 </div>
 
-<div id="outline-container-Create%20bpftrace%20scripts%20monitoring%20page_pool%20stats%20%28via%20tracepoints%29" class="outline-3">
-<h3 id="Create%20bpftrace%20scripts%20monitoring%20page_pool%20stats%20%28via%20tracepoints%29"><a href="#Create%20bpftrace%20scripts%20monitoring%20page_pool%20stats%20%28via%20tracepoints%29"><span class="todo TODO">TODO</span> Create bpftrace scripts monitoring page_pool stats (via tracepoints)</a></h3>
+<div id="outline-container-Create-bpftrace-scripts-monitoring-page_pool-stats--via-tracepoints-" class="outline-3">
+<h3 id="Create-bpftrace-scripts-monitoring-page_pool-stats--via-tracepoints-"><a href="#Create-bpftrace-scripts-monitoring-page_pool-stats--via-tracepoints-"><span class="todo TODO">TODO</span> Create bpftrace scripts monitoring page_pool stats (via tracepoints)</a></h3>
 </div>
 </div>
 </div>

@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Benchmarks for branch mvneta_04_page_pool_recycle_xdp</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,16 +26,16 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#Patch%20desc%20notes">Patch desc notes</a>
+<li><a href="#Patch-desc-notes">Patch desc notes</a>
 <ul>
-<li><a href="#Patch%20desc%3A%20net%3A%20mvneta%3A%20Add%20basic%20XDP%20support">Patch desc: net: mvneta: Add basic XDP support</a></li>
+<li><a href="#Patch-desc--net--mvneta--Add-basic-XDP-support">Patch desc: net: mvneta: Add basic XDP support</a></li>
 </ul>
 </li>
-<li><a href="#Testing%20with%20board%20operating%20at%20800MHz">Testing with board operating at 800MHz</a>
+<li><a href="#Testing-with-board-operating-at-800MHz">Testing with board operating at 800MHz</a>
 <ul>
-<li><a href="#XDP_DROP%2C%20net.core.bpf_jit_enable%3D0%2C%2064b%20packets">XDP_DROP, net.core.bpf_jit_enable=0, 64b packets</a></li>
-<li><a href="#XDP_DROP%2C%20net.core.bpf_jit_enable%3D1%2C%2064b%20packets">XDP_DROP, net.core.bpf_jit_enable=1, 64b packets</a></li>
-<li><a href="#XDP_DROP%2C%20net.core.bpf_jit_enable%3D1%2C%2064b%20packet%2C%20Instruction%20cache%20misses">XDP_DROP, net.core.bpf_jit_enable=1, 64b packet, Instruction cache misses</a></li>
+<li><a href="#XDP_DROP--net.core.bpf_jit_enable-0--64b-packets">XDP_DROP, net.core.bpf_jit_enable=0, 64b packets</a></li>
+<li><a href="#XDP_DROP--net.core.bpf_jit_enable-1--64b-packets">XDP_DROP, net.core.bpf_jit_enable=1, 64b packets</a></li>
+<li><a href="#XDP_DROP--net.core.bpf_jit_enable-1--64b-packet--Instruction-cache-misses">XDP_DROP, net.core.bpf_jit_enable=1, 64b packet, Instruction cache misses</a></li>
 </ul>
 </li>
 </ul>
@@ -53,18 +58,18 @@ Details on the page pool recycle results can be found here:
 <li><a href="board_espressobin03_bench_page_pool.html">board_espressobin03_bench_page_pool.html</a></li>
 </ul>
 
-<div id="outline-container-Patch%20desc%20notes" class="outline-2">
-<h2 id="Patch%20desc%20notes"><a href="#Patch%20desc%20notes">Patch desc notes</a></h2>
-<div class="outline-text-2" id="text-Patch%20desc%20notes">
+<div id="outline-container-Patch-desc-notes" class="outline-2">
+<h2 id="Patch-desc-notes"><a href="#Patch-desc-notes">Patch desc notes</a></h2>
+<div class="outline-text-2" id="text-Patch-desc-notes">
 <p>
 For branch mvneta_04_page_pool_recycle_xdp
 All patches from mvneta_03_page_pool_recycle are included
 </p>
 </div>
 
-<div id="outline-container-Patch%20desc%3A%20net%3A%20mvneta%3A%20Add%20basic%20XDP%20support" class="outline-3">
-<h3 id="Patch%20desc%3A%20net%3A%20mvneta%3A%20Add%20basic%20XDP%20support"><a href="#Patch%20desc%3A%20net%3A%20mvneta%3A%20Add%20basic%20XDP%20support">Patch desc: net: mvneta: Add basic XDP support</a></h3>
-<div class="outline-text-3" id="text-Patch%20desc%3A%20net%3A%20mvneta%3A%20Add%20basic%20XDP%20support">
+<div id="outline-container-Patch-desc--net--mvneta--Add-basic-XDP-support" class="outline-3">
+<h3 id="Patch-desc--net--mvneta--Add-basic-XDP-support"><a href="#Patch-desc--net--mvneta--Add-basic-XDP-support">Patch desc: net: mvneta: Add basic XDP support</a></h3>
+<div class="outline-text-3" id="text-Patch-desc--net--mvneta--Add-basic-XDP-support">
 <p>
 Adds basic XDP support (only XDP_DROP/XDP_REDIRECT)
 </p>
@@ -82,9 +87,9 @@ after the dma_sync calls
 </div>
 </div>
 
-<div id="outline-container-Testing%20with%20board%20operating%20at%20800MHz" class="outline-2">
-<h2 id="Testing%20with%20board%20operating%20at%20800MHz"><a href="#Testing%20with%20board%20operating%20at%20800MHz">Testing with board operating at 800MHz</a></h2>
-<div class="outline-text-2" id="text-Testing%20with%20board%20operating%20at%20800MHz">
+<div id="outline-container-Testing-with-board-operating-at-800MHz" class="outline-2">
+<h2 id="Testing-with-board-operating-at-800MHz"><a href="#Testing-with-board-operating-at-800MHz">Testing with board operating at 800MHz</a></h2>
+<div class="outline-text-2" id="text-Testing-with-board-operating-at-800MHz">
 <p>
 Notice below <code>perf stat</code> cycles counter reveled that the CPU as
 operating at 800MHz, while it should operate at 1GHz. Thus, below PPS
@@ -97,9 +102,9 @@ documented in kernel config recommendations <a href="configs/README_espressobin.
 </p>
 </div>
 
-<div id="outline-container-XDP_DROP%2C%20net.core.bpf_jit_enable%3D0%2C%2064b%20packets" class="outline-3">
-<h3 id="XDP_DROP%2C%20net.core.bpf_jit_enable%3D0%2C%2064b%20packets"><a href="#XDP_DROP%2C%20net.core.bpf_jit_enable%3D0%2C%2064b%20packets">XDP_DROP, net.core.bpf_jit_enable=0, 64b packets</a></h3>
-<div class="outline-text-3" id="text-XDP_DROP%2C%20net.core.bpf_jit_enable%3D0%2C%2064b%20packets">
+<div id="outline-container-XDP_DROP--net.core.bpf_jit_enable-0--64b-packets" class="outline-3">
+<h3 id="XDP_DROP--net.core.bpf_jit_enable-0--64b-packets"><a href="#XDP_DROP--net.core.bpf_jit_enable-0--64b-packets">XDP_DROP, net.core.bpf_jit_enable=0, 64b packets</a></h3>
+<div class="outline-text-3" id="text-XDP_DROP--net.core.bpf_jit_enable-0--64b-packets">
 <p>
 pps: 389660 pkt/s
 </p>
@@ -124,9 +129,9 @@ Performance counter stats for 'CPU(s) 0' (3 runs):
 </div>
 </div>
 
-<div id="outline-container-XDP_DROP%2C%20net.core.bpf_jit_enable%3D1%2C%2064b%20packets" class="outline-3">
-<h3 id="XDP_DROP%2C%20net.core.bpf_jit_enable%3D1%2C%2064b%20packets"><a href="#XDP_DROP%2C%20net.core.bpf_jit_enable%3D1%2C%2064b%20packets">XDP_DROP, net.core.bpf_jit_enable=1, 64b packets</a></h3>
-<div class="outline-text-3" id="text-XDP_DROP%2C%20net.core.bpf_jit_enable%3D1%2C%2064b%20packets">
+<div id="outline-container-XDP_DROP--net.core.bpf_jit_enable-1--64b-packets" class="outline-3">
+<h3 id="XDP_DROP--net.core.bpf_jit_enable-1--64b-packets"><a href="#XDP_DROP--net.core.bpf_jit_enable-1--64b-packets">XDP_DROP, net.core.bpf_jit_enable=1, 64b packets</a></h3>
+<div class="outline-text-3" id="text-XDP_DROP--net.core.bpf_jit_enable-1--64b-packets">
 <p>
 pps: 514312 pkt/s
 </p>
@@ -151,9 +156,9 @@ Performance counter stats for 'CPU(s) 0' (3 runs):
 </div>
 </div>
 
-<div id="outline-container-XDP_DROP%2C%20net.core.bpf_jit_enable%3D1%2C%2064b%20packet%2C%20Instruction%20cache%20misses" class="outline-3">
-<h3 id="XDP_DROP%2C%20net.core.bpf_jit_enable%3D1%2C%2064b%20packet%2C%20Instruction%20cache%20misses"><a href="#XDP_DROP%2C%20net.core.bpf_jit_enable%3D1%2C%2064b%20packet%2C%20Instruction%20cache%20misses">XDP_DROP, net.core.bpf_jit_enable=1, 64b packet, Instruction cache misses</a></h3>
-<div class="outline-text-3" id="text-XDP_DROP%2C%20net.core.bpf_jit_enable%3D1%2C%2064b%20packet%2C%20Instruction%20cache%20misses">
+<div id="outline-container-XDP_DROP--net.core.bpf_jit_enable-1--64b-packet--Instruction-cache-misses" class="outline-3">
+<h3 id="XDP_DROP--net.core.bpf_jit_enable-1--64b-packet--Instruction-cache-misses"><a href="#XDP_DROP--net.core.bpf_jit_enable-1--64b-packet--Instruction-cache-misses">XDP_DROP, net.core.bpf_jit_enable=1, 64b packet, Instruction cache misses</a></h3>
+<div class="outline-text-3" id="text-XDP_DROP--net.core.bpf_jit_enable-1--64b-packet--Instruction-cache-misses">
 <pre class="example">
 perf stat -C0 -r 3 -e L1-icache-load -e L1-icache-load-misses \
                    -e L1-dcache-loads -e L1-dcache-load-misses \

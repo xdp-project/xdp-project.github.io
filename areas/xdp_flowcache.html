@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Brainstorming around XDP-accelerated flowcache</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,24 +26,24 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#This%20section%20contains%20background%20and%20describes%20current%20state%20of%20affairs">This section contains background and describes current state of affairs</a>
+<li><a href="#This-section-contains-background-and-describes-current-state-of-affairs">This section contains background and describes current state of affairs</a>
 <ul>
 <li><a href="#Background">Background</a></li>
-<li><a href="#Recent%20events">Recent events</a></li>
+<li><a href="#Recent-events">Recent events</a></li>
 </ul>
 </li>
-<li><a href="#High%20level%20proposal">High level proposal</a>
+<li><a href="#High-level-proposal">High level proposal</a>
 <ul>
-<li><a href="#XDP%2FBPF%20accelerated%20forwarding">XDP/BPF accelerated forwarding</a></li>
-<li><a href="#API%20for%20use%20by%20HW%20packet%20forwarding%20accelerators">API for use by HW packet forwarding accelerators</a></li>
+<li><a href="#XDP-BPF-accelerated-forwarding">XDP/BPF accelerated forwarding</a></li>
+<li><a href="#API-for-use-by-HW-packet-forwarding-accelerators">API for use by HW packet forwarding accelerators</a></li>
 </ul>
 </li>
-<li><a href="#XDP%20flowcache%20project"><span class="todo TODO">TODO</span> XDP flowcache project</a>
+<li><a href="#XDP-flowcache-project"><span class="todo TODO">TODO</span> XDP flowcache project&#xa0;&#xa0;&#xa0;<span class="tag"><span class="_long">@long</span></span></a>
 <ul>
-<li><a href="#Investigate%20feasibility%20of%20approach"><span class="todo TODO">TODO</span> Investigate feasibility of approach</a></li>
-<li><a href="#Implement%20POC%20%28Proof%20of%20Concept%29"><span class="todo TODO">TODO</span> Implement POC (Proof of Concept)</a></li>
-<li><a href="#Test%20performance%20on%20POC"><span class="todo TODO">TODO</span> Test performance on POC</a></li>
-<li><a href="#Interact%20with%20current%20vendors%20regarding%20if%20proposed%20solution%20is%20enough%20to%20solve%20their%20problems"><span class="todo TODO">TODO</span> Interact with current vendors regarding if proposed solution is enough to solve their problems</a></li>
+<li><a href="#Investigate-feasibility-of-approach"><span class="todo TODO">TODO</span> Investigate feasibility of approach</a></li>
+<li><a href="#Implement-POC--Proof-of-Concept-"><span class="todo TODO">TODO</span> Implement POC (Proof of Concept)</a></li>
+<li><a href="#Test-performance-on-POC"><span class="todo TODO">TODO</span> Test performance on POC</a></li>
+<li><a href="#Interact-with-current-vendors-regarding-if-proposed-solution-is-enough-to-solve-their-problems"><span class="todo TODO">TODO</span> Interact with current vendors regarding if proposed solution is enough to solve their problems</a></li>
 </ul>
 </li>
 </ul>
@@ -52,9 +57,9 @@ controlled via (the XDP/BPF forwarding path does the same as the hardware
 incarnation.
 </p>
 
-<div id="outline-container-This%20section%20contains%20background%20and%20describes%20current%20state%20of%20affairs" class="outline-2">
-<h2 id="This%20section%20contains%20background%20and%20describes%20current%20state%20of%20affairs"><a href="#This%20section%20contains%20background%20and%20describes%20current%20state%20of%20affairs">This section contains background and describes current state of affairs</a></h2>
-<div class="outline-text-2" id="text-This%20section%20contains%20background%20and%20describes%20current%20state%20of%20affairs">
+<div id="outline-container-This-section-contains-background-and-describes-current-state-of-affairs" class="outline-2">
+<h2 id="This-section-contains-background-and-describes-current-state-of-affairs"><a href="#This-section-contains-background-and-describes-current-state-of-affairs">This section contains background and describes current state of affairs</a></h2>
+<div class="outline-text-2" id="text-This-section-contains-background-and-describes-current-state-of-affairs">
 </div>
 <div id="outline-container-Background" class="outline-3">
 <h3 id="Background"><a href="#Background">Background</a></h3>
@@ -101,9 +106,9 @@ by indroducing a flowoffload packet path:
 </div>
 </div>
 
-<div id="outline-container-Recent%20events" class="outline-3">
-<h3 id="Recent%20events"><a href="#Recent%20events">Recent events</a></h3>
-<div class="outline-text-3" id="text-Recent%20events">
+<div id="outline-container-Recent-events" class="outline-3">
+<h3 id="Recent-events"><a href="#Recent-events">Recent events</a></h3>
+<div class="outline-text-3" id="text-Recent-events">
 <p>
 There has been work in Linux Foundation subsidiary PRPL Foundation to
 standardise APIs into hardware, so that less work has to be done be the
@@ -127,9 +132,9 @@ NICs).
 </div>
 </div>
 
-<div id="outline-container-High%20level%20proposal" class="outline-2">
-<h2 id="High%20level%20proposal"><a href="#High%20level%20proposal">High level proposal</a></h2>
-<div class="outline-text-2" id="text-High%20level%20proposal">
+<div id="outline-container-High-level-proposal" class="outline-2">
+<h2 id="High-level-proposal"><a href="#High-level-proposal">High level proposal</a></h2>
+<div class="outline-text-2" id="text-High-level-proposal">
 <p>
 This document proposes two high level work items that will improve both
 Linux kernel forwarding performance and also create hooks for the hardware
@@ -137,9 +142,9 @@ packet accelerators.
 </p>
 </div>
 
-<div id="outline-container-XDP%2FBPF%20accelerated%20forwarding" class="outline-3">
-<h3 id="XDP%2FBPF%20accelerated%20forwarding"><a href="#XDP%2FBPF%20accelerated%20forwarding">XDP/BPF accelerated forwarding</a></h3>
-<div class="outline-text-3" id="text-XDP%2FBPF%20accelerated%20forwarding">
+<div id="outline-container-XDP-BPF-accelerated-forwarding" class="outline-3">
+<h3 id="XDP-BPF-accelerated-forwarding"><a href="#XDP-BPF-accelerated-forwarding">XDP/BPF accelerated forwarding</a></h3>
+<div class="outline-text-3" id="text-XDP-BPF-accelerated-forwarding">
 <p>
 If the above mentioned nf_flowtable fastpath bypass could be BPF/XDP
 accelerated, then performance would most likely be improved significantly on
@@ -151,9 +156,9 @@ never have to touch regular Linux kernel for already established flows.
 </div>
 </div>
 
-<div id="outline-container-API%20for%20use%20by%20HW%20packet%20forwarding%20accelerators" class="outline-3">
-<h3 id="API%20for%20use%20by%20HW%20packet%20forwarding%20accelerators"><a href="#API%20for%20use%20by%20HW%20packet%20forwarding%20accelerators">API for use by HW packet forwarding accelerators</a></h3>
-<div class="outline-text-3" id="text-API%20for%20use%20by%20HW%20packet%20forwarding%20accelerators">
+<div id="outline-container-API-for-use-by-HW-packet-forwarding-accelerators" class="outline-3">
+<h3 id="API-for-use-by-HW-packet-forwarding-accelerators"><a href="#API-for-use-by-HW-packet-forwarding-accelerators">API for use by HW packet forwarding accelerators</a></h3>
+<div class="outline-text-3" id="text-API-for-use-by-HW-packet-forwarding-accelerators">
 <p>
 The XDP/BPF based of forwarding would have to expose the same information to
 BPF that a HW packet forwarding accelerator would need to do its job. By
@@ -165,13 +170,13 @@ being done to hook their accelerators into the Linux kernel forwarding path.
 </div>
 </div>
 
-<div id="outline-container-XDP%20flowcache%20project" class="outline-2">
-<h2 id="XDP%20flowcache%20project"><a href="#XDP%20flowcache%20project"><span class="todo TODO">TODO</span> XDP flowcache project</a></h2>
-<div class="outline-text-2" id="text-XDP%20flowcache%20project">
+<div id="outline-container-XDP-flowcache-project" class="outline-2">
+<h2 id="XDP-flowcache-project"><a href="#XDP-flowcache-project"><span class="todo TODO">TODO</span> XDP flowcache project&#xa0;&#xa0;&#xa0;<span class="tag"><span class="_long">@long</span></span></a></h2>
+<div class="outline-text-2" id="text-XDP-flowcache-project">
 </div>
-<div id="outline-container-Investigate%20feasibility%20of%20approach" class="outline-3">
-<h3 id="Investigate%20feasibility%20of%20approach"><a href="#Investigate%20feasibility%20of%20approach"><span class="todo TODO">TODO</span> Investigate feasibility of approach</a></h3>
-<div class="outline-text-3" id="text-Investigate%20feasibility%20of%20approach">
+<div id="outline-container-Investigate-feasibility-of-approach" class="outline-3">
+<h3 id="Investigate-feasibility-of-approach"><a href="#Investigate-feasibility-of-approach"><span class="todo TODO">TODO</span> Investigate feasibility of approach</a></h3>
+<div class="outline-text-3" id="text-Investigate-feasibility-of-approach">
 <p>
 Basic investigation on feasibility and make first draft on what needs to
 be done to enable creation of PoC.
@@ -179,9 +184,9 @@ be done to enable creation of PoC.
 </div>
 </div>
 
-<div id="outline-container-Implement%20POC%20%28Proof%20of%20Concept%29" class="outline-3">
-<h3 id="Implement%20POC%20%28Proof%20of%20Concept%29"><a href="#Implement%20POC%20%28Proof%20of%20Concept%29"><span class="todo TODO">TODO</span> Implement POC (Proof of Concept)</a></h3>
-<div class="outline-text-3" id="text-Implement%20POC%20%28Proof%20of%20Concept%29">
+<div id="outline-container-Implement-POC--Proof-of-Concept-" class="outline-3">
+<h3 id="Implement-POC--Proof-of-Concept-"><a href="#Implement-POC--Proof-of-Concept-"><span class="todo TODO">TODO</span> Implement POC (Proof of Concept)</a></h3>
+<div class="outline-text-3" id="text-Implement-POC--Proof-of-Concept-">
 <p>
 For instance implement forwarding of TCP or UDP flows using XDP
 forwarding based on the flowcache to check if the approach makes sense.
@@ -189,9 +194,9 @@ forwarding based on the flowcache to check if the approach makes sense.
 </div>
 </div>
 
-<div id="outline-container-Test%20performance%20on%20POC" class="outline-3">
-<h3 id="Test%20performance%20on%20POC"><a href="#Test%20performance%20on%20POC"><span class="todo TODO">TODO</span> Test performance on POC</a></h3>
-<div class="outline-text-3" id="text-Test%20performance%20on%20POC">
+<div id="outline-container-Test-performance-on-POC" class="outline-3">
+<h3 id="Test-performance-on-POC"><a href="#Test-performance-on-POC"><span class="todo TODO">TODO</span> Test performance on POC</a></h3>
+<div class="outline-text-3" id="text-Test-performance-on-POC">
 <p>
 Test forwarding performance using XDP approach compared to classic style
 forwarding and flowoffload approach.
@@ -199,9 +204,9 @@ forwarding and flowoffload approach.
 </div>
 </div>
 
-<div id="outline-container-Interact%20with%20current%20vendors%20regarding%20if%20proposed%20solution%20is%20enough%20to%20solve%20their%20problems" class="outline-3">
-<h3 id="Interact%20with%20current%20vendors%20regarding%20if%20proposed%20solution%20is%20enough%20to%20solve%20their%20problems"><a href="#Interact%20with%20current%20vendors%20regarding%20if%20proposed%20solution%20is%20enough%20to%20solve%20their%20problems"><span class="todo TODO">TODO</span> Interact with current vendors regarding if proposed solution is enough to solve their problems</a></h3>
-<div class="outline-text-3" id="text-Interact%20with%20current%20vendors%20regarding%20if%20proposed%20solution%20is%20enough%20to%20solve%20their%20problems">
+<div id="outline-container-Interact-with-current-vendors-regarding-if-proposed-solution-is-enough-to-solve-their-problems" class="outline-3">
+<h3 id="Interact-with-current-vendors-regarding-if-proposed-solution-is-enough-to-solve-their-problems"><a href="#Interact-with-current-vendors-regarding-if-proposed-solution-is-enough-to-solve-their-problems"><span class="todo TODO">TODO</span> Interact with current vendors regarding if proposed solution is enough to solve their problems</a></h3>
+<div class="outline-text-3" id="text-Interact-with-current-vendors-regarding-if-proposed-solution-is-enough-to-solve-their-problems">
 <p>
 Bring work to PRPL Foundation working groups to get feedback and interest
 from vendors on the approach and if the proposed design/APIs is enough.

@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Hunting bug in CPUMAP</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,24 +26,24 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#Solved%3A%20upstream%20patch">Solved: upstream patch</a>
+<li><a href="#Solved--upstream-patch">Solved: upstream patch</a>
 <ul>
-<li><a href="#Patch%20desc">Patch desc</a></li>
-<li><a href="#stg%20mail%20patch">stg mail patch</a></li>
+<li><a href="#Patch-desc">Patch desc</a></li>
+<li><a href="#stg-mail-patch">stg mail patch</a></li>
 </ul>
 </li>
-<li><a href="#Bug%20in%20i40e%20frame_size%20for%20XDP">Bug in i40e frame_size for XDP</a>
+<li><a href="#Bug-in-i40e-frame_size-for-XDP">Bug in i40e frame_size for XDP</a>
 <ul>
-<li><a href="#i40e%20headroom%20calc%20is%20complicated">i40e headroom calc is complicated</a></li>
+<li><a href="#i40e-headroom-calc-is-complicated">i40e headroom calc is complicated</a></li>
 </ul>
 </li>
-<li><a href="#Record%20OOPSes">Record OOPSes</a>
+<li><a href="#Record-OOPSes">Record OOPSes</a>
 <ul>
-<li><a href="#kasan01%20-%20wild-memory-access">kasan01 - wild-memory-access</a></li>
-<li><a href="#kasan02%20-%20use%20after%20free">kasan02 - use after free</a></li>
+<li><a href="#kasan01---wild-memory-access">kasan01 - wild-memory-access</a></li>
+<li><a href="#kasan02---use-after-free">kasan02 - use after free</a></li>
 </ul>
 </li>
-<li><a href="#Deducting%20issue%20in%20code">Deducting issue in code</a></li>
+<li><a href="#Deducting-issue-in-code">Deducting issue in code</a></li>
 </ul>
 </div>
 </div>
@@ -53,9 +58,9 @@ other notes on how the data-layout is might be useful for others to debug
 similar issues.
 </p>
 
-<div id="outline-container-Solved%3A%20upstream%20patch" class="outline-2">
-<h2 id="Solved%3A%20upstream%20patch"><a href="#Solved%3A%20upstream%20patch">Solved: upstream patch</a></h2>
-<div class="outline-text-2" id="text-Solved%3A%20upstream%20patch">
+<div id="outline-container-Solved--upstream-patch" class="outline-2">
+<h2 id="Solved--upstream-patch"><a href="#Solved--upstream-patch">Solved: upstream patch</a></h2>
+<div class="outline-text-2" id="text-Solved--upstream-patch">
 <p>
 This was solved, and patch send upstream.
 </p>
@@ -64,9 +69,9 @@ This was solved, and patch send upstream.
 </ul>
 </div>
 
-<div id="outline-container-Patch%20desc" class="outline-3">
-<h3 id="Patch%20desc"><a href="#Patch%20desc">Patch desc</a></h3>
-<div class="outline-text-3" id="text-Patch%20desc">
+<div id="outline-container-Patch-desc" class="outline-3">
+<h3 id="Patch-desc"><a href="#Patch-desc">Patch desc</a></h3>
+<div class="outline-text-3" id="text-Patch-desc">
 <p>
 xdp: fix cpumap redirect SKB creation bug
 </p>
@@ -131,9 +136,9 @@ This patch is stable material for v5.0 see:
 </div>
 </div>
 
-<div id="outline-container-stg%20mail%20patch" class="outline-3">
-<h3 id="stg%20mail%20patch"><a href="#stg%20mail%20patch">stg mail patch</a></h3>
-<div class="outline-text-3" id="text-stg%20mail%20patch">
+<div id="outline-container-stg-mail-patch" class="outline-3">
+<h3 id="stg-mail-patch"><a href="#stg-mail-patch">stg mail patch</a></h3>
+<div class="outline-text-3" id="text-stg-mail-patch">
 <pre class="example">
 stg mail --version="bpf" --cc meup \
  --to netdev --to alexei --to daniel --cc ilias --cc toke --cc makita.toshiaki@lab.ntt.co.jp \
@@ -144,9 +149,9 @@ stg mail --version="bpf" --cc meup \
 </div>
 
 
-<div id="outline-container-Bug%20in%20i40e%20frame_size%20for%20XDP" class="outline-2">
-<h2 id="Bug%20in%20i40e%20frame_size%20for%20XDP"><a href="#Bug%20in%20i40e%20frame_size%20for%20XDP">Bug in i40e frame_size for XDP</a></h2>
-<div class="outline-text-2" id="text-Bug%20in%20i40e%20frame_size%20for%20XDP">
+<div id="outline-container-Bug-in-i40e-frame_size-for-XDP" class="outline-2">
+<h2 id="Bug-in-i40e-frame_size-for-XDP"><a href="#Bug-in-i40e-frame_size-for-XDP">Bug in i40e frame_size for XDP</a></h2>
+<div class="outline-text-2" id="text-Bug-in-i40e-frame_size-for-XDP">
 <p>
 Getting strange bugs using CPUMAP redirect on i40e. It work with single
 packets, but TCP stream testing can fail and crash. Update: the ixgbe driver
@@ -187,9 +192,9 @@ frame_size = SKB_DATA_ALIGN(xdpf-&gt;len + xdpf-&gt;headroom) +
 </div>
 </div>
 
-<div id="outline-container-i40e%20headroom%20calc%20is%20complicated" class="outline-3">
-<h3 id="i40e%20headroom%20calc%20is%20complicated"><a href="#i40e%20headroom%20calc%20is%20complicated">i40e headroom calc is complicated</a></h3>
-<div class="outline-text-3" id="text-i40e%20headroom%20calc%20is%20complicated">
+<div id="outline-container-i40e-headroom-calc-is-complicated" class="outline-3">
+<h3 id="i40e-headroom-calc-is-complicated"><a href="#i40e-headroom-calc-is-complicated">i40e headroom calc is complicated</a></h3>
+<div class="outline-text-3" id="text-i40e-headroom-calc-is-complicated">
 <p>
 The headroom for i40e is determined via:
 </p>
@@ -259,9 +264,9 @@ return I40E_SKB_PAD is giving us 192 bytes headroom.
 </div>
 </div>
 
-<div id="outline-container-Record%20OOPSes" class="outline-2">
-<h2 id="Record%20OOPSes"><a href="#Record%20OOPSes">Record OOPSes</a></h2>
-<div class="outline-text-2" id="text-Record%20OOPSes">
+<div id="outline-container-Record-OOPSes" class="outline-2">
+<h2 id="Record-OOPSes"><a href="#Record-OOPSes">Record OOPSes</a></h2>
+<div class="outline-text-2" id="text-Record-OOPSes">
 <p>
 Bug also in upstream net-next.
 </p>
@@ -270,9 +275,9 @@ Bug also in upstream net-next.
 Record the KASAN oopses.
 </p>
 </div>
-<div id="outline-container-kasan01%20-%20wild-memory-access" class="outline-3">
-<h3 id="kasan01%20-%20wild-memory-access"><a href="#kasan01%20-%20wild-memory-access">kasan01 - wild-memory-access</a></h3>
-<div class="outline-text-3" id="text-kasan01%20-%20wild-memory-access">
+<div id="outline-container-kasan01---wild-memory-access" class="outline-3">
+<h3 id="kasan01---wild-memory-access"><a href="#kasan01---wild-memory-access">kasan01 - wild-memory-access</a></h3>
+<div class="outline-text-3" id="text-kasan01---wild-memory-access">
 <pre class="example">
 [  623.436951] perf: interrupt took too long (15417 &gt; 15411), lowering kernel.perf_event_max_sample_rate to 12000
 [ 1075.579891] ixgbe 0000:01:00.1: removed PHC on ixgbe2
@@ -395,9 +400,9 @@ arch_atomic_dec_and_test at arch/x86/include/asm/atomic.h:125 (discriminator 3)
 </div>
 </div>
 
-<div id="outline-container-kasan02%20-%20use%20after%20free" class="outline-3">
-<h3 id="kasan02%20-%20use%20after%20free"><a href="#kasan02%20-%20use%20after%20free">kasan02 - use after free</a></h3>
-<div class="outline-text-3" id="text-kasan02%20-%20use%20after%20free">
+<div id="outline-container-kasan02---use-after-free" class="outline-3">
+<h3 id="kasan02---use-after-free"><a href="#kasan02---use-after-free">kasan02 - use after free</a></h3>
+<div class="outline-text-3" id="text-kasan02---use-after-free">
 <pre class="example">
 [  184.201858] ==================================================================
 [  184.209158] BUG: KASAN: use-after-free in skb_try_coalesce+0x3cb/0x760
@@ -569,9 +574,9 @@ __skb_fill_page_desc at include/linux/skbuff.h:2069
 </div>
 </div>
 
-<div id="outline-container-Deducting%20issue%20in%20code" class="outline-2">
-<h2 id="Deducting%20issue%20in%20code"><a href="#Deducting%20issue%20in%20code">Deducting issue in code</a></h2>
-<div class="outline-text-2" id="text-Deducting%20issue%20in%20code">
+<div id="outline-container-Deducting-issue-in-code" class="outline-2">
+<h2 id="Deducting-issue-in-code"><a href="#Deducting-issue-in-code">Deducting issue in code</a></h2>
+<div class="outline-text-2" id="text-Deducting-issue-in-code">
 <p>
 cpu_map_build_skb calc use:
 </p>

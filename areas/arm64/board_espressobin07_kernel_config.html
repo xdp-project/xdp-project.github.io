@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Espressobin config based on macchiatobin</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,7 +26,7 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#Kernel%20config%20changes">Kernel config changes</a></li>
+<li><a href="#Kernel-config-changes">Kernel config changes</a></li>
 </ul>
 </div>
 </div>
@@ -35,9 +40,9 @@ Need some kernel config adjust to get features we need, like BPF_SYSCALL and
 tracing (as XDP uses tracepoints for stats and debugging).
 </p>
 
-<div id="outline-container-Kernel%20config%20changes" class="outline-2">
-<h2 id="Kernel%20config%20changes"><a href="#Kernel%20config%20changes">Kernel config changes</a></h2>
-<div class="outline-text-2" id="text-Kernel%20config%20changes">
+<div id="outline-container-Kernel-config-changes" class="outline-2">
+<h2 id="Kernel-config-changes"><a href="#Kernel-config-changes">Kernel config changes</a></h2>
+<div class="outline-text-2" id="text-Kernel-config-changes">
 <p>
 Made some adjustment to kernel .config to compile in different features that we
 are developing on or are needed for <code>samples/bpf/</code> programs.

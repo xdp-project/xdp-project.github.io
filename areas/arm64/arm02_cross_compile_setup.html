@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Setup ARM cross compiler on build server</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,10 +26,10 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#Getting%20pre-compiled%20cross%20compiler">Getting pre-compiled cross compiler</a></li>
+<li><a href="#Getting-pre-compiled-cross-compiler">Getting pre-compiled cross compiler</a></li>
 <li><a href="#Compile">Compile</a>
 <ul>
-<li><a href="#Kernel%20Makefile%20environment%20variables">Kernel Makefile environment variables</a></li>
+<li><a href="#Kernel-Makefile-environment-variables">Kernel Makefile environment variables</a></li>
 </ul>
 </li>
 </ul>
@@ -38,9 +43,9 @@ Notes on howto get cross compiler working for ARM64.
 Goal: Need/want to get an upstream kernel running on my ARM64-bit hardware.
 </p>
 
-<div id="outline-container-Getting%20pre-compiled%20cross%20compiler" class="outline-2">
-<h2 id="Getting%20pre-compiled%20cross%20compiler"><a href="#Getting%20pre-compiled%20cross%20compiler">Getting pre-compiled cross compiler</a></h2>
-<div class="outline-text-2" id="text-Getting%20pre-compiled%20cross%20compiler">
+<div id="outline-container-Getting-pre-compiled-cross-compiler" class="outline-2">
+<h2 id="Getting-pre-compiled-cross-compiler"><a href="#Getting-pre-compiled-cross-compiler">Getting pre-compiled cross compiler</a></h2>
+<div class="outline-text-2" id="text-Getting-pre-compiled-cross-compiler">
 <p>
 Linaro provides this:
 <a href="https://releases.linaro.org/components/toolchain/binaries/latest-7/aarch64-linux-gnu/">https://releases.linaro.org/components/toolchain/binaries/latest-7/aarch64-linux-gnu/</a>
@@ -92,9 +97,9 @@ Also created script to push kernel to remote host:
 </ul>
 </div>
 
-<div id="outline-container-Kernel%20Makefile%20environment%20variables" class="outline-3">
-<h3 id="Kernel%20Makefile%20environment%20variables"><a href="#Kernel%20Makefile%20environment%20variables">Kernel Makefile environment variables</a></h3>
-<div class="outline-text-3" id="text-Kernel%20Makefile%20environment%20variables">
+<div id="outline-container-Kernel-Makefile-environment-variables" class="outline-3">
+<h3 id="Kernel-Makefile-environment-variables"><a href="#Kernel-Makefile-environment-variables">Kernel Makefile environment variables</a></h3>
+<div class="outline-text-3" id="text-Kernel-Makefile-environment-variables">
 <p>
 It can be convenient to setup environment variables for cross-compile in the
 current shell. Added file named <a href="https://github.com/netoptimizer/prototype-kernel/blob/master/scripts/arm64_compile_env.source">arm64_compile_env.source</a> that can be used by

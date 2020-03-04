@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Setup notes for board espressobin</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,24 +26,24 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#NIC%20driver">NIC driver</a></li>
-<li><a href="#Wiki%20setup%20info">Wiki setup info</a></li>
-<li><a href="#Board%20info%20in%20U-Boot">Board info in U-Boot</a></li>
-<li><a href="#Uboot%20config">Uboot config</a>
+<li><a href="#NIC-driver">NIC driver</a></li>
+<li><a href="#Wiki-setup-info">Wiki setup info</a></li>
+<li><a href="#Board-info-in-U-Boot">Board info in U-Boot</a></li>
+<li><a href="#Uboot-config">Uboot config</a>
 <ul>
-<li><a href="#Backup%2Ffallback%20kernel">Backup/fallback kernel</a></li>
+<li><a href="#Backup-fallback-kernel">Backup/fallback kernel</a></li>
 </ul>
 </li>
-<li><a href="#Ubuntu%20tar.gz%20hack">Ubuntu tar.gz hack</a></li>
-<li><a href="#Extra%20packages">Extra packages</a></li>
-<li><a href="#Getting%20perf%20on%20Ubuntu">Getting perf on Ubuntu</a></li>
-<li><a href="#Ubuntu%20network%20setup%20via%20netplan">Ubuntu network setup via netplan</a>
+<li><a href="#Ubuntu-tar.gz-hack">Ubuntu tar.gz hack</a></li>
+<li><a href="#Extra-packages">Extra packages</a></li>
+<li><a href="#Getting-perf-on-Ubuntu">Getting perf on Ubuntu</a></li>
+<li><a href="#Ubuntu-network-setup-via-netplan">Ubuntu network setup via netplan</a>
 <ul>
-<li><a href="#First%20failed%20attempt%20with%20netplan">First failed attempt with netplan</a></li>
-<li><a href="#Second%20attempt%20with%20netplan">Second attempt with netplan</a></li>
+<li><a href="#First-failed-attempt-with-netplan">First failed attempt with netplan</a></li>
+<li><a href="#Second-attempt-with-netplan">Second attempt with netplan</a></li>
 </ul>
 </li>
-<li><a href="#perf%20profiling%20on%20ubuntu%20with%20ARM64">perf profiling on ubuntu with ARM64</a></li>
+<li><a href="#perf-profiling-on-ubuntu-with-ARM64">perf profiling on ubuntu with ARM64</a></li>
 </ul>
 </div>
 </div>
@@ -49,9 +54,9 @@ The Espressobin board homepage:
 <li><a href="http://espressobin.net/tech-spec/">http://espressobin.net/tech-spec/</a></li>
 </ul>
 
-<div id="outline-container-NIC%20driver" class="outline-2">
-<h2 id="NIC%20driver"><a href="#NIC%20driver">NIC driver</a></h2>
-<div class="outline-text-2" id="text-NIC%20driver">
+<div id="outline-container-NIC-driver" class="outline-2">
+<h2 id="NIC-driver"><a href="#NIC-driver">NIC driver</a></h2>
+<div class="outline-text-2" id="text-NIC-driver">
 <p>
 This project is heavily focused on the network driver of the board.
 </p>
@@ -121,18 +126,18 @@ driver: dsa
 </div>
 </div>
 
-<div id="outline-container-Wiki%20setup%20info" class="outline-2">
-<h2 id="Wiki%20setup%20info"><a href="#Wiki%20setup%20info">Wiki setup info</a></h2>
-<div class="outline-text-2" id="text-Wiki%20setup%20info">
+<div id="outline-container-Wiki-setup-info" class="outline-2">
+<h2 id="Wiki-setup-info"><a href="#Wiki-setup-info">Wiki setup info</a></h2>
+<div class="outline-text-2" id="text-Wiki-setup-info">
 <p>
 <a href="http://wiki.espressobin.net/tiki-index.php?page=Boot+from+removable+storage+-+Ubuntu#Ubuntu_16.04.4_LTS">http://wiki.espressobin.net/tiki-index.php?page=Boot+from+removable+storage+-+Ubuntu#Ubuntu_16.04.4_LTS</a>
 </p>
 </div>
 </div>
 
-<div id="outline-container-Board%20info%20in%20U-Boot" class="outline-2">
-<h2 id="Board%20info%20in%20U-Boot"><a href="#Board%20info%20in%20U-Boot">Board info in U-Boot</a></h2>
-<div class="outline-text-2" id="text-Board%20info%20in%20U-Boot">
+<div id="outline-container-Board-info-in-U-Boot" class="outline-2">
+<h2 id="Board-info-in-U-Boot"><a href="#Board-info-in-U-Boot">Board info in U-Boot</a></h2>
+<div class="outline-text-2" id="text-Board-info-in-U-Boot">
 <p>
 After you press the reset key on your ESPRESSObin board, the system
 should reboot, and you see something like this via the serial console
@@ -159,9 +164,9 @@ Comphy-2: SATA0         6 Gbps
 </div>
 </div>
 
-<div id="outline-container-Uboot%20config" class="outline-2">
-<h2 id="Uboot%20config"><a href="#Uboot%20config">Uboot config</a></h2>
-<div class="outline-text-2" id="text-Uboot%20config">
+<div id="outline-container-Uboot-config" class="outline-2">
+<h2 id="Uboot-config"><a href="#Uboot-config">Uboot config</a></h2>
+<div class="outline-text-2" id="text-Uboot-config">
 <p>
 Got to boot prompt "Marvell&gt;&gt;".
 </p>
@@ -302,9 +307,9 @@ run bootmmc
 </pre>
 </div>
 
-<div id="outline-container-Backup%2Ffallback%20kernel" class="outline-3">
-<h3 id="Backup%2Ffallback%20kernel"><a href="#Backup%2Ffallback%20kernel">Backup/fallback kernel</a></h3>
-<div class="outline-text-3" id="text-Backup%2Ffallback%20kernel">
+<div id="outline-container-Backup-fallback-kernel" class="outline-3">
+<h3 id="Backup-fallback-kernel"><a href="#Backup-fallback-kernel">Backup/fallback kernel</a></h3>
+<div class="outline-text-3" id="text-Backup-fallback-kernel">
 <p>
 Setup a U-Boot fallback option in case I upload a broken kernel:
 </p>
@@ -317,9 +322,9 @@ run bootmmc.works
 </div>
 </div>
 
-<div id="outline-container-Ubuntu%20tar.gz%20hack" class="outline-2">
-<h2 id="Ubuntu%20tar.gz%20hack"><a href="#Ubuntu%20tar.gz%20hack">Ubuntu tar.gz hack</a></h2>
-<div class="outline-text-2" id="text-Ubuntu%20tar.gz%20hack">
+<div id="outline-container-Ubuntu-tar.gz-hack" class="outline-2">
+<h2 id="Ubuntu-tar.gz-hack"><a href="#Ubuntu-tar.gz-hack">Ubuntu tar.gz hack</a></h2>
+<div class="outline-text-2" id="text-Ubuntu-tar.gz-hack">
 <p>
 Got Ubuntu tar image from apalos/ilias.  Just mounted a macchiatobin
 image and tar extracted into this&#x2026;
@@ -336,9 +341,9 @@ Linux localhost.localdomain 4.19.0-rc7-02549-g3ddeac6 #1 SMP PREEMPT Fri Oct 19 
 </div>
 </div>
 
-<div id="outline-container-Extra%20packages" class="outline-2">
-<h2 id="Extra%20packages"><a href="#Extra%20packages">Extra packages</a></h2>
-<div class="outline-text-2" id="text-Extra%20packages">
+<div id="outline-container-Extra-packages" class="outline-2">
+<h2 id="Extra-packages"><a href="#Extra-packages">Extra packages</a></h2>
+<div class="outline-text-2" id="text-Extra-packages">
 <p>
 Install some extra software packages:
 </p>
@@ -398,9 +403,9 @@ apt install libbabeltrace-ctf-dev libbabeltrace-dev
 </div>
 
 
-<div id="outline-container-Getting%20perf%20on%20Ubuntu" class="outline-2">
-<h2 id="Getting%20perf%20on%20Ubuntu"><a href="#Getting%20perf%20on%20Ubuntu">Getting perf on Ubuntu</a></h2>
-<div class="outline-text-2" id="text-Getting%20perf%20on%20Ubuntu">
+<div id="outline-container-Getting-perf-on-Ubuntu" class="outline-2">
+<h2 id="Getting-perf-on-Ubuntu"><a href="#Getting-perf-on-Ubuntu">Getting perf on Ubuntu</a></h2>
+<div class="outline-text-2" id="text-Getting-perf-on-Ubuntu">
 <p>
 The perf tool is a bit annoying on Ubuntu, as it maintains a
 linux-tools package per kernel version.  And the perf program is a
@@ -428,18 +433,18 @@ linux-tools-4.15.0-38: /usr/lib/linux-tools-4.15.0-38/perf
 </div>
 </div>
 
-<div id="outline-container-Ubuntu%20network%20setup%20via%20netplan" class="outline-2">
-<h2 id="Ubuntu%20network%20setup%20via%20netplan"><a href="#Ubuntu%20network%20setup%20via%20netplan">Ubuntu network setup via netplan</a></h2>
-<div class="outline-text-2" id="text-Ubuntu%20network%20setup%20via%20netplan">
+<div id="outline-container-Ubuntu-network-setup-via-netplan" class="outline-2">
+<h2 id="Ubuntu-network-setup-via-netplan"><a href="#Ubuntu-network-setup-via-netplan">Ubuntu network setup via netplan</a></h2>
+<div class="outline-text-2" id="text-Ubuntu-network-setup-via-netplan">
 <p>
 Annoying Ubuntu (18.04.1 LTS) seems to have changed network interface
 setup, to a system called 'netplan'.
 </p>
 </div>
 
-<div id="outline-container-First%20failed%20attempt%20with%20netplan" class="outline-3">
-<h3 id="First%20failed%20attempt%20with%20netplan"><a href="#First%20failed%20attempt%20with%20netplan">First failed attempt with netplan</a></h3>
-<div class="outline-text-3" id="text-First%20failed%20attempt%20with%20netplan">
+<div id="outline-container-First-failed-attempt-with-netplan" class="outline-3">
+<h3 id="First-failed-attempt-with-netplan"><a href="#First-failed-attempt-with-netplan">First failed attempt with netplan</a></h3>
+<div class="outline-text-3" id="text-First-failed-attempt-with-netplan">
 <p>
 Follow:
  <a href="https://websiteforstudents.com/configure-static-ip-addresses-on-ubuntu-18-04-beta/">https://websiteforstudents.com/configure-static-ip-addresses-on-ubuntu-18-04-beta/</a>
@@ -470,9 +475,9 @@ Run: netplan apply
 </div>
 </div>
 
-<div id="outline-container-Second%20attempt%20with%20netplan" class="outline-3">
-<h3 id="Second%20attempt%20with%20netplan"><a href="#Second%20attempt%20with%20netplan">Second attempt with netplan</a></h3>
-<div class="outline-text-3" id="text-Second%20attempt%20with%20netplan">
+<div id="outline-container-Second-attempt-with-netplan" class="outline-3">
+<h3 id="Second-attempt-with-netplan"><a href="#Second-attempt-with-netplan">Second attempt with netplan</a></h3>
+<div class="outline-text-3" id="text-Second-attempt-with-netplan">
 <p>
 After booting another kernel on espressobin, it comes up with
 interfaces: lan0, lan1 and wan. But now networking is broken.
@@ -569,9 +574,9 @@ Info on different options for systemd-network setup:
 </div>
 
 
-<div id="outline-container-perf%20profiling%20on%20ubuntu%20with%20ARM64" class="outline-2">
-<h2 id="perf%20profiling%20on%20ubuntu%20with%20ARM64"><a href="#perf%20profiling%20on%20ubuntu%20with%20ARM64">perf profiling on ubuntu with ARM64</a></h2>
-<div class="outline-text-2" id="text-perf%20profiling%20on%20ubuntu%20with%20ARM64">
+<div id="outline-container-perf-profiling-on-ubuntu-with-ARM64" class="outline-2">
+<h2 id="perf-profiling-on-ubuntu-with-ARM64"><a href="#perf-profiling-on-ubuntu-with-ARM64">perf profiling on ubuntu with ARM64</a></h2>
+<div class="outline-text-2" id="text-perf-profiling-on-ubuntu-with-ARM64">
 <p>
 Annoying Ubuntu/Debian have their perf binary is a script that tried
 to detect the real perf binary via the kernel version.  This obviously

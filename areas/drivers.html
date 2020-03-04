@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Project management for XDP driver support</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,19 +26,19 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#Important%20medium-term%20tasks">Important medium-term tasks</a>
+<li><a href="#Important-medium-term-tasks">Important medium-term tasks&#xa0;&#xa0;&#xa0;<span class="tag"><span class="_medium">@medium</span></span></a>
 <ul>
-<li><a href="#Expanding%20XDP_REDIRECT%20support%20to%20more%20drivers"><span class="todo TODO">TODO</span> Expanding XDP_REDIRECT support to more drivers</a>
+<li><a href="#Expanding-XDP_REDIRECT-support-to-more-drivers"><span class="todo TODO">TODO</span> Expanding XDP_REDIRECT support to more drivers</a>
 <ul>
-<li><a href="#Map%20out%20redirect%20support%20in%20drivers%20and%20make%20a%20plan"><span class="todo NEXT">NEXT</span> Map out redirect support in drivers and make a plan</a></li>
-<li><a href="#What%20to%20do%20about%20failing%20REDIRECT"><span class="todo TODO">TODO</span> What to do about failing REDIRECT</a></li>
+<li><a href="#Map-out-redirect-support-in-drivers-and-make-a-plan"><span class="todo NEXT">NEXT</span> Map out redirect support in drivers and make a plan</a></li>
+<li><a href="#What-to-do-about-failing-REDIRECT"><span class="todo TODO">TODO</span> What to do about failing REDIRECT</a></li>
 <li><a href="#Queueing"><span class="todo TODO">TODO</span> Queueing</a></li>
 </ul>
 </li>
-<li><a href="#Adding%20XDP%20support%20to%20new%20drivers"><span class="todo WAIT">WAIT</span> Adding XDP support to new drivers</a>
+<li><a href="#Adding-XDP-support-to-new-drivers"><span class="todo WAIT">WAIT</span> Adding XDP support to new drivers</a>
 <ul>
-<li><a href="#Driver%20support%20for%20sfc%20driver"><span class="todo TODO">TODO</span> Driver support for sfc driver</a></li>
-<li><a href="#Driver%20support%20for%20Marvell%20mvpp2"><span class="todo TODO">TODO</span> Driver support for Marvell mvpp2</a></li>
+<li><a href="#Driver-support-for-sfc-driver"><span class="todo TODO">TODO</span> Driver support for sfc driver</a></li>
+<li><a href="#Driver-support-for-Marvell-mvpp2"><span class="todo TODO">TODO</span> Driver support for Marvell mvpp2</a></li>
 </ul>
 </li>
 </ul>
@@ -45,13 +50,13 @@
 Top-level headings indicate category, as explained in <a href="../xdp-project.html">../xdp-project.html</a>.
 </p>
 
-<div id="outline-container-Important%20medium-term%20tasks" class="outline-2">
-<h2 id="Important%20medium-term%20tasks"><a href="#Important%20medium-term%20tasks">Important medium-term tasks</a></h2>
-<div class="outline-text-2" id="text-Important%20medium-term%20tasks">
+<div id="outline-container-Important-medium-term-tasks" class="outline-2">
+<h2 id="Important-medium-term-tasks"><a href="#Important-medium-term-tasks">Important medium-term tasks&#xa0;&#xa0;&#xa0;<span class="tag"><span class="_medium">@medium</span></span></a></h2>
+<div class="outline-text-2" id="text-Important-medium-term-tasks">
 </div>
-<div id="outline-container-Expanding%20XDP_REDIRECT%20support%20to%20more%20drivers" class="outline-3">
-<h3 id="Expanding%20XDP_REDIRECT%20support%20to%20more%20drivers"><a href="#Expanding%20XDP_REDIRECT%20support%20to%20more%20drivers"><span class="todo TODO">TODO</span> Expanding XDP_REDIRECT support to more drivers</a></h3>
-<div class="outline-text-3" id="text-Expanding%20XDP_REDIRECT%20support%20to%20more%20drivers">
+<div id="outline-container-Expanding-XDP_REDIRECT-support-to-more-drivers" class="outline-3">
+<h3 id="Expanding-XDP_REDIRECT-support-to-more-drivers"><a href="#Expanding-XDP_REDIRECT-support-to-more-drivers"><span class="todo TODO">TODO</span> Expanding XDP_REDIRECT support to more drivers</a></h3>
+<div class="outline-text-3" id="text-Expanding-XDP_REDIRECT-support-to-more-drivers">
 <p>
 Very few drivers support XDP_REDIRECT.
 </p>
@@ -65,9 +70,9 @@ SW drivers: veth, tun (tuntap), virtio_net
 </p>
 </div>
 
-<div id="outline-container-Map%20out%20redirect%20support%20in%20drivers%20and%20make%20a%20plan" class="outline-4">
-<h4 id="Map%20out%20redirect%20support%20in%20drivers%20and%20make%20a%20plan"><a href="#Map%20out%20redirect%20support%20in%20drivers%20and%20make%20a%20plan"><span class="todo NEXT">NEXT</span> Map out redirect support in drivers and make a plan</a></h4>
-<div class="outline-text-4" id="text-Map%20out%20redirect%20support%20in%20drivers%20and%20make%20a%20plan">
+<div id="outline-container-Map-out-redirect-support-in-drivers-and-make-a-plan" class="outline-4">
+<h4 id="Map-out-redirect-support-in-drivers-and-make-a-plan"><a href="#Map-out-redirect-support-in-drivers-and-make-a-plan"><span class="todo NEXT">NEXT</span> Map out redirect support in drivers and make a plan</a></h4>
+<div class="outline-text-4" id="text-Map-out-redirect-support-in-drivers-and-make-a-plan">
 <p>
 It would be useful with a complete list drivers that are missing some or all
 parts of REDIRECT support. Based on this we can make a plan for what to do about
@@ -76,9 +81,9 @@ each of these.
 </div>
 </div>
 
-<div id="outline-container-What%20to%20do%20about%20failing%20REDIRECT" class="outline-4">
-<h4 id="What%20to%20do%20about%20failing%20REDIRECT"><a href="#What%20to%20do%20about%20failing%20REDIRECT"><span class="todo TODO">TODO</span> What to do about failing REDIRECT</a></h4>
-<div class="outline-text-4" id="text-What%20to%20do%20about%20failing%20REDIRECT">
+<div id="outline-container-What-to-do-about-failing-REDIRECT" class="outline-4">
+<h4 id="What-to-do-about-failing-REDIRECT"><a href="#What-to-do-about-failing-REDIRECT"><span class="todo TODO">TODO</span> What to do about failing REDIRECT</a></h4>
+<div class="outline-text-4" id="text-What-to-do-about-failing-REDIRECT">
 <p>
 <a href="../xdp-project.html#ID-760b03fc-2a8e-499c-a90c-74dbc4716cbc">Handling XDP_REDIRECT failures</a>
 </p>
@@ -90,26 +95,26 @@ each of these.
 </div>
 </div>
 
-<div id="outline-container-Adding%20XDP%20support%20to%20new%20drivers" class="outline-3">
-<h3 id="Adding%20XDP%20support%20to%20new%20drivers"><a href="#Adding%20XDP%20support%20to%20new%20drivers"><span class="todo WAIT">WAIT</span> Adding XDP support to new drivers</a></h3>
-<div class="outline-text-3" id="text-Adding%20XDP%20support%20to%20new%20drivers">
+<div id="outline-container-Adding-XDP-support-to-new-drivers" class="outline-3">
+<h3 id="Adding-XDP-support-to-new-drivers"><a href="#Adding-XDP-support-to-new-drivers"><span class="todo WAIT">WAIT</span> Adding XDP support to new drivers</a></h3>
+<div class="outline-text-3" id="text-Adding-XDP-support-to-new-drivers">
 <p>
 Waiting for page pool work
 </p>
 </div>
 
-<div id="outline-container-Driver%20support%20for%20sfc%20driver" class="outline-4">
-<h4 id="Driver%20support%20for%20sfc%20driver"><a href="#Driver%20support%20for%20sfc%20driver"><span class="todo TODO">TODO</span> Driver support for sfc driver</a></h4>
-<div class="outline-text-4" id="text-Driver%20support%20for%20sfc%20driver">
+<div id="outline-container-Driver-support-for-sfc-driver" class="outline-4">
+<h4 id="Driver-support-for-sfc-driver"><a href="#Driver-support-for-sfc-driver"><span class="todo TODO">TODO</span> Driver support for sfc driver</a></h4>
+<div class="outline-text-4" id="text-Driver-support-for-sfc-driver">
 </div>
 <ul class="org-ul">
-<li><a id="Sync%20with%20Edward%20Cree%20et%20al"></a><a href="#Sync%20with%20Edward%20Cree%20et%20al"><span class="todo NEXT">NEXT</span> Sync with Edward Cree et al</a><br /></li>
+<li><a id="Sync-with-Edward-Cree-et-al"></a><a href="#Sync-with-Edward-Cree-et-al"><span class="todo NEXT">NEXT</span> Sync with Edward Cree et al</a><br /></li>
 </ul>
 </div>
 
-<div id="outline-container-Driver%20support%20for%20Marvell%20mvpp2" class="outline-4">
-<h4 id="Driver%20support%20for%20Marvell%20mvpp2"><a href="#Driver%20support%20for%20Marvell%20mvpp2"><span class="todo TODO">TODO</span> Driver support for Marvell mvpp2</a></h4>
-<div class="outline-text-4" id="text-Driver%20support%20for%20Marvell%20mvpp2">
+<div id="outline-container-Driver-support-for-Marvell-mvpp2" class="outline-4">
+<h4 id="Driver-support-for-Marvell-mvpp2"><a href="#Driver-support-for-Marvell-mvpp2"><span class="todo TODO">TODO</span> Driver support for Marvell mvpp2</a></h4>
+<div class="outline-text-4" id="text-Driver-support-for-Marvell-mvpp2">
 <p>
 Matteo
 </p>

@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Improvements to xdp_fwd sample</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,10 +26,10 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#Initial%20patchset">Initial patchset</a>
+<li><a href="#Initial-patchset">Initial patchset</a>
 <ul>
-<li><a href="#COVER-LETTER%3A%20bpf%3A%20improvements%20to%20xdp_fwd%20sample">COVER-LETTER: bpf: improvements to xdp_fwd sample</a></li>
-<li><a href="#Patch%3A%20samples%2Fbpf%3A%20make%20xdp_fwd%20more%20practically%20usable">Patch: samples/bpf: make xdp_fwd more practically usable</a></li>
+<li><a href="#COVER-LETTER--bpf--improvements-to-xdp_fwd-sample">COVER-LETTER: bpf: improvements to xdp_fwd sample</a></li>
+<li><a href="#Patch--samples-bpf--make-xdp_fwd-more-practically-usable">Patch: samples/bpf: make xdp_fwd more practically usable</a></li>
 </ul>
 </li>
 </ul>
@@ -35,13 +40,13 @@ This document contains notes and patch desc for improvements to
 xdp_fwd sample from the kernel tree.
 </p>
 
-<div id="outline-container-Initial%20patchset" class="outline-2">
-<h2 id="Initial%20patchset"><a href="#Initial%20patchset">Initial patchset</a></h2>
-<div class="outline-text-2" id="text-Initial%20patchset">
+<div id="outline-container-Initial-patchset" class="outline-2">
+<h2 id="Initial-patchset"><a href="#Initial-patchset">Initial patchset</a></h2>
+<div class="outline-text-2" id="text-Initial-patchset">
 </div>
-<div id="outline-container-COVER-LETTER%3A%20bpf%3A%20improvements%20to%20xdp_fwd%20sample" class="outline-3">
-<h3 id="COVER-LETTER%3A%20bpf%3A%20improvements%20to%20xdp_fwd%20sample"><a href="#COVER-LETTER%3A%20bpf%3A%20improvements%20to%20xdp_fwd%20sample">COVER-LETTER: bpf: improvements to xdp_fwd sample</a></h3>
-<div class="outline-text-3" id="text-COVER-LETTER%3A%20bpf%3A%20improvements%20to%20xdp_fwd%20sample">
+<div id="outline-container-COVER-LETTER--bpf--improvements-to-xdp_fwd-sample" class="outline-3">
+<h3 id="COVER-LETTER--bpf--improvements-to-xdp_fwd-sample"><a href="#COVER-LETTER--bpf--improvements-to-xdp_fwd-sample">COVER-LETTER: bpf: improvements to xdp_fwd sample</a></h3>
+<div class="outline-text-3" id="text-COVER-LETTER--bpf--improvements-to-xdp_fwd-sample">
 <p>
 V3: Hopefully fixed all issues point out by Yonghong Song
 </p>
@@ -109,9 +114,9 @@ V3: <a href="https://patchwork.ozlabs.org/project/netdev/list/?series=124041&amp
 </div>
 
 
-<div id="outline-container-Patch%3A%20samples%2Fbpf%3A%20make%20xdp_fwd%20more%20practically%20usable" class="outline-3">
-<h3 id="Patch%3A%20samples%2Fbpf%3A%20make%20xdp_fwd%20more%20practically%20usable"><a href="#Patch%3A%20samples%2Fbpf%3A%20make%20xdp_fwd%20more%20practically%20usable">Patch: samples/bpf: make xdp_fwd more practically usable</a></h3>
-<div class="outline-text-3" id="text-Patch%3A%20samples%2Fbpf%3A%20make%20xdp_fwd%20more%20practically%20usable">
+<div id="outline-container-Patch--samples-bpf--make-xdp_fwd-more-practically-usable" class="outline-3">
+<h3 id="Patch--samples-bpf--make-xdp_fwd-more-practically-usable"><a href="#Patch--samples-bpf--make-xdp_fwd-more-practically-usable">Patch: samples/bpf: make xdp_fwd more practically usable</a></h3>
+<div class="outline-text-3" id="text-Patch--samples-bpf--make-xdp_fwd-more-practically-usable">
 <p>
 samples/bpf: make xdp_fwd more practically usable via devmap lookup
 </p>

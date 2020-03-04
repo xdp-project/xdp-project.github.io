@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>&lrm;</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -20,15 +25,15 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#XDP%20for%20TSN%20%28Time-Sensitive%20Networking%29">XDP for TSN (Time-Sensitive Networking)</a></li>
-<li><a href="#Measuring%20on%20armv8">Measuring on armv8</a></li>
-<li><a href="#Caveats%20and%20future%20improvements%2Ftestcases">Caveats and future improvements/testcases</a></li>
+<li><a href="#XDP-for-TSN--Time-Sensitive-Networking-">XDP for TSN (Time-Sensitive Networking)</a></li>
+<li><a href="#Measuring-on-armv8">Measuring on armv8</a></li>
+<li><a href="#Caveats-and-future-improvements-testcases">Caveats and future improvements/testcases</a></li>
 </ul>
 </div>
 </div>
-<div id="outline-container-XDP%20for%20TSN%20%28Time-Sensitive%20Networking%29" class="outline-2">
-<h2 id="XDP%20for%20TSN%20%28Time-Sensitive%20Networking%29"><a href="#XDP%20for%20TSN%20%28Time-Sensitive%20Networking%29">XDP for TSN (Time-Sensitive Networking)</a></h2>
-<div class="outline-text-2" id="text-XDP%20for%20TSN%20%28Time-Sensitive%20Networking%29">
+<div id="outline-container-XDP-for-TSN--Time-Sensitive-Networking-" class="outline-2">
+<h2 id="XDP-for-TSN--Time-Sensitive-Networking-"><a href="#XDP-for-TSN--Time-Sensitive-Networking-">XDP for TSN (Time-Sensitive Networking)</a></h2>
+<div class="outline-text-2" id="text-XDP-for-TSN--Time-Sensitive-Networking-">
 <p>
 TSN requires low latency and bounded jitter. 
 Although XDP doesn't offer bounded jitter the latency is greatly improved
@@ -40,9 +45,9 @@ jitter on the Rx path.
 </div>
 </div>
 
-<div id="outline-container-Measuring%20on%20armv8" class="outline-2">
-<h2 id="Measuring%20on%20armv8"><a href="#Measuring%20on%20armv8">Measuring on armv8</a></h2>
-<div class="outline-text-2" id="text-Measuring%20on%20armv8">
+<div id="outline-container-Measuring-on-armv8" class="outline-2">
+<h2 id="Measuring-on-armv8"><a href="#Measuring-on-armv8">Measuring on armv8</a></h2>
+<div class="outline-text-2" id="text-Measuring-on-armv8">
 <p>
 An easy way of measuring latency from the napi Rx poller down to user-space
 is piggyback on XDP data_meta of the xdp_buff struct.
@@ -174,9 +179,9 @@ account for possibly missed packets etc.
 </div>
 </div>
 
-<div id="outline-container-Caveats%20and%20future%20improvements%2Ftestcases" class="outline-2">
-<h2 id="Caveats%20and%20future%20improvements%2Ftestcases"><a href="#Caveats%20and%20future%20improvements%2Ftestcases">Caveats and future improvements/testcases</a></h2>
-<div class="outline-text-2" id="text-Caveats%20and%20future%20improvements%2Ftestcases">
+<div id="outline-container-Caveats-and-future-improvements-testcases" class="outline-2">
+<h2 id="Caveats-and-future-improvements-testcases"><a href="#Caveats-and-future-improvements-testcases">Caveats and future improvements/testcases</a></h2>
+<div class="outline-text-2" id="text-Caveats-and-future-improvements-testcases">
 <p>
 This approach will <b>not</b> offer absolute timings and can't serve as a
 guarantee. 

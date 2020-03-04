@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Design: Having XDP programs per RX-queue</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,35 +26,35 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#Background%20for%20XDP%20per%20RX-queue">Background for XDP per RX-queue</a>
+<li><a href="#Background-for-XDP-per-RX-queue">Background for XDP per RX-queue</a>
 <ul>
-<li><a href="#Original%20idea">Original idea</a></li>
-<li><a href="#Small%20step%20the%20direction%3A%20xdp_rxq_info">Small step the direction: xdp_rxq_info</a></li>
-<li><a href="#Bottleneck%20in%20single%2Fglobal%20netdev%20XDP%20program">Bottleneck in single/global netdev XDP program</a></li>
-<li><a href="#Depending%20on%20NIC%20hardware%20filter%20setup">Depending on NIC hardware filter setup</a></li>
+<li><a href="#Original-idea">Original idea</a></li>
+<li><a href="#Small-step-the-direction--xdp_rxq_info">Small step the direction: xdp_rxq_info</a></li>
+<li><a href="#Bottleneck-in-single-global-netdev-XDP-program">Bottleneck in single/global netdev XDP program</a></li>
+<li><a href="#Depending-on-NIC-hardware-filter-setup">Depending on NIC hardware filter setup</a></li>
 </ul>
 </li>
-<li><a href="#Interface%20semantics">Interface semantics</a>
+<li><a href="#Interface-semantics">Interface semantics</a>
 <ul>
-<li><a href="#Proposal%3A%20RXQ-prog%20takes%20precedence">Proposal: RXQ-prog takes precedence</a></li>
-<li><a href="#Covering%20future%20semantics">Covering future semantics</a></li>
-<li><a href="#Introspection%20tools">Introspection tools</a></li>
+<li><a href="#Proposal--RXQ-prog-takes-precedence">Proposal: RXQ-prog takes precedence</a></li>
+<li><a href="#Covering-future-semantics">Covering future semantics</a></li>
+<li><a href="#Introspection-tools">Introspection tools</a></li>
 </ul>
 </li>
 <li><a href="#iproute2">iproute2</a></li>
 <li><a href="#bpftool">bpftool</a></li>
-<li><a href="#Code%20assesment">Code assesment</a>
+<li><a href="#Code-assesment">Code assesment</a>
 <ul>
-<li><a href="#Initial%20code%20assesment">Initial code assesment</a></li>
-<li><a href="#Extending%20XDP-setup%20NDO%20commands">Extending XDP-setup NDO commands</a></li>
-<li><a href="#Refactor%20idea%3A%20move%20xdp_rxq_info%20to%20net_device%2Fnetdev_rx_queue">Refactor idea: move xdp_rxq_info to net_device/netdev_rx_queue</a></li>
-<li><a href="#Refactor%20idea%3A%20xdp%2Fbpf_prog%20into%20netdev_rx_queue%2Fnet_device">Refactor idea: xdp/bpf_prog into netdev_rx_queue/net_device</a></li>
-<li><a href="#Code%20gotchas%3A%20driver%20runtime%20changing%20num%20queues">Code gotchas: driver runtime changing num queues</a></li>
+<li><a href="#Initial-code-assesment">Initial code assesment</a></li>
+<li><a href="#Extending-XDP-setup-NDO-commands">Extending XDP-setup NDO commands</a></li>
+<li><a href="#Refactor-idea--move-xdp_rxq_info-to-net_device-netdev_rx_queue">Refactor idea: move xdp_rxq_info to net_device/netdev_rx_queue</a></li>
+<li><a href="#Refactor-idea--xdp-bpf_prog-into-netdev_rx_queue-net_device">Refactor idea: xdp/bpf_prog into netdev_rx_queue/net_device</a></li>
+<li><a href="#Code-gotchas--driver-runtime-changing-num-queues">Code gotchas: driver runtime changing num queues</a></li>
 </ul>
 </li>
-<li><a href="#Code%20notes%20for%20AF_XDP%20sockets">Code notes for AF_XDP sockets</a>
+<li><a href="#Code-notes-for-AF_XDP-sockets">Code notes for AF_XDP sockets</a>
 <ul>
-<li><a href="#AF_XDP%20bind">AF_XDP bind</a></li>
+<li><a href="#AF_XDP-bind">AF_XDP bind</a></li>
 </ul>
 </li>
 </ul>
@@ -75,9 +80,9 @@ In this document the idea of a per-RX-queue XDP program is re-visited, and
 the rationale, design and semantics for this feature is outlined.
 </p>
 
-<div id="outline-container-Background%20for%20XDP%20per%20RX-queue" class="outline-2">
-<h2 id="Background%20for%20XDP%20per%20RX-queue"><a href="#Background%20for%20XDP%20per%20RX-queue">Background for XDP per RX-queue</a></h2>
-<div class="outline-text-2" id="text-Background%20for%20XDP%20per%20RX-queue">
+<div id="outline-container-Background-for-XDP-per-RX-queue" class="outline-2">
+<h2 id="Background-for-XDP-per-RX-queue"><a href="#Background-for-XDP-per-RX-queue">Background for XDP per RX-queue</a></h2>
+<div class="outline-text-2" id="text-Background-for-XDP-per-RX-queue">
 <p>
 This section explains the background and the need for supporting XDP
 programs attached to individual RX-queue of the NIC, and some of the steps
@@ -85,9 +90,9 @@ already taken towards this goal.
 </p>
 </div>
 
-<div id="outline-container-Original%20idea" class="outline-3">
-<h3 id="Original%20idea"><a href="#Original%20idea">Original idea</a></h3>
-<div class="outline-text-3" id="text-Original%20idea">
+<div id="outline-container-Original-idea" class="outline-3">
+<h3 id="Original-idea"><a href="#Original-idea">Original idea</a></h3>
+<div class="outline-text-3" id="text-Original-idea">
 <p>
 Original idea behind per RX-queue handling comes from Van Jacobson's
 NetChannels
@@ -98,9 +103,9 @@ channel into a socket or user-application.
 </div>
 </div>
 
-<div id="outline-container-Small%20step%20the%20direction%3A%20xdp_rxq_info" class="outline-3">
-<h3 id="Small%20step%20the%20direction%3A%20xdp_rxq_info"><a href="#Small%20step%20the%20direction%3A%20xdp_rxq_info">Small step the direction: xdp_rxq_info</a></h3>
-<div class="outline-text-3" id="text-Small%20step%20the%20direction%3A%20xdp_rxq_info">
+<div id="outline-container-Small-step-the-direction--xdp_rxq_info" class="outline-3">
+<h3 id="Small-step-the-direction--xdp_rxq_info"><a href="#Small-step-the-direction--xdp_rxq_info">Small step the direction: xdp_rxq_info</a></h3>
+<div class="outline-text-3" id="text-Small-step-the-direction--xdp_rxq_info">
 <p>
 In kernel <a href="https://git.kernel.org/torvalds/c/aecd67b60722d">v4.16</a> <code>struct
 xdp_rxq_info</code> was introduced, which contains information specific to each
@@ -153,9 +158,9 @@ copy can be elided.
 </div>
 </div>
 
-<div id="outline-container-Bottleneck%20in%20single%2Fglobal%20netdev%20XDP%20program" class="outline-3">
-<h3 id="Bottleneck%20in%20single%2Fglobal%20netdev%20XDP%20program"><a href="#Bottleneck%20in%20single%2Fglobal%20netdev%20XDP%20program">Bottleneck in single/global netdev XDP program</a></h3>
-<div class="outline-text-3" id="text-Bottleneck%20in%20single%2Fglobal%20netdev%20XDP%20program">
+<div id="outline-container-Bottleneck-in-single-global-netdev-XDP-program" class="outline-3">
+<h3 id="Bottleneck-in-single-global-netdev-XDP-program"><a href="#Bottleneck-in-single-global-netdev-XDP-program">Bottleneck in single/global netdev XDP program</a></h3>
+<div class="outline-text-3" id="text-Bottleneck-in-single-global-netdev-XDP-program">
 <p>
 For XDP program that use AF_XDP the <code>queue_index</code> trait, which let the XDP
 program know what RX-queue the packet originated from, is especially
@@ -209,9 +214,9 @@ handle the flush at NAPI-end).
 </div>
 </div>
 
-<div id="outline-container-Depending%20on%20NIC%20hardware%20filter%20setup" class="outline-3">
-<h3 id="Depending%20on%20NIC%20hardware%20filter%20setup"><a href="#Depending%20on%20NIC%20hardware%20filter%20setup">Depending on NIC hardware filter setup</a></h3>
-<div class="outline-text-3" id="text-Depending%20on%20NIC%20hardware%20filter%20setup">
+<div id="outline-container-Depending-on-NIC-hardware-filter-setup" class="outline-3">
+<h3 id="Depending-on-NIC-hardware-filter-setup"><a href="#Depending-on-NIC-hardware-filter-setup">Depending on NIC hardware filter setup</a></h3>
+<div class="outline-text-3" id="text-Depending-on-NIC-hardware-filter-setup">
 <p>
 For XDP progs per RX-queue to make sense, we do need to setup NIC hardware
 filters to steer trafic to specific RX-queues.  AF_XDP zero-copy already
@@ -228,9 +233,9 @@ before attaching the XDP program.
 </div>
 </div>
 
-<div id="outline-container-Interface%20semantics" class="outline-2">
-<h2 id="Interface%20semantics"><a href="#Interface%20semantics">Interface semantics</a></h2>
-<div class="outline-text-2" id="text-Interface%20semantics">
+<div id="outline-container-Interface-semantics" class="outline-2">
+<h2 id="Interface-semantics"><a href="#Interface-semantics">Interface semantics</a></h2>
+<div class="outline-text-2" id="text-Interface-semantics">
 <p>
 The initial reason XDP programs per RX-queue was rejected was usability
 concerns.  Thus, it is important that we define and agree on the behavior
@@ -238,9 +243,9 @@ and semantic meaning of the user-interface.
 </p>
 </div>
 
-<div id="outline-container-Proposal%3A%20RXQ-prog%20takes%20precedence" class="outline-3">
-<h3 id="Proposal%3A%20RXQ-prog%20takes%20precedence"><a href="#Proposal%3A%20RXQ-prog%20takes%20precedence">Proposal: RXQ-prog takes precedence</a></h3>
-<div class="outline-text-3" id="text-Proposal%3A%20RXQ-prog%20takes%20precedence">
+<div id="outline-container-Proposal--RXQ-prog-takes-precedence" class="outline-3">
+<h3 id="Proposal--RXQ-prog-takes-precedence"><a href="#Proposal--RXQ-prog-takes-precedence">Proposal: RXQ-prog takes precedence</a></h3>
+<div class="outline-text-3" id="text-Proposal--RXQ-prog-takes-precedence">
 <p>
 Proposal#1: The RX-queue xdp_prog (RXQ-prog) takes precedence over the global
 xdp_prog (global-prog) installed on the netdev.  More specifically:
@@ -287,9 +292,9 @@ global-prog. When/if RXQ-prog is removed, global-prog is re-attached if set.
 </div>
 </div>
 
-<div id="outline-container-Covering%20future%20semantics" class="outline-3">
-<h3 id="Covering%20future%20semantics"><a href="#Covering%20future%20semantics">Covering future semantics</a></h3>
-<div class="outline-text-3" id="text-Covering%20future%20semantics">
+<div id="outline-container-Covering-future-semantics" class="outline-3">
+<h3 id="Covering-future-semantics"><a href="#Covering-future-semantics">Covering future semantics</a></h3>
+<div class="outline-text-3" id="text-Covering-future-semantics">
 <p>
 NOTE: (Björn) Is this section valid? Do we really want to relax the
 BPF-program part? Yes, I'd like to get rid of the retpoline, but <b>not</b> the
@@ -323,9 +328,9 @@ allow the sysadm to unload/remove this XDP-"hook".
 </div>
 </div>
 
-<div id="outline-container-Introspection%20tools" class="outline-3">
-<h3 id="Introspection%20tools"><a href="#Introspection%20tools">Introspection tools</a></h3>
-<div class="outline-text-3" id="text-Introspection%20tools">
+<div id="outline-container-Introspection-tools" class="outline-3">
+<h3 id="Introspection-tools"><a href="#Introspection-tools">Introspection tools</a></h3>
+<div class="outline-text-3" id="text-Introspection-tools">
 <p>
 For the user/sysadm it is also very important that the existing tools for
 listing XDP program are extended with support for listing the RXQ-prog's.
@@ -425,13 +430,13 @@ to iproute2.
 </div>
 </div>
 
-<div id="outline-container-Code%20assesment" class="outline-2">
-<h2 id="Code%20assesment"><a href="#Code%20assesment">Code assesment</a></h2>
-<div class="outline-text-2" id="text-Code%20assesment">
+<div id="outline-container-Code-assesment" class="outline-2">
+<h2 id="Code-assesment"><a href="#Code-assesment">Code assesment</a></h2>
+<div class="outline-text-2" id="text-Code-assesment">
 </div>
-<div id="outline-container-Initial%20code%20assesment" class="outline-3">
-<h3 id="Initial%20code%20assesment"><a href="#Initial%20code%20assesment">Initial code assesment</a></h3>
-<div class="outline-text-3" id="text-Initial%20code%20assesment">
+<div id="outline-container-Initial-code-assesment" class="outline-3">
+<h3 id="Initial-code-assesment"><a href="#Initial-code-assesment">Initial code assesment</a></h3>
+<div class="outline-text-3" id="text-Initial-code-assesment">
 <p>
 Most of the XDP drivers already have an xdp_prog pointer stored in some per
 RX-queue data-structure.  Thus, part of the driver code should be ready to
@@ -459,9 +464,9 @@ to simplify the driver interface?
 </div>
 </div>
 
-<div id="outline-container-Extending%20XDP-setup%20NDO%20commands" class="outline-3">
-<h3 id="Extending%20XDP-setup%20NDO%20commands"><a href="#Extending%20XDP-setup%20NDO%20commands">Extending XDP-setup NDO commands</a></h3>
-<div class="outline-text-3" id="text-Extending%20XDP-setup%20NDO%20commands">
+<div id="outline-container-Extending-XDP-setup-NDO-commands" class="outline-3">
+<h3 id="Extending-XDP-setup-NDO-commands"><a href="#Extending-XDP-setup-NDO-commands">Extending XDP-setup NDO commands</a></h3>
+<div class="outline-text-3" id="text-Extending-XDP-setup-NDO-commands">
 <p>
 We (obviously) need to extend <code>enum bpf_netdev_command</code> with a new command,
 and extend <code>struct netdev_bpf</code> with a new union-struct to carry our info.
@@ -519,9 +524,9 @@ index 1377d085ef99..02feb990119c 100644
 </div>
 </div>
 
-<div id="outline-container-Refactor%20idea%3A%20move%20xdp_rxq_info%20to%20net_device%2Fnetdev_rx_queue" class="outline-3">
-<h3 id="Refactor%20idea%3A%20move%20xdp_rxq_info%20to%20net_device%2Fnetdev_rx_queue"><a href="#Refactor%20idea%3A%20move%20xdp_rxq_info%20to%20net_device%2Fnetdev_rx_queue">Refactor idea: move xdp_rxq_info to net_device/netdev_rx_queue</a></h3>
-<div class="outline-text-3" id="text-Refactor%20idea%3A%20move%20xdp_rxq_info%20to%20net_device%2Fnetdev_rx_queue">
+<div id="outline-container-Refactor-idea--move-xdp_rxq_info-to-net_device-netdev_rx_queue" class="outline-3">
+<h3 id="Refactor-idea--move-xdp_rxq_info-to-net_device-netdev_rx_queue"><a href="#Refactor-idea--move-xdp_rxq_info-to-net_device-netdev_rx_queue">Refactor idea: move xdp_rxq_info to net_device/netdev_rx_queue</a></h3>
+<div class="outline-text-3" id="text-Refactor-idea--move-xdp_rxq_info-to-net_device-netdev_rx_queue">
 <p>
 Should we move <code>xdp_rxq_info</code> into net_device-&gt;_rx[] which is <code>struct
 netdev_rx_queue</code>.  (Saeed actually proposed this originally).
@@ -553,9 +558,9 @@ net_device, thus this member could also be used by native-XDP.
 </div>
 </div>
 
-<div id="outline-container-Refactor%20idea%3A%20xdp%2Fbpf_prog%20into%20netdev_rx_queue%2Fnet_device" class="outline-3">
-<h3 id="Refactor%20idea%3A%20xdp%2Fbpf_prog%20into%20netdev_rx_queue%2Fnet_device"><a href="#Refactor%20idea%3A%20xdp%2Fbpf_prog%20into%20netdev_rx_queue%2Fnet_device">Refactor idea: xdp/bpf_prog into netdev_rx_queue/net_device</a></h3>
-<div class="outline-text-3" id="text-Refactor%20idea%3A%20xdp%2Fbpf_prog%20into%20netdev_rx_queue%2Fnet_device">
+<div id="outline-container-Refactor-idea--xdp-bpf_prog-into-netdev_rx_queue-net_device" class="outline-3">
+<h3 id="Refactor-idea--xdp-bpf_prog-into-netdev_rx_queue-net_device"><a href="#Refactor-idea--xdp-bpf_prog-into-netdev_rx_queue-net_device">Refactor idea: xdp/bpf_prog into netdev_rx_queue/net_device</a></h3>
+<div class="outline-text-3" id="text-Refactor-idea--xdp-bpf_prog-into-netdev_rx_queue-net_device">
 <p>
 The "global" bpf_prog in generic-XDP is stored in <code>net_device</code> member
 <code>xdp_prog</code>.  For generic-XDP to gain XDP-prog per RX-queue support, we could
@@ -577,9 +582,9 @@ implementation for the XDP-case, but not for the XDP HW-case.
 </div>
 
 
-<div id="outline-container-Code%20gotchas%3A%20driver%20runtime%20changing%20num%20queues" class="outline-3">
-<h3 id="Code%20gotchas%3A%20driver%20runtime%20changing%20num%20queues"><a href="#Code%20gotchas%3A%20driver%20runtime%20changing%20num%20queues">Code gotchas: driver runtime changing num queues</a></h3>
-<div class="outline-text-3" id="text-Code%20gotchas%3A%20driver%20runtime%20changing%20num%20queues">
+<div id="outline-container-Code-gotchas--driver-runtime-changing-num-queues" class="outline-3">
+<h3 id="Code-gotchas--driver-runtime-changing-num-queues"><a href="#Code-gotchas--driver-runtime-changing-num-queues">Code gotchas: driver runtime changing num queues</a></h3>
+<div class="outline-text-3" id="text-Code-gotchas--driver-runtime-changing-num-queues">
 <p>
 We need to check what happens when the driver change the number of queues
 runtime.  This can happen via ethtool:
@@ -611,13 +616,13 @@ queue. This could apply to RXQ-prog as well.
 </div>
 </div>
 
-<div id="outline-container-Code%20notes%20for%20AF_XDP%20sockets" class="outline-2">
-<h2 id="Code%20notes%20for%20AF_XDP%20sockets"><a href="#Code%20notes%20for%20AF_XDP%20sockets">Code notes for AF_XDP sockets</a></h2>
-<div class="outline-text-2" id="text-Code%20notes%20for%20AF_XDP%20sockets">
+<div id="outline-container-Code-notes-for-AF_XDP-sockets" class="outline-2">
+<h2 id="Code-notes-for-AF_XDP-sockets"><a href="#Code-notes-for-AF_XDP-sockets">Code notes for AF_XDP sockets</a></h2>
+<div class="outline-text-2" id="text-Code-notes-for-AF_XDP-sockets">
 </div>
-<div id="outline-container-AF_XDP%20bind" class="outline-3">
-<h3 id="AF_XDP%20bind"><a href="#AF_XDP%20bind">AF_XDP bind</a></h3>
-<div class="outline-text-3" id="text-AF_XDP%20bind">
+<div id="outline-container-AF_XDP-bind" class="outline-3">
+<h3 id="AF_XDP-bind"><a href="#AF_XDP-bind">AF_XDP bind</a></h3>
+<div class="outline-text-3" id="text-AF_XDP-bind">
 <p>
 The AF_XDP socket bind call is an interesting hook point, that could be
 leveraged.

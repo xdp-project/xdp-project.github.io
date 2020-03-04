@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>NXP LS1088A - Create rootfs</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,11 +26,11 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#Download%20flexbuild">Download flexbuild</a></li>
-<li><a href="#Create%20Ubuntu%20rootfs">Create Ubuntu rootfs</a></li>
-<li><a href="#Install%20on%20SD-card">Install on SD-card</a></li>
-<li><a href="#Boot%20setup">Boot setup</a></li>
-<li><a href="#Kernel%20DTS%20files">Kernel DTS files</a></li>
+<li><a href="#Download-flexbuild">Download flexbuild</a></li>
+<li><a href="#Create-Ubuntu-rootfs">Create Ubuntu rootfs</a></li>
+<li><a href="#Install-on-SD-card">Install on SD-card</a></li>
+<li><a href="#Boot-setup">Boot setup</a></li>
+<li><a href="#Kernel-DTS-files">Kernel DTS files</a></li>
 </ul>
 </div>
 </div>
@@ -56,9 +61,9 @@ This document is basically a cheat-sheet, with steps that I performed to
 bring-up the board.
 </p>
 
-<div id="outline-container-Download%20flexbuild" class="outline-2">
-<h2 id="Download%20flexbuild"><a href="#Download%20flexbuild">Download flexbuild</a></h2>
-<div class="outline-text-2" id="text-Download%20flexbuild">
+<div id="outline-container-Download-flexbuild" class="outline-2">
+<h2 id="Download-flexbuild"><a href="#Download-flexbuild">Download flexbuild</a></h2>
+<div class="outline-text-2" id="text-Download-flexbuild">
 <p>
 First step is downloading and extracting the flexbuild tool:
 </p>
@@ -68,9 +73,9 @@ First step is downloading and extracting the flexbuild tool:
 </div>
 </div>
 
-<div id="outline-container-Create%20Ubuntu%20rootfs" class="outline-2">
-<h2 id="Create%20Ubuntu%20rootfs"><a href="#Create%20Ubuntu%20rootfs">Create Ubuntu rootfs</a></h2>
-<div class="outline-text-2" id="text-Create%20Ubuntu%20rootfs">
+<div id="outline-container-Create-Ubuntu-rootfs" class="outline-2">
+<h2 id="Create-Ubuntu-rootfs"><a href="#Create-Ubuntu-rootfs">Create Ubuntu rootfs</a></h2>
+<div class="outline-text-2" id="text-Create-Ubuntu-rootfs">
 <p>
 A more detailed description of all the steps can be found in chapter 4.1.7.2
 from <a href="https://www.nxp.com/docs/en/user-guide/LSDKUG_Rev19.03.pdf">LSDK 19.03</a> User Guide.
@@ -141,9 +146,9 @@ wget http://www.nxp.com/lgfiles/sdk/lsdk1903/lib_modules_LS_arm64_4.19.26.tgz
 </div>
 </div>
 
-<div id="outline-container-Install%20on%20SD-card" class="outline-2">
-<h2 id="Install%20on%20SD-card"><a href="#Install%20on%20SD-card">Install on SD-card</a></h2>
-<div class="outline-text-2" id="text-Install%20on%20SD-card">
+<div id="outline-container-Install-on-SD-card" class="outline-2">
+<h2 id="Install-on-SD-card"><a href="#Install-on-SD-card">Install on SD-card</a></h2>
+<div class="outline-text-2" id="text-Install-on-SD-card">
 <p>
 Install the bootpartition and Ubuntu rootfs onto an SD card or USB directly
 from an x86 machine.
@@ -182,9 +187,9 @@ and use it to install the images on the SD-card:
 </div>
 </div>
 
-<div id="outline-container-Boot%20setup" class="outline-2">
-<h2 id="Boot%20setup"><a href="#Boot%20setup">Boot setup</a></h2>
-<div class="outline-text-2" id="text-Boot%20setup">
+<div id="outline-container-Boot-setup" class="outline-2">
+<h2 id="Boot-setup"><a href="#Boot-setup">Boot setup</a></h2>
+<div class="outline-text-2" id="text-Boot-setup">
 <p>
 From <a href="https://www.nxp.com/docs/en/user-guide/LSDKUG_Rev19.03.pdf">LSDK 19.03</a> User Guide:
 "4.1.7.3.2 Option 1 - Deploy LSDK images using removable storage device"
@@ -206,9 +211,9 @@ Changed DIP switch <code>SW1[1:8]</code> :
 </div>
 </div>
 
-<div id="outline-container-Kernel%20DTS%20files" class="outline-2">
-<h2 id="Kernel%20DTS%20files"><a href="#Kernel%20DTS%20files">Kernel DTS files</a></h2>
-<div class="outline-text-2" id="text-Kernel%20DTS%20files">
+<div id="outline-container-Kernel-DTS-files" class="outline-2">
+<h2 id="Kernel-DTS-files"><a href="#Kernel-DTS-files">Kernel DTS files</a></h2>
+<div class="outline-text-2" id="text-Kernel-DTS-files">
 <p>
 Upstream kernel also have DTS files for this board:
 </p>

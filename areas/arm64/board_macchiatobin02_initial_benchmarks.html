@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>MacchiatoBIN initial benchmarks and troubleshooting</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,28 +26,28 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#Init%20benchmarks">Init benchmarks</a></li>
-<li><a href="#NIC%20to%20CPU%20scaling">NIC to CPU scaling</a></li>
-<li><a href="#netperf%20initial%20test">netperf initial test</a>
+<li><a href="#Init-benchmarks">Init benchmarks</a></li>
+<li><a href="#NIC-to-CPU-scaling">NIC to CPU scaling</a></li>
+<li><a href="#netperf-initial-test">netperf initial test</a>
 <ul>
-<li><a href="#Localhost%20performance%20with%20netperf">Localhost performance with netperf</a></li>
-<li><a href="#netperf%20from%20firesoul%20via%20ixgbe1">netperf from firesoul via ixgbe1</a></li>
+<li><a href="#Localhost-performance-with-netperf">Localhost performance with netperf</a></li>
+<li><a href="#netperf-from-firesoul-via-ixgbe1">netperf from firesoul via ixgbe1</a></li>
 </ul>
 </li>
-<li><a href="#Issue%3A%20Macchiatobin%20DMA%20overhead%20too%20large">Issue: Macchiatobin DMA overhead too large</a>
+<li><a href="#Issue--Macchiatobin-DMA-overhead-too-large">Issue: Macchiatobin DMA overhead too large</a>
 <ul>
-<li><a href="#mvpp2%20DMA%20code%20notes">mvpp2 DMA code notes</a></li>
-<li><a href="#DMA%20works%20with%204.4.52-armada-17.10.3-g6adee55">DMA works with 4.4.52-armada-17.10.3-g6adee55</a></li>
-<li><a href="#Found%20DMA%20issue">Found DMA issue</a></li>
+<li><a href="#mvpp2-DMA-code-notes">mvpp2 DMA code notes</a></li>
+<li><a href="#DMA-works-with-4.4.52-armada-17.10.3-g6adee55">DMA works with 4.4.52-armada-17.10.3-g6adee55</a></li>
+<li><a href="#Found-DMA-issue">Found DMA issue</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-Init%20benchmarks" class="outline-2">
-<h2 id="Init%20benchmarks"><a href="#Init%20benchmarks">Init benchmarks</a></h2>
-<div class="outline-text-2" id="text-Init%20benchmarks">
+<div id="outline-container-Init-benchmarks" class="outline-2">
+<h2 id="Init-benchmarks"><a href="#Init-benchmarks">Init benchmarks</a></h2>
+<div class="outline-text-2" id="text-Init-benchmarks">
 <p>
 The initial benchmarks show something is wrong:
 </p>
@@ -99,9 +104,9 @@ Killing the dhclient on the test interface, result in performance increase to
 </div>
 </div>
 
-<div id="outline-container-NIC%20to%20CPU%20scaling" class="outline-2">
-<h2 id="NIC%20to%20CPU%20scaling"><a href="#NIC%20to%20CPU%20scaling">NIC to CPU scaling</a></h2>
-<div class="outline-text-2" id="text-NIC%20to%20CPU%20scaling">
+<div id="outline-container-NIC-to-CPU-scaling" class="outline-2">
+<h2 id="NIC-to-CPU-scaling"><a href="#NIC-to-CPU-scaling">NIC to CPU scaling</a></h2>
+<div class="outline-text-2" id="text-NIC-to-CPU-scaling">
 <p>
 Only 1-CPU active
 </p>
@@ -117,13 +122,13 @@ ethtool -X eth0 equal 4
 </div>
 </div>
 
-<div id="outline-container-netperf%20initial%20test" class="outline-2">
-<h2 id="netperf%20initial%20test"><a href="#netperf%20initial%20test">netperf initial test</a></h2>
-<div class="outline-text-2" id="text-netperf%20initial%20test">
+<div id="outline-container-netperf-initial-test" class="outline-2">
+<h2 id="netperf-initial-test"><a href="#netperf-initial-test">netperf initial test</a></h2>
+<div class="outline-text-2" id="text-netperf-initial-test">
 </div>
-<div id="outline-container-Localhost%20performance%20with%20netperf" class="outline-3">
-<h3 id="Localhost%20performance%20with%20netperf"><a href="#Localhost%20performance%20with%20netperf">Localhost performance with netperf</a></h3>
-<div class="outline-text-3" id="text-Localhost%20performance%20with%20netperf">
+<div id="outline-container-Localhost-performance-with-netperf" class="outline-3">
+<h3 id="Localhost-performance-with-netperf"><a href="#Localhost-performance-with-netperf">Localhost performance with netperf</a></h3>
+<div class="outline-text-3" id="text-Localhost-performance-with-netperf">
 <p>
 netperf TCP_RR localhost:  35,591 Trans/sec
 </p>
@@ -158,9 +163,9 @@ bytes  bytes   bytes    secs.    10^6bits/sec
 </div>
 
 
-<div id="outline-container-netperf%20from%20firesoul%20via%20ixgbe1" class="outline-3">
-<h3 id="netperf%20from%20firesoul%20via%20ixgbe1"><a href="#netperf%20from%20firesoul%20via%20ixgbe1">netperf from firesoul via ixgbe1</a></h3>
-<div class="outline-text-3" id="text-netperf%20from%20firesoul%20via%20ixgbe1">
+<div id="outline-container-netperf-from-firesoul-via-ixgbe1" class="outline-3">
+<h3 id="netperf-from-firesoul-via-ixgbe1"><a href="#netperf-from-firesoul-via-ixgbe1">netperf from firesoul via ixgbe1</a></h3>
+<div class="outline-text-3" id="text-netperf-from-firesoul-via-ixgbe1">
 <p>
 netperf TCP_RR from-remote-host:  8,064 Trans/sec
 </p>
@@ -192,9 +197,9 @@ bytes  bytes   bytes    secs.    10^6bits/sec
 </div>
 
 
-<div id="outline-container-Issue%3A%20Macchiatobin%20DMA%20overhead%20too%20large" class="outline-2">
-<h2 id="Issue%3A%20Macchiatobin%20DMA%20overhead%20too%20large"><a href="#Issue%3A%20Macchiatobin%20DMA%20overhead%20too%20large">Issue: Macchiatobin DMA overhead too large</a></h2>
-<div class="outline-text-2" id="text-Issue%3A%20Macchiatobin%20DMA%20overhead%20too%20large">
+<div id="outline-container-Issue--Macchiatobin-DMA-overhead-too-large" class="outline-2">
+<h2 id="Issue--Macchiatobin-DMA-overhead-too-large"><a href="#Issue--Macchiatobin-DMA-overhead-too-large">Issue: Macchiatobin DMA overhead too large</a></h2>
+<div class="outline-text-2" id="text-Issue--Macchiatobin-DMA-overhead-too-large">
 <p>
 The overhead of the DMA operations are too large.  Perf investigations
 indicate that the DMA swiotlb code is using bounce buffers for this
@@ -202,9 +207,9 @@ device, which should not be needed on this platform.
 </p>
 </div>
 
-<div id="outline-container-mvpp2%20DMA%20code%20notes" class="outline-3">
-<h3 id="mvpp2%20DMA%20code%20notes"><a href="#mvpp2%20DMA%20code%20notes">mvpp2 DMA code notes</a></h3>
-<div class="outline-text-3" id="text-mvpp2%20DMA%20code%20notes">
+<div id="outline-container-mvpp2-DMA-code-notes" class="outline-3">
+<h3 id="mvpp2-DMA-code-notes"><a href="#mvpp2-DMA-code-notes">mvpp2 DMA code notes</a></h3>
+<div class="outline-text-3" id="text-mvpp2-DMA-code-notes">
 <p>
 drivers/net/ethernet/marvell/mvpp2/
 </p>
@@ -247,9 +252,9 @@ arch/arm64/mm/dma-mapping.c:    .unmap_page = __swiotlb_unmap_page,
 </div>
 </div>
 
-<div id="outline-container-DMA%20works%20with%204.4.52-armada-17.10.3-g6adee55" class="outline-3">
-<h3 id="DMA%20works%20with%204.4.52-armada-17.10.3-g6adee55"><a href="#DMA%20works%20with%204.4.52-armada-17.10.3-g6adee55">DMA works with 4.4.52-armada-17.10.3-g6adee55</a></h3>
-<div class="outline-text-3" id="text-DMA%20works%20with%204.4.52-armada-17.10.3-g6adee55">
+<div id="outline-container-DMA-works-with-4.4.52-armada-17.10.3-g6adee55" class="outline-3">
+<h3 id="DMA-works-with-4.4.52-armada-17.10.3-g6adee55"><a href="#DMA-works-with-4.4.52-armada-17.10.3-g6adee55">DMA works with 4.4.52-armada-17.10.3-g6adee55</a></h3>
+<div class="outline-text-3" id="text-DMA-works-with-4.4.52-armada-17.10.3-g6adee55">
 <p>
 It seems the DMA overhead does not exist with the SolidRun kernel
 4.4.52-armada-17.10.3-g6adee55.
@@ -277,9 +282,9 @@ poll function in upstream <code>mvpp2</code> driver is named <code>mvpp2_poll</c
 </div>
 </div>
 
-<div id="outline-container-Found%20DMA%20issue" class="outline-3">
-<h3 id="Found%20DMA%20issue"><a href="#Found%20DMA%20issue">Found DMA issue</a></h3>
-<div class="outline-text-3" id="text-Found%20DMA%20issue">
+<div id="outline-container-Found-DMA-issue" class="outline-3">
+<h3 id="Found-DMA-issue"><a href="#Found-DMA-issue">Found DMA issue</a></h3>
+<div class="outline-text-3" id="text-Found-DMA-issue">
 <p>
 The memory getting allocated for RX buffers were above 40-bit.  Thus,
 the (steaming) DMA mapping is forced to go through bounce-buffers.

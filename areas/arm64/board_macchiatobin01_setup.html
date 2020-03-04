@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Setup notes for board macchiatobin</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,12 +26,12 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#Bootable%20Micro%20SD%20card">Bootable Micro SD card</a></li>
-<li><a href="#Works%20with%20upstream">Works with upstream</a></li>
-<li><a href="#Macchiatobin%20kernel-config">Macchiatobin kernel-config</a></li>
-<li><a href="#Brick%20by%20installing%20wrong%20kernel">Brick by installing wrong kernel</a>
+<li><a href="#Bootable-Micro-SD-card">Bootable Micro SD card</a></li>
+<li><a href="#Works-with-upstream">Works with upstream</a></li>
+<li><a href="#Macchiatobin-kernel-config">Macchiatobin kernel-config</a></li>
+<li><a href="#Brick-by-installing-wrong-kernel">Brick by installing wrong kernel</a>
 <ul>
-<li><a href="#Using%20Marvell%20kernel%3A%204.14.22-armada-18.09.3">Using Marvell kernel: 4.14.22-armada-18.09.3</a></li>
+<li><a href="#Using-Marvell-kernel--4.14.22-armada-18.09.3">Using Marvell kernel: 4.14.22-armada-18.09.3</a></li>
 </ul>
 </li>
 <li><a href="#Unbrick">Unbrick</a></li>
@@ -40,9 +45,9 @@ MacchiatoBIN, wiki docs:
 <li><a href="http://wiki.macchiatobin.net/tiki-index.php?page=Build+from+source+-+Kernel">http://wiki.macchiatobin.net/tiki-index.php?page=Build+from+source+-+Kernel</a></li>
 </ul>
 
-<div id="outline-container-Bootable%20Micro%20SD%20card" class="outline-2">
-<h2 id="Bootable%20Micro%20SD%20card"><a href="#Bootable%20Micro%20SD%20card">Bootable Micro SD card</a></h2>
-<div class="outline-text-2" id="text-Bootable%20Micro%20SD%20card">
+<div id="outline-container-Bootable-Micro-SD-card" class="outline-2">
+<h2 id="Bootable-Micro-SD-card"><a href="#Bootable-Micro-SD-card">Bootable Micro SD card</a></h2>
+<div class="outline-text-2" id="text-Bootable-Micro-SD-card">
 <p>
 Created a bootable Micro SD card via following:
 </p>
@@ -56,9 +61,9 @@ Got at working image booting: 4.4.52-armada-17.10.3-g6adee55.
 </div>
 </div>
 
-<div id="outline-container-Works%20with%20upstream" class="outline-2">
-<h2 id="Works%20with%20upstream"><a href="#Works%20with%20upstream">Works with upstream</a></h2>
-<div class="outline-text-2" id="text-Works%20with%20upstream">
+<div id="outline-container-Works-with-upstream" class="outline-2">
+<h2 id="Works-with-upstream"><a href="#Works-with-upstream">Works with upstream</a></h2>
+<div class="outline-text-2" id="text-Works-with-upstream">
 <p>
 Managed to compile an upstream kernel based of bpf-next via script:
 </p>
@@ -83,9 +88,9 @@ This kernel did have a DMA performance issue described in:
 </div>
 
 
-<div id="outline-container-Macchiatobin%20kernel-config" class="outline-2">
-<h2 id="Macchiatobin%20kernel-config"><a href="#Macchiatobin%20kernel-config">Macchiatobin kernel-config</a></h2>
-<div class="outline-text-2" id="text-Macchiatobin%20kernel-config">
+<div id="outline-container-Macchiatobin-kernel-config" class="outline-2">
+<h2 id="Macchiatobin-kernel-config"><a href="#Macchiatobin-kernel-config">Macchiatobin kernel-config</a></h2>
+<div class="outline-text-2" id="text-Macchiatobin-kernel-config">
 <p>
 Need to get their kernel-config, as basis for my upstream kernel compile.
 </p>
@@ -112,18 +117,18 @@ make ARCH=arm64 mvebu_v8_lsp_defconfig
 </div>
 </div>
 
-<div id="outline-container-Brick%20by%20installing%20wrong%20kernel" class="outline-2">
-<h2 id="Brick%20by%20installing%20wrong%20kernel"><a href="#Brick%20by%20installing%20wrong%20kernel">Brick by installing wrong kernel</a></h2>
-<div class="outline-text-2" id="text-Brick%20by%20installing%20wrong%20kernel">
+<div id="outline-container-Brick-by-installing-wrong-kernel" class="outline-2">
+<h2 id="Brick-by-installing-wrong-kernel"><a href="#Brick-by-installing-wrong-kernel">Brick by installing wrong kernel</a></h2>
+<div class="outline-text-2" id="text-Brick-by-installing-wrong-kernel">
 <p>
 Managed to brick the box, by installing another kernel that didn't boot.
 See error below, and next section for how I unbricked the box.
 </p>
 </div>
 
-<div id="outline-container-Using%20Marvell%20kernel%3A%204.14.22-armada-18.09.3" class="outline-3">
-<h3 id="Using%20Marvell%20kernel%3A%204.14.22-armada-18.09.3"><a href="#Using%20Marvell%20kernel%3A%204.14.22-armada-18.09.3">Using Marvell kernel: 4.14.22-armada-18.09.3</a></h3>
-<div class="outline-text-3" id="text-Using%20Marvell%20kernel%3A%204.14.22-armada-18.09.3">
+<div id="outline-container-Using-Marvell-kernel--4.14.22-armada-18.09.3" class="outline-3">
+<h3 id="Using-Marvell-kernel--4.14.22-armada-18.09.3"><a href="#Using-Marvell-kernel--4.14.22-armada-18.09.3">Using Marvell kernel: 4.14.22-armada-18.09.3</a></h3>
+<div class="outline-text-3" id="text-Using-Marvell-kernel--4.14.22-armada-18.09.3">
 <p>
 Caused crash:
 </p>

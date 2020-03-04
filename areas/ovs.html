@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Project management for XDP and Open vSwitch integration</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,14 +26,14 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#Possible%20approach%20for%20re-implement%20this%20using%20XDP">Possible approach for re-implement this using XDP</a>
+<li><a href="#Possible-approach-for-re-implement-this-using-XDP">Possible approach for re-implement this using XDP</a>
 <ul>
-<li><a href="#Helper%20for%20the%20flow%20lookup">Helper for the flow lookup</a></li>
-<li><a href="#Action%20processing">Action processing</a></li>
-<li><a href="#Actions%20required%20to%20be%20implemented%20in%20XDP">Actions required to be implemented in XDP</a></li>
+<li><a href="#Helper-for-the-flow-lookup">Helper for the flow lookup</a></li>
+<li><a href="#Action-processing">Action processing</a></li>
+<li><a href="#Actions-required-to-be-implemented-in-XDP">Actions required to be implemented in XDP</a></li>
 </ul>
 </li>
-<li><a href="#List%20of%20open%20items">List of open items</a></li>
+<li><a href="#List-of-open-items">List of open items</a></li>
 </ul>
 </div>
 </div>
@@ -54,13 +59,13 @@ Implementation of Open vSwitch</a>
 </p>
 
 
-<div id="outline-container-Possible%20approach%20for%20re-implement%20this%20using%20XDP" class="outline-2">
-<h2 id="Possible%20approach%20for%20re-implement%20this%20using%20XDP"><a href="#Possible%20approach%20for%20re-implement%20this%20using%20XDP">Possible approach for re-implement this using XDP</a></h2>
-<div class="outline-text-2" id="text-Possible%20approach%20for%20re-implement%20this%20using%20XDP">
+<div id="outline-container-Possible-approach-for-re-implement-this-using-XDP" class="outline-2">
+<h2 id="Possible-approach-for-re-implement-this-using-XDP"><a href="#Possible-approach-for-re-implement-this-using-XDP">Possible approach for re-implement this using XDP</a></h2>
+<div class="outline-text-2" id="text-Possible-approach-for-re-implement-this-using-XDP">
 </div>
-<div id="outline-container-Helper%20for%20the%20flow%20lookup" class="outline-3">
-<h3 id="Helper%20for%20the%20flow%20lookup"><a href="#Helper%20for%20the%20flow%20lookup">Helper for the flow lookup</a></h3>
-<div class="outline-text-3" id="text-Helper%20for%20the%20flow%20lookup">
+<div id="outline-container-Helper-for-the-flow-lookup" class="outline-3">
+<h3 id="Helper-for-the-flow-lookup"><a href="#Helper-for-the-flow-lookup">Helper for the flow lookup</a></h3>
+<div class="outline-text-3" id="text-Helper-for-the-flow-lookup">
 <p>
 To simplify the design it would be beneficial to add a helper function to
 the OVS kernel module which will do the flow lookup and return the set of
@@ -76,9 +81,9 @@ the XDP data space, and keeping it in sync.
 </div>
 
 
-<div id="outline-container-Action%20processing" class="outline-3">
-<h3 id="Action%20processing"><a href="#Action%20processing">Action processing</a></h3>
-<div class="outline-text-3" id="text-Action%20processing">
+<div id="outline-container-Action-processing" class="outline-3">
+<h3 id="Action-processing"><a href="#Action-processing">Action processing</a></h3>
+<div class="outline-text-3" id="text-Action-processing">
 <p>
 Actions are processed in a linear fashion, one at a time, where the last
 action can be a recirculation resulting in another lookup and another set of
@@ -128,9 +133,9 @@ currently missing from XDP.
 </div>
 
 
-<div id="outline-container-Actions%20required%20to%20be%20implemented%20in%20XDP" class="outline-3">
-<h3 id="Actions%20required%20to%20be%20implemented%20in%20XDP"><a href="#Actions%20required%20to%20be%20implemented%20in%20XDP">Actions required to be implemented in XDP</a></h3>
-<div class="outline-text-3" id="text-Actions%20required%20to%20be%20implemented%20in%20XDP">
+<div id="outline-container-Actions-required-to-be-implemented-in-XDP" class="outline-3">
+<h3 id="Actions-required-to-be-implemented-in-XDP"><a href="#Actions-required-to-be-implemented-in-XDP">Actions required to be implemented in XDP</a></h3>
+<div class="outline-text-3" id="text-Actions-required-to-be-implemented-in-XDP">
 <p>
 TODO: Add more details on what actions the datapath can/will take. See the
 kernel function <a href="https://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next.git/tree/net/openvswitch/actions.c?h=v5.1#n1217">do_execute_actions()</a> for some  reference.
@@ -140,9 +145,9 @@ kernel function <a href="https://git.kernel.org/pub/scm/linux/kernel/git/davem/n
 </div>
 
 
-<div id="outline-container-List%20of%20open%20items" class="outline-2">
-<h2 id="List%20of%20open%20items"><a href="#List%20of%20open%20items">List of open items</a></h2>
-<div class="outline-text-2" id="text-List%20of%20open%20items">
+<div id="outline-container-List-of-open-items" class="outline-2">
+<h2 id="List-of-open-items"><a href="#List-of-open-items">List of open items</a></h2>
+<div class="outline-text-2" id="text-List-of-open-items">
 <ul class="org-ul">
 <li>Support for Cloning packets, and work on multiple clones in the XDP
 program, and be able to sent the clones to different egress ports.</li>

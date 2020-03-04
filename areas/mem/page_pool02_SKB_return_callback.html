@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Implementing page_pool return-hook via SKB</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,29 +26,29 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#Basic%20idea">Basic idea</a></li>
-<li><a href="#%28pre-RFC%29%20Wrong%20recycle%20on%20two%20branches">(pre-RFC) Wrong recycle on two branches</a></li>
+<li><a href="#Basic-idea">Basic idea</a></li>
+<li><a href="#-pre-RFC--Wrong-recycle-on-two-branches">(pre-RFC) Wrong recycle on two branches</a></li>
 <li><a href="#RFC-patchset">RFC-patchset</a>
 <ul>
 <li><a href="#RFC-feedback">RFC-feedback</a>
 <ul>
-<li><a href="#Case%3A%20skb_try_coalesce%28%29">Case: skb_try_coalesce()</a></li>
-<li><a href="#Case%3A%20skb_gro_receive%28%29">Case: skb_gro_receive()</a></li>
+<li><a href="#Case--skb_try_coalesce--">Case: skb_try_coalesce()</a></li>
+<li><a href="#Case--skb_gro_receive--">Case: skb_gro_receive()</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#Patchset%3A%20DMA%20addr%20in%20struct%20page">Patchset: DMA addr in struct page</a>
+<li><a href="#Patchset--DMA-addr-in-struct-page">Patchset: DMA addr in struct page</a>
 <ul>
 <li><a href="#Cover-letter">Cover-letter</a></li>
-<li><a href="#Stgit%20mail%20command">Stgit mail command</a></li>
-<li><a href="#Using%20DMA_ATTR_SKIP_CPU_SYNC">Using DMA_ATTR_SKIP_CPU_SYNC</a></li>
+<li><a href="#Stgit-mail-command">Stgit mail command</a></li>
+<li><a href="#Using-DMA_ATTR_SKIP_CPU_SYNC">Using DMA_ATTR_SKIP_CPU_SYNC</a></li>
 </ul>
 </li>
-<li><a href="#Testing%20procedures">Testing procedures</a>
+<li><a href="#Testing-procedures">Testing procedures</a>
 <ul>
-<li><a href="#Multicast%20traffic">Multicast traffic</a></li>
-<li><a href="#TCP%20traffic">TCP traffic</a></li>
+<li><a href="#Multicast-traffic">Multicast traffic</a></li>
+<li><a href="#TCP-traffic">TCP traffic</a></li>
 </ul>
 </li>
 </ul>
@@ -55,9 +60,9 @@ return-hook via SKB (See section "Return-hook: via SKB" in
 <a href="page_pool01_evolving_API.html">page_pool01_evolving_API.html</a>)
 </p>
 
-<div id="outline-container-Basic%20idea" class="outline-2">
-<h2 id="Basic%20idea"><a href="#Basic%20idea">Basic idea</a></h2>
-<div class="outline-text-2" id="text-Basic%20idea">
+<div id="outline-container-Basic-idea" class="outline-2">
+<h2 id="Basic-idea"><a href="#Basic-idea">Basic idea</a></h2>
+<div class="outline-text-2" id="text-Basic-idea">
 <p>
 SKB freeing basically all goes through <code>__kfree_skb()</code>, and following
 the code path expanding relevant code-inside (see below), then is it
@@ -89,9 +94,9 @@ return hook.
 </div>
 
 
-<div id="outline-container-%28pre-RFC%29%20Wrong%20recycle%20on%20two%20branches" class="outline-2">
-<h2 id="%28pre-RFC%29%20Wrong%20recycle%20on%20two%20branches"><a href="#%28pre-RFC%29%20Wrong%20recycle%20on%20two%20branches">(pre-RFC) Wrong recycle on two branches</a></h2>
-<div class="outline-text-2" id="text-%28pre-RFC%29%20Wrong%20recycle%20on%20two%20branches">
+<div id="outline-container--pre-RFC--Wrong-recycle-on-two-branches" class="outline-2">
+<h2 id="-pre-RFC--Wrong-recycle-on-two-branches"><a href="#-pre-RFC--Wrong-recycle-on-two-branches">(pre-RFC) Wrong recycle on two branches</a></h2>
+<div class="outline-text-2" id="text--pre-RFC--Wrong-recycle-on-two-branches">
 <p>
 Git tree: <a href="https://github.com/apalos/bpf-next">https://github.com/apalos/bpf-next</a>
 Branches:
@@ -198,9 +203,9 @@ TODO: go through each case Eric pointed out and check constraints.
 </p>
 </div>
 
-<div id="outline-container-Case%3A%20skb_try_coalesce%28%29" class="outline-4">
-<h4 id="Case%3A%20skb_try_coalesce%28%29"><a href="#Case%3A%20skb_try_coalesce%28%29">Case: skb_try_coalesce()</a></h4>
-<div class="outline-text-4" id="text-Case%3A%20skb_try_coalesce%28%29">
+<div id="outline-container-Case--skb_try_coalesce--" class="outline-4">
+<h4 id="Case--skb_try_coalesce--"><a href="#Case--skb_try_coalesce--">Case: skb_try_coalesce()</a></h4>
+<div class="outline-text-4" id="text-Case--skb_try_coalesce--">
 <p>
 skb_try_coalesce() was broken, as it converts the skb-&gt;head into a skb "frags"
 of another SKB.
@@ -218,17 +223,17 @@ Look into code solutions, in prioritized order:
 </div>
 
 
-<div id="outline-container-Case%3A%20skb_gro_receive%28%29" class="outline-4">
-<h4 id="Case%3A%20skb_gro_receive%28%29"><a href="#Case%3A%20skb_gro_receive%28%29">Case: skb_gro_receive()</a></h4>
+<div id="outline-container-Case--skb_gro_receive--" class="outline-4">
+<h4 id="Case--skb_gro_receive--"><a href="#Case--skb_gro_receive--">Case: skb_gro_receive()</a></h4>
 </div>
 </div>
 </div>
 
 
 
-<div id="outline-container-Patchset%3A%20DMA%20addr%20in%20struct%20page" class="outline-2">
-<h2 id="Patchset%3A%20DMA%20addr%20in%20struct%20page"><a href="#Patchset%3A%20DMA%20addr%20in%20struct%20page">Patchset: DMA addr in struct page</a></h2>
-<div class="outline-text-2" id="text-Patchset%3A%20DMA%20addr%20in%20struct%20page">
+<div id="outline-container-Patchset--DMA-addr-in-struct-page" class="outline-2">
+<h2 id="Patchset--DMA-addr-in-struct-page"><a href="#Patchset--DMA-addr-in-struct-page">Patchset: DMA addr in struct page</a></h2>
+<div class="outline-text-2" id="text-Patchset--DMA-addr-in-struct-page">
 </div>
 <div id="outline-container-Cover-letter" class="outline-3">
 <h3 id="Cover-letter"><a href="#Cover-letter">Cover-letter</a></h3>
@@ -276,9 +281,9 @@ Question: Who of the maintainers MM or netdev will take these changes?
 </div>
 </div>
 
-<div id="outline-container-Stgit%20mail%20command" class="outline-3">
-<h3 id="Stgit%20mail%20command"><a href="#Stgit%20mail%20command">Stgit mail command</a></h3>
-<div class="outline-text-3" id="text-Stgit%20mail%20command">
+<div id="outline-container-Stgit-mail-command" class="outline-3">
+<h3 id="Stgit-mail-command"><a href="#Stgit-mail-command">Stgit mail command</a></h3>
+<div class="outline-text-3" id="text-Stgit-mail-command">
 <pre class="example">
 stg mail --prefix=net-next --version="V3" --edit-cover  --cc meup \
  --to netdev --to linux-mm@kvack.org \
@@ -293,9 +298,9 @@ stg mail --prefix=net-next --version="V3" --edit-cover  --cc meup \
 </div>
 
 
-<div id="outline-container-Using%20DMA_ATTR_SKIP_CPU_SYNC" class="outline-3">
-<h3 id="Using%20DMA_ATTR_SKIP_CPU_SYNC"><a href="#Using%20DMA_ATTR_SKIP_CPU_SYNC">Using DMA_ATTR_SKIP_CPU_SYNC</a></h3>
-<div class="outline-text-3" id="text-Using%20DMA_ATTR_SKIP_CPU_SYNC">
+<div id="outline-container-Using-DMA_ATTR_SKIP_CPU_SYNC" class="outline-3">
+<h3 id="Using-DMA_ATTR_SKIP_CPU_SYNC"><a href="#Using-DMA_ATTR_SKIP_CPU_SYNC">Using DMA_ATTR_SKIP_CPU_SYNC</a></h3>
+<div class="outline-text-3" id="text-Using-DMA_ATTR_SKIP_CPU_SYNC">
 <p>
 page_pool: use DMA_ATTR_SKIP_CPU_SYNC for DMA mappings
 </p>
@@ -314,13 +319,13 @@ driver takes over the DMA-sync steps.
 </div>
 
 
-<div id="outline-container-Testing%20procedures" class="outline-2">
-<h2 id="Testing%20procedures"><a href="#Testing%20procedures">Testing procedures</a></h2>
-<div class="outline-text-2" id="text-Testing%20procedures">
+<div id="outline-container-Testing-procedures" class="outline-2">
+<h2 id="Testing-procedures"><a href="#Testing-procedures">Testing procedures</a></h2>
+<div class="outline-text-2" id="text-Testing-procedures">
 </div>
-<div id="outline-container-Multicast%20traffic" class="outline-3">
-<h3 id="Multicast%20traffic"><a href="#Multicast%20traffic">Multicast traffic</a></h3>
-<div class="outline-text-3" id="text-Multicast%20traffic">
+<div id="outline-container-Multicast-traffic" class="outline-3">
+<h3 id="Multicast-traffic"><a href="#Multicast-traffic">Multicast traffic</a></h3>
+<div class="outline-text-3" id="text-Multicast-traffic">
 <p>
 Multicast traffic requires skb_clone'ing, so here is a test case with
 multicast:
@@ -359,9 +364,9 @@ receiving packets.
 </div>
 </div>
 
-<div id="outline-container-TCP%20traffic" class="outline-3">
-<h3 id="TCP%20traffic"><a href="#TCP%20traffic">TCP traffic</a></h3>
-<div class="outline-text-3" id="text-TCP%20traffic">
+<div id="outline-container-TCP-traffic" class="outline-3">
+<h3 id="TCP-traffic"><a href="#TCP-traffic">TCP traffic</a></h3>
+<div class="outline-text-3" id="text-TCP-traffic">
 <p>
 Both scp and iperf seem to trigger skb_try_coalesce()
 </p>

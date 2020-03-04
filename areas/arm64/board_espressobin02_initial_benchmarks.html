@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Espressobin initial benchmarks</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -23,17 +28,17 @@
 <ul>
 <li><a href="#Hardware">Hardware</a>
 <ul>
-<li><a href="#More%20info%20on%20hardware">More info on hardware</a></li>
+<li><a href="#More-info-on-hardware">More info on hardware</a></li>
 </ul>
 </li>
-<li><a href="#Baseline%20benchmark%20HW">Baseline benchmark HW</a></li>
-<li><a href="#Performance%20gotcha%20with%20PTP-timestamping">Performance gotcha with PTP-timestamping</a></li>
-<li><a href="#Random%20benchmark%20notes">Random benchmark notes</a>
+<li><a href="#Baseline-benchmark-HW">Baseline benchmark HW</a></li>
+<li><a href="#Performance-gotcha-with-PTP-timestamping">Performance gotcha with PTP-timestamping</a></li>
+<li><a href="#Random-benchmark-notes">Random benchmark notes</a>
 <ul>
-<li><a href="#branch-miss%20optimize%231">branch-miss optimize#1</a></li>
+<li><a href="#branch-miss-optimize-1">branch-miss optimize#1</a></li>
 </ul>
 </li>
-<li><a href="#Debugging%20hints">Debugging hints</a></li>
+<li><a href="#Debugging-hints">Debugging hints</a></li>
 </ul>
 </div>
 </div>
@@ -63,9 +68,9 @@ Flags:               fp asimd evtstrm aes pmull sha1 sha2 crc32 cpuid
 </pre>
 </div>
 
-<div id="outline-container-More%20info%20on%20hardware" class="outline-3">
-<h3 id="More%20info%20on%20hardware"><a href="#More%20info%20on%20hardware">More info on hardware</a></h3>
-<div class="outline-text-3" id="text-More%20info%20on%20hardware">
+<div id="outline-container-More-info-on-hardware" class="outline-3">
+<h3 id="More-info-on-hardware"><a href="#More-info-on-hardware">More info on hardware</a></h3>
+<div class="outline-text-3" id="text-More-info-on-hardware">
 <p>
 The Cortex-A53 MPCore instruction cache is 2-way set associative
 </p>
@@ -93,9 +98,9 @@ found this via <a href="https://www.marvell.com/documents/qc8hltbjybmpjhx36ckw/"
 </div>
 
 
-<div id="outline-container-Baseline%20benchmark%20HW" class="outline-2">
-<h2 id="Baseline%20benchmark%20HW"><a href="#Baseline%20benchmark%20HW">Baseline benchmark HW</a></h2>
-<div class="outline-text-2" id="text-Baseline%20benchmark%20HW">
+<div id="outline-container-Baseline-benchmark-HW" class="outline-2">
+<h2 id="Baseline-benchmark-HW"><a href="#Baseline-benchmark-HW">Baseline benchmark HW</a></h2>
+<div class="outline-text-2" id="text-Baseline-benchmark-HW">
 <p>
 Performance baseline when dropping packets as early as possible with
 in iptables raw table:
@@ -118,9 +123,9 @@ Ethtool(wan     ) stat:       211261 (        211,261) &lt;= rx_packets /sec
 </div>
 </div>
 
-<div id="outline-container-Performance%20gotcha%20with%20PTP-timestamping" class="outline-2">
-<h2 id="Performance%20gotcha%20with%20PTP-timestamping"><a href="#Performance%20gotcha%20with%20PTP-timestamping">Performance gotcha with PTP-timestamping</a></h2>
-<div class="outline-text-2" id="text-Performance%20gotcha%20with%20PTP-timestamping">
+<div id="outline-container-Performance-gotcha-with-PTP-timestamping" class="outline-2">
+<h2 id="Performance-gotcha-with-PTP-timestamping"><a href="#Performance-gotcha-with-PTP-timestamping">Performance gotcha with PTP-timestamping</a></h2>
+<div class="outline-text-2" id="text-Performance-gotcha-with-PTP-timestamping">
 <p>
 The config CONFIG_NET_PTP_CLASSIFY caused a funny issue.
 </p>
@@ -188,13 +193,13 @@ IpExtInNoECTPkts                275804             0.0
 </div>
 </div>
 
-<div id="outline-container-Random%20benchmark%20notes" class="outline-2">
-<h2 id="Random%20benchmark%20notes"><a href="#Random%20benchmark%20notes">Random benchmark notes</a></h2>
-<div class="outline-text-2" id="text-Random%20benchmark%20notes">
+<div id="outline-container-Random-benchmark-notes" class="outline-2">
+<h2 id="Random-benchmark-notes"><a href="#Random-benchmark-notes">Random benchmark notes</a></h2>
+<div class="outline-text-2" id="text-Random-benchmark-notes">
 </div>
-<div id="outline-container-branch-miss%20optimize%231" class="outline-3">
-<h3 id="branch-miss%20optimize%231"><a href="#branch-miss%20optimize%231">branch-miss optimize#1</a></h3>
-<div class="outline-text-3" id="text-branch-miss%20optimize%231">
+<div id="outline-container-branch-miss-optimize-1" class="outline-3">
+<h3 id="branch-miss-optimize-1"><a href="#branch-miss-optimize-1">branch-miss optimize#1</a></h3>
+<div class="outline-text-3" id="text-branch-miss-optimize-1">
 <p>
 Tried different branch-miss optimizations, not much performance gain
 seen in PPS numbers.
@@ -310,9 +315,9 @@ Ethtool(wan     ) stat:       258104 (        258,104) &lt;= rx_packets /sec
 </div>
 
 
-<div id="outline-container-Debugging%20hints" class="outline-2">
-<h2 id="Debugging%20hints"><a href="#Debugging%20hints">Debugging hints</a></h2>
-<div class="outline-text-2" id="text-Debugging%20hints">
+<div id="outline-container-Debugging-hints" class="outline-2">
+<h2 id="Debugging-hints"><a href="#Debugging-hints">Debugging hints</a></h2>
+<div class="outline-text-2" id="text-Debugging-hints">
 <p>
 ./scripts/faddr2line net/core/xdp.o __xdp_return+0x140
 </p>

@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Using libbpf to share maps between programs</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,9 +26,9 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#Current%20issue%20with%20libbpf%20map%20pinning">Current issue with libbpf map pinning</a>
+<li><a href="#Current-issue-with-libbpf-map-pinning">Current issue with libbpf map pinning</a>
 <ul>
-<li><a href="#Difficult%20to%20extend%20bpf_object__pin_maps">Difficult to extend bpf_object__pin_maps</a></li>
+<li><a href="#Difficult-to-extend-bpf_object__pin_maps">Difficult to extend bpf_object__pin_maps</a></li>
 </ul>
 </li>
 </ul>
@@ -34,9 +39,9 @@ This document is about improving and extending libbpf with an API that
 makes it easier to share BPF maps between BPF-programs.
 </p>
 
-<div id="outline-container-Current%20issue%20with%20libbpf%20map%20pinning" class="outline-2">
-<h2 id="Current%20issue%20with%20libbpf%20map%20pinning"><a href="#Current%20issue%20with%20libbpf%20map%20pinning">Current issue with libbpf map pinning</a></h2>
-<div class="outline-text-2" id="text-Current%20issue%20with%20libbpf%20map%20pinning">
+<div id="outline-container-Current-issue-with-libbpf-map-pinning" class="outline-2">
+<h2 id="Current-issue-with-libbpf-map-pinning"><a href="#Current-issue-with-libbpf-map-pinning">Current issue with libbpf map pinning</a></h2>
+<div class="outline-text-2" id="text-Current-issue-with-libbpf-map-pinning">
 <p>
 Currently there are two libbpf API calls for pinning maps (path must be a
 bpffs mount point), which will pin (on unpin) <b>ALL</b> maps in the BPF-ELF
@@ -56,9 +61,9 @@ pin operation will simply fail.
 </p>
 </div>
 
-<div id="outline-container-Difficult%20to%20extend%20bpf_object__pin_maps" class="outline-3">
-<h3 id="Difficult%20to%20extend%20bpf_object__pin_maps"><a href="#Difficult%20to%20extend%20bpf_object__pin_maps">Difficult to extend bpf_object__pin_maps</a></h3>
-<div class="outline-text-3" id="text-Difficult%20to%20extend%20bpf_object__pin_maps">
+<div id="outline-container-Difficult-to-extend-bpf_object__pin_maps" class="outline-3">
+<h3 id="Difficult-to-extend-bpf_object__pin_maps"><a href="#Difficult-to-extend-bpf_object__pin_maps">Difficult to extend bpf_object__pin_maps</a></h3>
+<div class="outline-text-3" id="text-Difficult-to-extend-bpf_object__pin_maps">
 <p>
 It's not trivial (read difficult) to extend <code>bpf_object__pin_maps()</code> to
 reuse existing maps.  This connected with how the different phases of

@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>CPUMAP optimizations patchset-V1</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,81 +26,81 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#WARNING%3A%20F27%20issue">WARNING: F27 issue</a></li>
-<li><a href="#Testlab%20machine">Testlab machine</a></li>
-<li><a href="#patch%20descriptions%20%2F%20notes">patch descriptions / notes</a>
+<li><a href="#WARNING--F27-issue">WARNING: F27 issue</a></li>
+<li><a href="#Testlab-machine">Testlab machine</a></li>
+<li><a href="#patch-descriptions---notes">patch descriptions / notes</a>
 <ul>
-<li><a href="#Cover%20letter">Cover letter</a>
+<li><a href="#Cover-letter">Cover letter</a>
 <ul>
-<li><a href="#stg%20mail%20V1">stg mail V1</a></li>
+<li><a href="#stg-mail-V1">stg mail V1</a></li>
 </ul>
 </li>
 <li><a href="#baseline">baseline</a>
 <ul>
-<li><a href="#NIC%3A%20i40e1%20-%20Kernel%3A%205.1.0-rc2-bpf-next-cpumap-baseline%2B">NIC: i40e1 - Kernel: 5.1.0-rc2-bpf-next-cpumap-baseline+</a></li>
-<li><a href="#NIC%3A%20i40e1%20-%20UDP%20socket%20baseline">NIC: i40e1 - UDP socket baseline</a></li>
-<li><a href="#NIC%3A%20i40e1%20-%20baseline%20cpumap%20redirect">NIC: i40e1 - baseline cpumap redirect</a></li>
+<li><a href="#NIC--i40e1---Kernel--5.1.0-rc2-bpf-next-cpumap-baseline-">NIC: i40e1 - Kernel: 5.1.0-rc2-bpf-next-cpumap-baseline+</a></li>
+<li><a href="#NIC--i40e1---UDP-socket-baseline">NIC: i40e1 - UDP socket baseline</a></li>
+<li><a href="#NIC--i40e1---baseline-cpumap-redirect">NIC: i40e1 - baseline cpumap redirect</a></li>
 </ul>
 </li>
-<li><a href="#Patch%3A%20bpf%3A%20cpumap%20use%20ptr_ring_consume_batched">Patch: bpf: cpumap use ptr_ring_consume_batched</a>
+<li><a href="#Patch--bpf--cpumap-use-ptr_ring_consume_batched">Patch: bpf: cpumap use ptr_ring_consume_batched</a>
 <ul>
-<li><a href="#benchmarks%20on%20this%20patch">benchmarks on this patch</a></li>
+<li><a href="#benchmarks-on-this-patch">benchmarks on this patch</a></li>
 </ul>
 </li>
-<li><a href="#Patch%3A%20bpf%3A%20cpumap%20send%20a%20SKB-list%20towards%20network%20stack.">Patch: bpf: cpumap send a SKB-list towards network stack.</a>
+<li><a href="#Patch--bpf--cpumap-send-a-SKB-list-towards-network-stack.">Patch: bpf: cpumap send a SKB-list towards network stack.</a>
 <ul>
-<li><a href="#benchmark01%20on%20this%20patch">benchmark01 on this patch</a></li>
-<li><a href="#benchmark02%20on%20this%20patch">benchmark02 on this patch</a></li>
-<li><a href="#benchmark03%20more%20reorg">benchmark03 more reorg</a></li>
+<li><a href="#benchmark01-on-this-patch">benchmark01 on this patch</a></li>
+<li><a href="#benchmark02-on-this-patch">benchmark02 on this patch</a></li>
+<li><a href="#benchmark03-more-reorg">benchmark03 more reorg</a></li>
 </ul>
 </li>
-<li><a href="#Patch%3A%20net%3A%20core%3A%20introduce%20build_skb_around">Patch: net: core: introduce build_skb_around</a>
+<li><a href="#Patch--net--core--introduce-build_skb_around">Patch: net: core: introduce build_skb_around</a>
 <ul>
-<li><a href="#Patch%3A%20net%3A%20core%3A%20introduce%20build_skb_around--benchmarks%20on%20this%20patch">benchmarks on this patch</a></li>
+<li><a href="#Patch--net--core--introduce-build_skb_around--benchmarks-on-this-patch">benchmarks on this patch</a></li>
 </ul>
 </li>
-<li><a href="#Patch%3A%20bpf%3A%20cpumap%20do%20bulk%20allocation%20of%20SKBs">Patch: bpf: cpumap do bulk allocation of SKBs</a>
+<li><a href="#Patch--bpf--cpumap-do-bulk-allocation-of-SKBs">Patch: bpf: cpumap do bulk allocation of SKBs</a>
 <ul>
-<li><a href="#Patch%3A%20bpf%3A%20cpumap%20do%20bulk%20allocation%20of%20SKBs--benchmarks%20on%20this%20patch">benchmarks on this patch</a></li>
+<li><a href="#Patch--bpf--cpumap-do-bulk-allocation-of-SKBs--benchmarks-on-this-patch">benchmarks on this patch</a></li>
 </ul>
 </li>
-<li><a href="#Patch%3A%20bpf%3A%20cpumap%20memory%20prefetchw%20optimizations%20for%20struct%20page">Patch: bpf: cpumap memory prefetchw optimizations for struct page</a>
+<li><a href="#Patch--bpf--cpumap-memory-prefetchw-optimizations-for-struct-page">Patch: bpf: cpumap memory prefetchw optimizations for struct page</a>
 <ul>
-<li><a href="#Patch%3A%20bpf%3A%20cpumap%20memory%20prefetchw%20optimizations%20for%20struct%20page--benchmarks%20on%20this%20patch">benchmarks on this patch</a></li>
+<li><a href="#Patch--bpf--cpumap-memory-prefetchw-optimizations-for-struct-page--benchmarks-on-this-patch">benchmarks on this patch</a></li>
 </ul>
 </li>
-<li><a href="#test%20reorg">test reorg</a>
+<li><a href="#test-reorg">test reorg</a>
 <ul>
-<li><a href="#benchmarks%20on%20experimental%20patch">benchmarks on experimental patch</a></li>
+<li><a href="#benchmarks-on-experimental-patch">benchmarks on experimental patch</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li><a href="#notes">notes</a></li>
-<li><a href="#Evaluating%20effect%20of%20page-prefetchw">Evaluating effect of page-prefetchw</a>
+<li><a href="#Evaluating-effect-of-page-prefetchw">Evaluating effect of page-prefetchw</a>
 <ul>
-<li><a href="#page-prefetchw%20%2B%20i40e%20%2B%20batch-16%20%2B%20iptables-raw-drop">page-prefetchw + i40e + batch-16 + iptables-raw-drop</a></li>
-<li><a href="#page-prefetch%20%28non-W%29%20%2B%20i40e%20%2B%20batch-16%20%2B%20iptables-raw-drop">page-prefetch (non-W) + i40e + batch-16 + iptables-raw-drop</a></li>
+<li><a href="#page-prefetchw---i40e---batch-16---iptables-raw-drop">page-prefetchw + i40e + batch-16 + iptables-raw-drop</a></li>
+<li><a href="#page-prefetch--non-W----i40e---batch-16---iptables-raw-drop">page-prefetch (non-W) + i40e + batch-16 + iptables-raw-drop</a></li>
 </ul>
 </li>
-<li><a href="#Eval%20prefetch%20of%20xdp_frame%20area">Eval prefetch of xdp_frame area</a>
+<li><a href="#Eval-prefetch-of-xdp_frame-area">Eval prefetch of xdp_frame area</a>
 <ul>
-<li><a href="#prefetchw%20xdp_frame">prefetchw xdp_frame</a></li>
-<li><a href="#remove%20any%20prefetch%20of%20xdp_frame">remove any prefetch of xdp_frame</a></li>
-<li><a href="#test%20reduce%20CPUMAP_BATCH%20to%208">test reduce CPUMAP_BATCH to 8</a></li>
-<li><a href="#Test%3A%20prefetchw%20single%20%2B%20i%2B1">Test: prefetchw single + i+1</a></li>
-<li><a href="#Test%3A%20Remove%20all%20prefetches">Test: Remove all prefetches</a></li>
+<li><a href="#prefetchw-xdp_frame">prefetchw xdp_frame</a></li>
+<li><a href="#remove-any-prefetch-of-xdp_frame">remove any prefetch of xdp_frame</a></li>
+<li><a href="#test-reduce-CPUMAP_BATCH-to-8">test reduce CPUMAP_BATCH to 8</a></li>
+<li><a href="#Test--prefetchw-single---i-1">Test: prefetchw single + i+1</a></li>
+<li><a href="#Test--Remove-all-prefetches">Test: Remove all prefetches</a></li>
 </ul>
 </li>
-<li><a href="#Hack%20use%20Felix%20kfree_skb_list%20bulk">Hack use Felix kfree_skb_list bulk</a>
+<li><a href="#Hack-use-Felix-kfree_skb_list-bulk">Hack use Felix kfree_skb_list bulk</a>
 <ul>
-<li><a href="#test%3A%20remove%20kmem_cache_free_bulk">test: remove kmem_cache_free_bulk</a></li>
+<li><a href="#test--remove-kmem_cache_free_bulk">test: remove kmem_cache_free_bulk</a></li>
 </ul>
 </li>
 <li><a href="#--notes">notes</a>
 <ul>
 <li><a href="#Experiments">Experiments</a></li>
-<li><a href="#Experiment%3A%20cut-out%20netfilter-code-path">Experiment: cut-out netfilter-code-path</a></li>
+<li><a href="#Experiment--cut-out-netfilter-code-path">Experiment: cut-out netfilter-code-path</a></li>
 </ul>
 </li>
 </ul>
@@ -105,9 +110,9 @@
 Next benchmark iteration in <a href="cpumap03-optimizations.html">cpumap03-optimizations.html</a>.
 </p>
 
-<div id="outline-container-WARNING%3A%20F27%20issue" class="outline-2">
-<h2 id="WARNING%3A%20F27%20issue"><a href="#WARNING%3A%20F27%20issue">WARNING: F27 issue</a></h2>
-<div class="outline-text-2" id="text-WARNING%3A%20F27%20issue">
+<div id="outline-container-WARNING--F27-issue" class="outline-2">
+<h2 id="WARNING--F27-issue"><a href="#WARNING--F27-issue">WARNING: F27 issue</a></h2>
+<div class="outline-text-2" id="text-WARNING--F27-issue">
 <p>
 A lot of the test-results have to be redone, because Fedora release 27 (F27)
 have been loading iptables-filter behind my back&#x2026;
@@ -132,9 +137,9 @@ the result recored with or without iptables filter loaded.
 </div>
 </div>
 
-<div id="outline-container-Testlab%20machine" class="outline-2">
-<h2 id="Testlab%20machine"><a href="#Testlab%20machine">Testlab machine</a></h2>
-<div class="outline-text-2" id="text-Testlab%20machine">
+<div id="outline-container-Testlab-machine" class="outline-2">
+<h2 id="Testlab-machine"><a href="#Testlab-machine">Testlab machine</a></h2>
+<div class="outline-text-2" id="text-Testlab-machine">
 <p>
 The testlab machine:
 </p>
@@ -146,13 +151,13 @@ The testlab machine:
 </div>
 </div>
 
-<div id="outline-container-patch%20descriptions%20%2F%20notes" class="outline-2">
-<h2 id="patch%20descriptions%20%2F%20notes"><a href="#patch%20descriptions%20%2F%20notes">patch descriptions / notes</a></h2>
-<div class="outline-text-2" id="text-patch%20descriptions%20%2F%20notes">
+<div id="outline-container-patch-descriptions---notes" class="outline-2">
+<h2 id="patch-descriptions---notes"><a href="#patch-descriptions---notes">patch descriptions / notes</a></h2>
+<div class="outline-text-2" id="text-patch-descriptions---notes">
 </div>
-<div id="outline-container-Cover%20letter" class="outline-3">
-<h3 id="Cover%20letter"><a href="#Cover%20letter">Cover letter</a></h3>
-<div class="outline-text-3" id="text-Cover%20letter">
+<div id="outline-container-Cover-letter" class="outline-3">
+<h3 id="Cover-letter"><a href="#Cover-letter">Cover letter</a></h3>
+<div class="outline-text-3" id="text-Cover-letter">
 <p>
 Bulk optimization for XDP cpumap redirect
 </p>
@@ -171,9 +176,9 @@ Patch-5: Prefetch struct page to solve CPU stall
 </p>
 </div>
 
-<div id="outline-container-stg%20mail%20V1" class="outline-4">
-<h4 id="stg%20mail%20V1"><a href="#stg%20mail%20V1">stg mail V1</a></h4>
-<div class="outline-text-4" id="text-stg%20mail%20V1">
+<div id="outline-container-stg-mail-V1" class="outline-4">
+<h4 id="stg-mail-V1"><a href="#stg-mail-V1">stg mail V1</a></h4>
+<div class="outline-text-4" id="text-stg-mail-V1">
 <pre class="example">
 stg mail --version=bpf-next --edit-cover --cc meup \
  --to netdev --cc bpf@vger.kernel.org \
@@ -193,9 +198,9 @@ stg mail --version=bpf-next --edit-cover --cc meup \
 <h3 id="baseline"><a href="#baseline">baseline</a></h3>
 <div class="outline-text-3" id="text-baseline">
 </div>
-<div id="outline-container-NIC%3A%20i40e1%20-%20Kernel%3A%205.1.0-rc2-bpf-next-cpumap-baseline%2B" class="outline-4">
-<h4 id="NIC%3A%20i40e1%20-%20Kernel%3A%205.1.0-rc2-bpf-next-cpumap-baseline%2B"><a href="#NIC%3A%20i40e1%20-%20Kernel%3A%205.1.0-rc2-bpf-next-cpumap-baseline%2B">NIC: i40e1 - Kernel: 5.1.0-rc2-bpf-next-cpumap-baseline+</a></h4>
-<div class="outline-text-4" id="text-NIC%3A%20i40e1%20-%20Kernel%3A%205.1.0-rc2-bpf-next-cpumap-baseline%2B">
+<div id="outline-container-NIC--i40e1---Kernel--5.1.0-rc2-bpf-next-cpumap-baseline-" class="outline-4">
+<h4 id="NIC--i40e1---Kernel--5.1.0-rc2-bpf-next-cpumap-baseline-"><a href="#NIC--i40e1---Kernel--5.1.0-rc2-bpf-next-cpumap-baseline-">NIC: i40e1 - Kernel: 5.1.0-rc2-bpf-next-cpumap-baseline+</a></h4>
+<div class="outline-text-4" id="text-NIC--i40e1---Kernel--5.1.0-rc2-bpf-next-cpumap-baseline-">
 <p>
 Below tests done on top of bpf-next on base commit dd399ac9e343c.
 </p>
@@ -229,8 +234,8 @@ supports-priv-flags: yes
 </div>
 
 <ul class="org-ul">
-<li><a id="baseline%3A%20UdpNoPorts%3A%203%2C326%2C983%20pps"></a><a href="#baseline%3A%20UdpNoPorts%3A%203%2C326%2C983%20pps">baseline: UdpNoPorts: 3,326,983 pps</a><br />
-<div class="outline-text-5" id="text-baseline%3A%20UdpNoPorts%3A%203%2C326%2C983%20pps">
+<li><a id="baseline--UdpNoPorts--3-326-983-pps"></a><a href="#baseline--UdpNoPorts--3-326-983-pps">baseline: UdpNoPorts: 3,326,983 pps</a><br />
+<div class="outline-text-5" id="text-baseline--UdpNoPorts--3-326-983-pps">
 <p>
 Unloaded all netfilter/iptables modules.
 </p>
@@ -252,8 +257,8 @@ IpExtInNoECTPkts                3327010            0.0
 </div>
 </li>
 
-<li><a id="baseline%3A%20iptables-raw%20drop%3A%205%2C705%2C245%20pps%20%28GRO-enabled%29"></a><a href="#baseline%3A%20iptables-raw%20drop%3A%205%2C705%2C245%20pps%20%28GRO-enabled%29">baseline: iptables-raw drop: 5,705,245 pps (GRO-enabled)</a><br />
-<div class="outline-text-5" id="text-baseline%3A%20iptables-raw%20drop%3A%205%2C705%2C245%20pps%20%28GRO-enabled%29">
+<li><a id="baseline--iptables-raw-drop--5-705-245-pps--GRO-enabled-"></a><a href="#baseline--iptables-raw-drop--5-705-245-pps--GRO-enabled-">baseline: iptables-raw drop: 5,705,245 pps (GRO-enabled)</a><br />
+<div class="outline-text-5" id="text-baseline--iptables-raw-drop--5-705-245-pps--GRO-enabled-">
 <p>
 Command used to drop packets:
 </p>
@@ -274,8 +279,8 @@ IpExtInNoECTPkts                5705343            0.0
 </div>
 </li>
 
-<li><a id="baseline%3A%20iptables-raw%20drop%3A%206%2C701%2C692%20pps%20%28GRO-disabled%29"></a><a href="#baseline%3A%20iptables-raw%20drop%3A%206%2C701%2C692%20pps%20%28GRO-disabled%29">baseline: iptables-raw drop: 6,701,692 pps (GRO-disabled)</a><br />
-<div class="outline-text-5" id="text-baseline%3A%20iptables-raw%20drop%3A%206%2C701%2C692%20pps%20%28GRO-disabled%29">
+<li><a id="baseline--iptables-raw-drop--6-701-692-pps--GRO-disabled-"></a><a href="#baseline--iptables-raw-drop--6-701-692-pps--GRO-disabled-">baseline: iptables-raw drop: 6,701,692 pps (GRO-disabled)</a><br />
+<div class="outline-text-5" id="text-baseline--iptables-raw-drop--6-701-692-pps--GRO-disabled-">
 <p>
 Command to disable GRO:
 </p>
@@ -295,9 +300,9 @@ IpExtInNoECTPkts                6701673            0.0
 </ul>
 </div>
 
-<div id="outline-container-NIC%3A%20i40e1%20-%20UDP%20socket%20baseline" class="outline-4">
-<h4 id="NIC%3A%20i40e1%20-%20UDP%20socket%20baseline"><a href="#NIC%3A%20i40e1%20-%20UDP%20socket%20baseline">NIC: i40e1 - UDP socket baseline</a></h4>
-<div class="outline-text-4" id="text-NIC%3A%20i40e1%20-%20UDP%20socket%20baseline">
+<div id="outline-container-NIC--i40e1---UDP-socket-baseline" class="outline-4">
+<h4 id="NIC--i40e1---UDP-socket-baseline"><a href="#NIC--i40e1---UDP-socket-baseline">NIC: i40e1 - UDP socket baseline</a></h4>
+<div class="outline-text-4" id="text-NIC--i40e1---UDP-socket-baseline">
 <p>
 Testing with UDP socket sink program:
 </p>
@@ -316,8 +321,8 @@ stealing CPU-time-slices from).
 </div>
 
 <ul class="org-ul">
-<li><a id="udp_sink%3A%20same%20CPU%20as%20RX%20%3D%20718%2C135%20pps"></a><a href="#udp_sink%3A%20same%20CPU%20as%20RX%20%3D%20718%2C135%20pps">udp_sink: same CPU as RX = 718,135 pps</a><br />
-<div class="outline-text-5" id="text-udp_sink%3A%20same%20CPU%20as%20RX%20%3D%20718%2C135%20pps">
+<li><a id="udp_sink--same-CPU-as-RX---718-135-pps"></a><a href="#udp_sink--same-CPU-as-RX---718-135-pps">udp_sink: same CPU as RX = 718,135 pps</a><br />
+<div class="outline-text-5" id="text-udp_sink--same-CPU-as-RX---718-135-pps">
 <pre class="example">
 [jbrouer@broadwell src]$ sudo taskset -c 1 ./udp_sink --port 9 --recvmsg --repeat 1000 --reuse
           	run      count   	ns/pkt	pps		cycles	payload
@@ -334,8 +339,8 @@ recvmsg   	run:  8	 1000000	1392.27	718250.94	5012	18	 demux:1
 </div>
 </li>
 
-<li><a id="udp_sink%3A%20another%20CPU%20than%20RX%20%3D%202%2C311%2C585%20pps"></a><a href="#udp_sink%3A%20another%20CPU%20than%20RX%20%3D%202%2C311%2C585%20pps">udp_sink: another CPU than RX = 2,311,585 pps</a><br />
-<div class="outline-text-5" id="text-udp_sink%3A%20another%20CPU%20than%20RX%20%3D%202%2C311%2C585%20pps">
+<li><a id="udp_sink--another-CPU-than-RX---2-311-585-pps"></a><a href="#udp_sink--another-CPU-than-RX---2-311-585-pps">udp_sink: another CPU than RX = 2,311,585 pps</a><br />
+<div class="outline-text-5" id="text-udp_sink--another-CPU-than-RX---2-311-585-pps">
 <pre class="example">
 [jbrouer@broadwell src]$ sudo taskset -c 3 ./udp_sink --port 9 --recvmsg --repeat 1000 --reuse
           	run      count   	ns/pkt	pps		cycles	payload
@@ -355,17 +360,17 @@ recvmsg   	run:  9	 1000000	432.62	2311479.47	1557	18	 demux:1
 </ul>
 </div>
 
-<div id="outline-container-NIC%3A%20i40e1%20-%20baseline%20cpumap%20redirect" class="outline-4">
-<h4 id="NIC%3A%20i40e1%20-%20baseline%20cpumap%20redirect"><a href="#NIC%3A%20i40e1%20-%20baseline%20cpumap%20redirect">NIC: i40e1 - baseline cpumap redirect</a></h4>
-<div class="outline-text-4" id="text-NIC%3A%20i40e1%20-%20baseline%20cpumap%20redirect">
+<div id="outline-container-NIC--i40e1---baseline-cpumap-redirect" class="outline-4">
+<h4 id="NIC--i40e1---baseline-cpumap-redirect"><a href="#NIC--i40e1---baseline-cpumap-redirect">NIC: i40e1 - baseline cpumap redirect</a></h4>
+<div class="outline-text-4" id="text-NIC--i40e1---baseline-cpumap-redirect">
 <p>
 What is the baseline CPUMAP redirect performance.
 </p>
 </div>
 
 <ul class="org-ul">
-<li><a id="baseline-redirect%3A%20UdpNoPorts%3A%202%2C727%2C840%20pps"></a><a href="#baseline-redirect%3A%20UdpNoPorts%3A%202%2C727%2C840%20pps">baseline-redirect: UdpNoPorts: 2,727,840 pps</a><br />
-<div class="outline-text-5" id="text-baseline-redirect%3A%20UdpNoPorts%3A%202%2C727%2C840%20pps">
+<li><a id="baseline-redirect--UdpNoPorts--2-727-840-pps"></a><a href="#baseline-redirect--UdpNoPorts--2-727-840-pps">baseline-redirect: UdpNoPorts: 2,727,840 pps</a><br />
+<div class="outline-text-5" id="text-baseline-redirect--UdpNoPorts--2-727-840-pps">
 <pre class="example">
 sudo ./xdp_redirect_cpu --dev i40e1 --qsize 128 --cpu 4 --prog xdp_cpu_map0
 Running XDP/eBPF prog_num:0
@@ -397,8 +402,8 @@ IpExtInNoECTPkts                2701820            0.0
 </div>
 </li>
 
-<li><a id="baseline-redirect%3A%20iptables-raw%20drop%3A%206%2C166%2C709%20pps"></a><a href="#baseline-redirect%3A%20iptables-raw%20drop%3A%206%2C166%2C709%20pps">baseline-redirect: iptables-raw drop: 6,166,709 pps</a><br />
-<div class="outline-text-5" id="text-baseline-redirect%3A%20iptables-raw%20drop%3A%206%2C166%2C709%20pps">
+<li><a id="baseline-redirect--iptables-raw-drop--6-166-709-pps"></a><a href="#baseline-redirect--iptables-raw-drop--6-166-709-pps">baseline-redirect: iptables-raw drop: 6,166,709 pps</a><br />
+<div class="outline-text-5" id="text-baseline-redirect--iptables-raw-drop--6-166-709-pps">
 <pre class="example">
 sudo ./xdp_redirect_cpu --dev i40e1 --qsize 128 --cpu 4 --prog xdp_cpu_map0
 Running XDP/eBPF prog_num:0
@@ -426,9 +431,9 @@ IpExtInNoECTPkts                6167164            0.0
 </div>
 </div>
 
-<div id="outline-container-Patch%3A%20bpf%3A%20cpumap%20use%20ptr_ring_consume_batched" class="outline-3">
-<h3 id="Patch%3A%20bpf%3A%20cpumap%20use%20ptr_ring_consume_batched"><a href="#Patch%3A%20bpf%3A%20cpumap%20use%20ptr_ring_consume_batched">Patch: bpf: cpumap use ptr_ring_consume_batched</a></h3>
-<div class="outline-text-3" id="text-Patch%3A%20bpf%3A%20cpumap%20use%20ptr_ring_consume_batched">
+<div id="outline-container-Patch--bpf--cpumap-use-ptr_ring_consume_batched" class="outline-3">
+<h3 id="Patch--bpf--cpumap-use-ptr_ring_consume_batched"><a href="#Patch--bpf--cpumap-use-ptr_ring_consume_batched">Patch: bpf: cpumap use ptr_ring_consume_batched</a></h3>
+<div class="outline-text-3" id="text-Patch--bpf--cpumap-use-ptr_ring_consume_batched">
 <p>
 Move ptr_ring dequeue outside loop, that allocate SKBs and calls network
 stack, as these operations that can take some time. The ptr_ring is a
@@ -449,13 +454,13 @@ size being active.
 </p>
 </div>
 
-<div id="outline-container-benchmarks%20on%20this%20patch" class="outline-4">
-<h4 id="benchmarks%20on%20this%20patch"><a href="#benchmarks%20on%20this%20patch">benchmarks on this patch</a></h4>
-<div class="outline-text-4" id="text-benchmarks%20on%20this%20patch">
+<div id="outline-container-benchmarks-on-this-patch" class="outline-4">
+<h4 id="benchmarks-on-this-patch"><a href="#benchmarks-on-this-patch">benchmarks on this patch</a></h4>
+<div class="outline-text-4" id="text-benchmarks-on-this-patch">
 </div>
 <ul class="org-ul">
-<li><a id="redirect%3A%20UdpNoPorts%3A%202%2C817%2C054"></a><a href="#redirect%3A%20UdpNoPorts%3A%202%2C817%2C054">redirect: UdpNoPorts: 2,817,054</a><br />
-<div class="outline-text-5" id="text-redirect%3A%20UdpNoPorts%3A%202%2C817%2C054">
+<li><a id="redirect--UdpNoPorts--2-817-054"></a><a href="#redirect--UdpNoPorts--2-817-054">redirect: UdpNoPorts: 2,817,054</a><br />
+<div class="outline-text-5" id="text-redirect--UdpNoPorts--2-817-054">
 <pre class="example">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -486,8 +491,8 @@ IpExtInNoECTPkts                2829076            0.0
 </div>
 </li>
 
-<li><a id="redirect%3A%20iptables-raw%20drop%3A%206%2C328%2C978"></a><a href="#redirect%3A%20iptables-raw%20drop%3A%206%2C328%2C978">redirect: iptables-raw drop: 6,328,978</a><br />
-<div class="outline-text-5" id="text-redirect%3A%20iptables-raw%20drop%3A%206%2C328%2C978">
+<li><a id="redirect--iptables-raw-drop--6-328-978"></a><a href="#redirect--iptables-raw-drop--6-328-978">redirect: iptables-raw drop: 6,328,978</a><br />
+<div class="outline-text-5" id="text-redirect--iptables-raw-drop--6-328-978">
 <pre class="example">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -523,9 +528,9 @@ IpExtInNoECTPkts                6358232            0.0
 </div>
 
 
-<div id="outline-container-Patch%3A%20bpf%3A%20cpumap%20send%20a%20SKB-list%20towards%20network%20stack." class="outline-3">
-<h3 id="Patch%3A%20bpf%3A%20cpumap%20send%20a%20SKB-list%20towards%20network%20stack."><a href="#Patch%3A%20bpf%3A%20cpumap%20send%20a%20SKB-list%20towards%20network%20stack.">Patch: bpf: cpumap send a SKB-list towards network stack.</a></h3>
-<div class="outline-text-3" id="text-Patch%3A%20bpf%3A%20cpumap%20send%20a%20SKB-list%20towards%20network%20stack.">
+<div id="outline-container-Patch--bpf--cpumap-send-a-SKB-list-towards-network-stack." class="outline-3">
+<h3 id="Patch--bpf--cpumap-send-a-SKB-list-towards-network-stack."><a href="#Patch--bpf--cpumap-send-a-SKB-list-towards-network-stack.">Patch: bpf: cpumap send a SKB-list towards network stack.</a></h3>
+<div class="outline-text-3" id="text-Patch--bpf--cpumap-send-a-SKB-list-towards-network-stack.">
 <p>
 Reduce BH-disable period further by moving cpu_map_build_skb()
 outside/before invoking the network stack. And build up a skb_list that is
@@ -540,13 +545,13 @@ netif_receive_skb_list_core().
 </p>
 </div>
 
-<div id="outline-container-benchmark01%20on%20this%20patch" class="outline-4">
-<h4 id="benchmark01%20on%20this%20patch"><a href="#benchmark01%20on%20this%20patch">benchmark01 on this patch</a></h4>
-<div class="outline-text-4" id="text-benchmark01%20on%20this%20patch">
+<div id="outline-container-benchmark01-on-this-patch" class="outline-4">
+<h4 id="benchmark01-on-this-patch"><a href="#benchmark01-on-this-patch">benchmark01 on this patch</a></h4>
+<div class="outline-text-4" id="text-benchmark01-on-this-patch">
 </div>
 <ul class="org-ul">
-<li><a id="redirect%3A%20UdpNoPorts%3A%202%2C846%2C583"></a><a href="#redirect%3A%20UdpNoPorts%3A%202%2C846%2C583">redirect: UdpNoPorts: 2,846,583</a><br />
-<div class="outline-text-5" id="text-redirect%3A%20UdpNoPorts%3A%202%2C846%2C583">
+<li><a id="redirect--UdpNoPorts--2-846-583"></a><a href="#redirect--UdpNoPorts--2-846-583">redirect: UdpNoPorts: 2,846,583</a><br />
+<div class="outline-text-5" id="text-redirect--UdpNoPorts--2-846-583">
 <pre class="example">
 sudo ./xdp_redirect_cpu --dev i40e1 --qsize 128 --cpu 4 --prog xdp_cpu_map0 --sec 3
 Running XDP/eBPF prog_num:0
@@ -563,8 +568,8 @@ xdp_exception   total   0              0
 </div>
 </li>
 
-<li><a id="redirect%3A%20iptables-raw%20drop%3A%205%2C535%2C958"></a><a href="#redirect%3A%20iptables-raw%20drop%3A%205%2C535%2C958">redirect: iptables-raw drop: 5,535,958</a><br />
-<div class="outline-text-5" id="text-redirect%3A%20iptables-raw%20drop%3A%205%2C535%2C958">
+<li><a id="redirect--iptables-raw-drop--5-535-958"></a><a href="#redirect--iptables-raw-drop--5-535-958">redirect: iptables-raw drop: 5,535,958</a><br />
+<div class="outline-text-5" id="text-redirect--iptables-raw-drop--5-535-958">
 <p>
 Strange performance drop.
 </p>
@@ -584,8 +589,8 @@ xdp_exception   total   0              0
 </div>
 </li>
 
-<li><a id="iptables-raw%20drop%3A%205%2C378%2C828%20pps%20%28GRO-enabled%29"></a><a href="#iptables-raw%20drop%3A%205%2C378%2C828%20pps%20%28GRO-enabled%29">iptables-raw drop: 5,378,828 pps (GRO-enabled)</a><br />
-<div class="outline-text-5" id="text-iptables-raw%20drop%3A%205%2C378%2C828%20pps%20%28GRO-enabled%29">
+<li><a id="iptables-raw-drop--5-378-828-pps--GRO-enabled-"></a><a href="#iptables-raw-drop--5-378-828-pps--GRO-enabled-">iptables-raw drop: 5,378,828 pps (GRO-enabled)</a><br />
+<div class="outline-text-5" id="text-iptables-raw-drop--5-378-828-pps--GRO-enabled-">
 <p>
 Command used to drop packets:
 </p>
@@ -625,17 +630,17 @@ IpExtInNoECTPkts                6269686            0.0
 </ul>
 </div>
 
-<div id="outline-container-benchmark02%20on%20this%20patch" class="outline-4">
-<h4 id="benchmark02%20on%20this%20patch"><a href="#benchmark02%20on%20this%20patch">benchmark02 on this patch</a></h4>
-<div class="outline-text-4" id="text-benchmark02%20on%20this%20patch">
+<div id="outline-container-benchmark02-on-this-patch" class="outline-4">
+<h4 id="benchmark02-on-this-patch"><a href="#benchmark02-on-this-patch">benchmark02 on this patch</a></h4>
+<div class="outline-text-4" id="text-benchmark02-on-this-patch">
 <p>
 Re-organize code in net/core/dev.c.
 </p>
 </div>
 
 <ul class="org-ul">
-<li><a id="redirect%3A%20UdpNoPorts%3A%202%2C829%2C666"></a><a href="#redirect%3A%20UdpNoPorts%3A%202%2C829%2C666">redirect: UdpNoPorts: 2,829,666</a><br />
-<div class="outline-text-5" id="text-redirect%3A%20UdpNoPorts%3A%202%2C829%2C666">
+<li><a id="redirect--UdpNoPorts--2-829-666"></a><a href="#redirect--UdpNoPorts--2-829-666">redirect: UdpNoPorts: 2,829,666</a><br />
+<div class="outline-text-5" id="text-redirect--UdpNoPorts--2-829-666">
 <pre class="example">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -651,8 +656,8 @@ xdp_exception   total   0              0
 </div>
 </li>
 
-<li><a id="redirect%3A%20iptables-raw%20drop%3A%205%2C529%2C818"></a><a href="#redirect%3A%20iptables-raw%20drop%3A%205%2C529%2C818">redirect: iptables-raw drop: 5,529,818</a><br />
-<div class="outline-text-5" id="text-redirect%3A%20iptables-raw%20drop%3A%205%2C529%2C818">
+<li><a id="redirect--iptables-raw-drop--5-529-818"></a><a href="#redirect--iptables-raw-drop--5-529-818">redirect: iptables-raw drop: 5,529,818</a><br />
+<div class="outline-text-5" id="text-redirect--iptables-raw-drop--5-529-818">
 <pre class="example">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -668,8 +673,8 @@ xdp_exception   total   0              0
 </div>
 </li>
 
-<li><a id="iptables-raw%20drop%3A%205%2C420%2C909"></a><a href="#iptables-raw%20drop%3A%205%2C420%2C909">iptables-raw drop: 5,420,909</a><br />
-<div class="outline-text-5" id="text-iptables-raw%20drop%3A%205%2C420%2C909">
+<li><a id="iptables-raw-drop--5-420-909"></a><a href="#iptables-raw-drop--5-420-909">iptables-raw drop: 5,420,909</a><br />
+<div class="outline-text-5" id="text-iptables-raw-drop--5-420-909">
 <p>
 Using standard Linux kernel and NAPI-RX iptables-raw drop.
 </p>
@@ -685,9 +690,9 @@ IpExtInNoECTPkts                5420892            0.0
 </ul>
 </div>
 
-<div id="outline-container-benchmark03%20more%20reorg" class="outline-4">
-<h4 id="benchmark03%20more%20reorg"><a href="#benchmark03%20more%20reorg">benchmark03 more reorg</a></h4>
-<div class="outline-text-4" id="text-benchmark03%20more%20reorg">
+<div id="outline-container-benchmark03-more-reorg" class="outline-4">
+<h4 id="benchmark03-more-reorg"><a href="#benchmark03-more-reorg">benchmark03 more reorg</a></h4>
+<div class="outline-text-4" id="text-benchmark03-more-reorg">
 <p>
 Re-organize code in net/core/dev.c.
 </p>
@@ -701,9 +706,9 @@ redirect: iptables-raw drop: 5,516,606
 </div>
 
 
-<div id="outline-container-Patch%3A%20net%3A%20core%3A%20introduce%20build_skb_around" class="outline-3">
-<h3 id="Patch%3A%20net%3A%20core%3A%20introduce%20build_skb_around"><a href="#Patch%3A%20net%3A%20core%3A%20introduce%20build_skb_around">Patch: net: core: introduce build_skb_around</a></h3>
-<div class="outline-text-3" id="text-Patch%3A%20net%3A%20core%3A%20introduce%20build_skb_around">
+<div id="outline-container-Patch--net--core--introduce-build_skb_around" class="outline-3">
+<h3 id="Patch--net--core--introduce-build_skb_around"><a href="#Patch--net--core--introduce-build_skb_around">Patch: net: core: introduce build_skb_around</a></h3>
+<div class="outline-text-3" id="text-Patch--net--core--introduce-build_skb_around">
 <p>
 The function build_skb() also have the responsibility to allocate and clear
 the SKB structure. Introduce a new function build_skb_around(), that moves
@@ -716,13 +721,13 @@ Next patch use this function combined with kmem_cache_alloc_bulk.
 </p>
 </div>
 
-<div id="outline-container-Patch%3A%20net%3A%20core%3A%20introduce%20build_skb_around--benchmarks%20on%20this%20patch" class="outline-4">
-<h4 id="Patch%3A%20net%3A%20core%3A%20introduce%20build_skb_around--benchmarks%20on%20this%20patch"><a href="#Patch%3A%20net%3A%20core%3A%20introduce%20build_skb_around--benchmarks%20on%20this%20patch">benchmarks on this patch</a></h4>
-<div class="outline-text-4" id="text-Patch%3A%20net%3A%20core%3A%20introduce%20build_skb_around--benchmarks%20on%20this%20patch">
+<div id="outline-container-Patch--net--core--introduce-build_skb_around--benchmarks-on-this-patch" class="outline-4">
+<h4 id="Patch--net--core--introduce-build_skb_around--benchmarks-on-this-patch"><a href="#Patch--net--core--introduce-build_skb_around--benchmarks-on-this-patch">benchmarks on this patch</a></h4>
+<div class="outline-text-4" id="text-Patch--net--core--introduce-build_skb_around--benchmarks-on-this-patch">
 </div>
 <ul class="org-ul">
-<li><a id="redirect%3A%20UdpNoPorts%3A%202%2C832%2C411"></a><a href="#redirect%3A%20UdpNoPorts%3A%202%2C832%2C411">redirect: UdpNoPorts: 2,832,411</a><br />
-<div class="outline-text-5" id="text-redirect%3A%20UdpNoPorts%3A%202%2C832%2C411">
+<li><a id="redirect--UdpNoPorts--2-832-411"></a><a href="#redirect--UdpNoPorts--2-832-411">redirect: UdpNoPorts: 2,832,411</a><br />
+<div class="outline-text-5" id="text-redirect--UdpNoPorts--2-832-411">
 <pre class="example">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -738,8 +743,8 @@ xdp_exception   total   0              0
 </div>
 </li>
 
-<li><a id="redirect%3A%20iptables-raw%20drop%3A%205%2C522%2C555"></a><a href="#redirect%3A%20iptables-raw%20drop%3A%205%2C522%2C555">redirect: iptables-raw drop: 5,522,555</a><br />
-<div class="outline-text-5" id="text-redirect%3A%20iptables-raw%20drop%3A%205%2C522%2C555">
+<li><a id="redirect--iptables-raw-drop--5-522-555"></a><a href="#redirect--iptables-raw-drop--5-522-555">redirect: iptables-raw drop: 5,522,555</a><br />
+<div class="outline-text-5" id="text-redirect--iptables-raw-drop--5-522-555">
 <pre class="example">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -755,8 +760,8 @@ xdp_exception   total   0              0
 </div>
 </li>
 
-<li><a id="iptables-raw%20drop%3A%205%2C396%2C717"></a><a href="#iptables-raw%20drop%3A%205%2C396%2C717">iptables-raw drop: 5,396,717</a><br />
-<div class="outline-text-5" id="text-iptables-raw%20drop%3A%205%2C396%2C717">
+<li><a id="iptables-raw-drop--5-396-717"></a><a href="#iptables-raw-drop--5-396-717">iptables-raw drop: 5,396,717</a><br />
+<div class="outline-text-5" id="text-iptables-raw-drop--5-396-717">
 <pre class="example">
 $ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
@@ -770,9 +775,9 @@ IpExtInNoECTPkts                5396720            0.0
 </div>
 </div>
 
-<div id="outline-container-Patch%3A%20bpf%3A%20cpumap%20do%20bulk%20allocation%20of%20SKBs" class="outline-3">
-<h3 id="Patch%3A%20bpf%3A%20cpumap%20do%20bulk%20allocation%20of%20SKBs"><a href="#Patch%3A%20bpf%3A%20cpumap%20do%20bulk%20allocation%20of%20SKBs">Patch: bpf: cpumap do bulk allocation of SKBs</a></h3>
-<div class="outline-text-3" id="text-Patch%3A%20bpf%3A%20cpumap%20do%20bulk%20allocation%20of%20SKBs">
+<div id="outline-container-Patch--bpf--cpumap-do-bulk-allocation-of-SKBs" class="outline-3">
+<h3 id="Patch--bpf--cpumap-do-bulk-allocation-of-SKBs"><a href="#Patch--bpf--cpumap-do-bulk-allocation-of-SKBs">Patch: bpf: cpumap do bulk allocation of SKBs</a></h3>
+<div class="outline-text-3" id="text-Patch--bpf--cpumap-do-bulk-allocation-of-SKBs">
 <p>
 As cpumap now batch consume xdp_frame's from the ptr_ring, it knows how many
 SKBs it need to allocate. Thus, lets bulk allocate these SKBs via
@@ -791,13 +796,13 @@ then the Intel CPU memset rep stos will have a real performance gain.)
 </p>
 </div>
 
-<div id="outline-container-Patch%3A%20bpf%3A%20cpumap%20do%20bulk%20allocation%20of%20SKBs--benchmarks%20on%20this%20patch" class="outline-4">
-<h4 id="Patch%3A%20bpf%3A%20cpumap%20do%20bulk%20allocation%20of%20SKBs--benchmarks%20on%20this%20patch"><a href="#Patch%3A%20bpf%3A%20cpumap%20do%20bulk%20allocation%20of%20SKBs--benchmarks%20on%20this%20patch">benchmarks on this patch</a></h4>
-<div class="outline-text-4" id="text-Patch%3A%20bpf%3A%20cpumap%20do%20bulk%20allocation%20of%20SKBs--benchmarks%20on%20this%20patch">
+<div id="outline-container-Patch--bpf--cpumap-do-bulk-allocation-of-SKBs--benchmarks-on-this-patch" class="outline-4">
+<h4 id="Patch--bpf--cpumap-do-bulk-allocation-of-SKBs--benchmarks-on-this-patch"><a href="#Patch--bpf--cpumap-do-bulk-allocation-of-SKBs--benchmarks-on-this-patch">benchmarks on this patch</a></h4>
+<div class="outline-text-4" id="text-Patch--bpf--cpumap-do-bulk-allocation-of-SKBs--benchmarks-on-this-patch">
 </div>
 <ul class="org-ul">
-<li><a id="redirect%3A%20UdpNoPorts%3A%202%2C943%2C928"></a><a href="#redirect%3A%20UdpNoPorts%3A%202%2C943%2C928">redirect: UdpNoPorts: 2,943,928</a><br />
-<div class="outline-text-5" id="text-redirect%3A%20UdpNoPorts%3A%202%2C943%2C928">
+<li><a id="redirect--UdpNoPorts--2-943-928"></a><a href="#redirect--UdpNoPorts--2-943-928">redirect: UdpNoPorts: 2,943,928</a><br />
+<div class="outline-text-5" id="text-redirect--UdpNoPorts--2-943-928">
 <pre class="example">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -813,8 +818,8 @@ xdp_exception   total   0              0
 </div>
 </li>
 
-<li><a id="redirect%3A%20iptables-raw%20drop%3A%205%2C908%2C032"></a><a href="#redirect%3A%20iptables-raw%20drop%3A%205%2C908%2C032">redirect: iptables-raw drop: 5,908,032</a><br />
-<div class="outline-text-5" id="text-redirect%3A%20iptables-raw%20drop%3A%205%2C908%2C032">
+<li><a id="redirect--iptables-raw-drop--5-908-032"></a><a href="#redirect--iptables-raw-drop--5-908-032">redirect: iptables-raw drop: 5,908,032</a><br />
+<div class="outline-text-5" id="text-redirect--iptables-raw-drop--5-908-032">
 <pre class="example">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -863,9 +868,9 @@ $ perf stat -C5 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.f
 </div>
 </div>
 
-<div id="outline-container-Patch%3A%20bpf%3A%20cpumap%20memory%20prefetchw%20optimizations%20for%20struct%20page" class="outline-3">
-<h3 id="Patch%3A%20bpf%3A%20cpumap%20memory%20prefetchw%20optimizations%20for%20struct%20page"><a href="#Patch%3A%20bpf%3A%20cpumap%20memory%20prefetchw%20optimizations%20for%20struct%20page">Patch: bpf: cpumap memory prefetchw optimizations for struct page</a></h3>
-<div class="outline-text-3" id="text-Patch%3A%20bpf%3A%20cpumap%20memory%20prefetchw%20optimizations%20for%20struct%20page">
+<div id="outline-container-Patch--bpf--cpumap-memory-prefetchw-optimizations-for-struct-page" class="outline-3">
+<h3 id="Patch--bpf--cpumap-memory-prefetchw-optimizations-for-struct-page"><a href="#Patch--bpf--cpumap-memory-prefetchw-optimizations-for-struct-page">Patch: bpf: cpumap memory prefetchw optimizations for struct page</a></h3>
+<div class="outline-text-3" id="text-Patch--bpf--cpumap-memory-prefetchw-optimizations-for-struct-page">
 <p>
 A lot of the performance gain comes from this patch.
 </p>
@@ -887,13 +892,13 @@ prefetch into L2 will have the same benefit.
 </p>
 </div>
 
-<div id="outline-container-Patch%3A%20bpf%3A%20cpumap%20memory%20prefetchw%20optimizations%20for%20struct%20page--benchmarks%20on%20this%20patch" class="outline-4">
-<h4 id="Patch%3A%20bpf%3A%20cpumap%20memory%20prefetchw%20optimizations%20for%20struct%20page--benchmarks%20on%20this%20patch"><a href="#Patch%3A%20bpf%3A%20cpumap%20memory%20prefetchw%20optimizations%20for%20struct%20page--benchmarks%20on%20this%20patch">benchmarks on this patch</a></h4>
-<div class="outline-text-4" id="text-Patch%3A%20bpf%3A%20cpumap%20memory%20prefetchw%20optimizations%20for%20struct%20page--benchmarks%20on%20this%20patch">
+<div id="outline-container-Patch--bpf--cpumap-memory-prefetchw-optimizations-for-struct-page--benchmarks-on-this-patch" class="outline-4">
+<h4 id="Patch--bpf--cpumap-memory-prefetchw-optimizations-for-struct-page--benchmarks-on-this-patch"><a href="#Patch--bpf--cpumap-memory-prefetchw-optimizations-for-struct-page--benchmarks-on-this-patch">benchmarks on this patch</a></h4>
+<div class="outline-text-4" id="text-Patch--bpf--cpumap-memory-prefetchw-optimizations-for-struct-page--benchmarks-on-this-patch">
 </div>
 <ul class="org-ul">
-<li><a id="redirect%3A%20UdpNoPorts%3A%203%2C270%2C640"></a><a href="#redirect%3A%20UdpNoPorts%3A%203%2C270%2C640">redirect: UdpNoPorts: 3,270,640</a><br />
-<div class="outline-text-5" id="text-redirect%3A%20UdpNoPorts%3A%203%2C270%2C640">
+<li><a id="redirect--UdpNoPorts--3-270-640"></a><a href="#redirect--UdpNoPorts--3-270-640">redirect: UdpNoPorts: 3,270,640</a><br />
+<div class="outline-text-5" id="text-redirect--UdpNoPorts--3-270-640">
 <pre class="example">
 unning XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -909,8 +914,8 @@ xdp_exception   total   0              0
 </div>
 </li>
 
-<li><a id="redirect%3A%20iptables-raw%20drop%3A%206%2C882%2C973"></a><a href="#redirect%3A%20iptables-raw%20drop%3A%206%2C882%2C973">redirect: iptables-raw drop: 6,882,973</a><br />
-<div class="outline-text-5" id="text-redirect%3A%20iptables-raw%20drop%3A%206%2C882%2C973">
+<li><a id="redirect--iptables-raw-drop--6-882-973"></a><a href="#redirect--iptables-raw-drop--6-882-973">redirect: iptables-raw drop: 6,882,973</a><br />
+<div class="outline-text-5" id="text-redirect--iptables-raw-drop--6-882-973">
 <pre class="example">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -929,13 +934,13 @@ xdp_exception   total   0              0
 </div>
 </div>
 
-<div id="outline-container-test%20reorg" class="outline-3">
-<h3 id="test%20reorg"><a href="#test%20reorg">test reorg</a></h3>
-<div class="outline-text-3" id="text-test%20reorg">
+<div id="outline-container-test-reorg" class="outline-3">
+<h3 id="test-reorg"><a href="#test-reorg">test reorg</a></h3>
+<div class="outline-text-3" id="text-test-reorg">
 </div>
-<div id="outline-container-benchmarks%20on%20experimental%20patch" class="outline-4">
-<h4 id="benchmarks%20on%20experimental%20patch"><a href="#benchmarks%20on%20experimental%20patch">benchmarks on experimental patch</a></h4>
-<div class="outline-text-4" id="text-benchmarks%20on%20experimental%20patch">
+<div id="outline-container-benchmarks-on-experimental-patch" class="outline-4">
+<h4 id="benchmarks-on-experimental-patch"><a href="#benchmarks-on-experimental-patch">benchmarks on experimental patch</a></h4>
+<div class="outline-text-4" id="text-benchmarks-on-experimental-patch">
 <p>
 Re-organize code in net/core/dev.c. Results look like the performance
 problem was solved.  UPDATE: This could be cause by F27 reloading iptables
@@ -945,8 +950,8 @@ effected by iptables-filter being loaded or not.
 </div>
 
 <ul class="org-ul">
-<li><a id="redirect%3A%20UdpNoPorts%3A%203%2C060%2C774"></a><a href="#redirect%3A%20UdpNoPorts%3A%203%2C060%2C774">redirect: UdpNoPorts: 3,060,774</a><br />
-<div class="outline-text-5" id="text-redirect%3A%20UdpNoPorts%3A%203%2C060%2C774">
+<li><a id="redirect--UdpNoPorts--3-060-774"></a><a href="#redirect--UdpNoPorts--3-060-774">redirect: UdpNoPorts: 3,060,774</a><br />
+<div class="outline-text-5" id="text-redirect--UdpNoPorts--3-060-774">
 <pre class="example">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -962,8 +967,8 @@ xdp_exception   total   0              0
 </div>
 </li>
 
-<li><a id="redirect%3A%20iptables-raw%20drop%3A%207%2C035%2C517"></a><a href="#redirect%3A%20iptables-raw%20drop%3A%207%2C035%2C517">redirect: iptables-raw drop: 7,035,517</a><br />
-<div class="outline-text-5" id="text-redirect%3A%20iptables-raw%20drop%3A%207%2C035%2C517">
+<li><a id="redirect--iptables-raw-drop--7-035-517"></a><a href="#redirect--iptables-raw-drop--7-035-517">redirect: iptables-raw drop: 7,035,517</a><br />
+<div class="outline-text-5" id="text-redirect--iptables-raw-drop--7-035-517">
 <pre class="example">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -1014,8 +1019,8 @@ $ perf stat -C5 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.f
 </div>
 </li>
 
-<li><a id="iptables-raw%20drop%3A%205%2C412%2C097%20%28GRO-enabled%29"></a><a href="#iptables-raw%20drop%3A%205%2C412%2C097%20%28GRO-enabled%29">iptables-raw drop: 5,412,097 (GRO-enabled)</a><br />
-<div class="outline-text-5" id="text-iptables-raw%20drop%3A%205%2C412%2C097%20%28GRO-enabled%29">
+<li><a id="iptables-raw-drop--5-412-097--GRO-enabled-"></a><a href="#iptables-raw-drop--5-412-097--GRO-enabled-">iptables-raw drop: 5,412,097 (GRO-enabled)</a><br />
+<div class="outline-text-5" id="text-iptables-raw-drop--5-412-097--GRO-enabled-">
 <p>
 Command used to drop packets:
 </p>
@@ -1056,9 +1061,9 @@ IpExtInNoECTPkts                5412085            0.0
 </div>
 </div>
 
-<div id="outline-container-Evaluating%20effect%20of%20page-prefetchw" class="outline-2">
-<h2 id="Evaluating%20effect%20of%20page-prefetchw"><a href="#Evaluating%20effect%20of%20page-prefetchw">Evaluating effect of page-prefetchw</a></h2>
-<div class="outline-text-2" id="text-Evaluating%20effect%20of%20page-prefetchw">
+<div id="outline-container-Evaluating-effect-of-page-prefetchw" class="outline-2">
+<h2 id="Evaluating-effect-of-page-prefetchw"><a href="#Evaluating-effect-of-page-prefetchw">Evaluating effect of page-prefetchw</a></h2>
+<div class="outline-text-2" id="text-Evaluating-effect-of-page-prefetchw">
 <p>
 (Below tests done on top of base commit dd399ac9e343c)
 </p>
@@ -1068,9 +1073,9 @@ Conclusion: based on below, the prefetchw on struct-page is important.
 </p>
 </div>
 
-<div id="outline-container-page-prefetchw%20%2B%20i40e%20%2B%20batch-16%20%2B%20iptables-raw-drop" class="outline-3">
-<h3 id="page-prefetchw%20%2B%20i40e%20%2B%20batch-16%20%2B%20iptables-raw-drop"><a href="#page-prefetchw%20%2B%20i40e%20%2B%20batch-16%20%2B%20iptables-raw-drop">page-prefetchw + i40e + batch-16 + iptables-raw-drop</a></h3>
-<div class="outline-text-3" id="text-page-prefetchw%20%2B%20i40e%20%2B%20batch-16%20%2B%20iptables-raw-drop">
+<div id="outline-container-page-prefetchw---i40e---batch-16---iptables-raw-drop" class="outline-3">
+<h3 id="page-prefetchw---i40e---batch-16---iptables-raw-drop"><a href="#page-prefetchw---i40e---batch-16---iptables-raw-drop">page-prefetchw + i40e + batch-16 + iptables-raw-drop</a></h3>
+<div class="outline-text-3" id="text-page-prefetchw---i40e---batch-16---iptables-raw-drop">
 <pre class="example">
 $ sudo ./xdp_redirect_cpu --prog 0 --dev i40e1 --qsize 128 --cpu 5
 Running XDP/eBPF prog_num:0
@@ -1087,9 +1092,9 @@ xdp_exception   total   0              0
 </div>
 </div>
 
-<div id="outline-container-page-prefetch%20%28non-W%29%20%2B%20i40e%20%2B%20batch-16%20%2B%20iptables-raw-drop" class="outline-3">
-<h3 id="page-prefetch%20%28non-W%29%20%2B%20i40e%20%2B%20batch-16%20%2B%20iptables-raw-drop"><a href="#page-prefetch%20%28non-W%29%20%2B%20i40e%20%2B%20batch-16%20%2B%20iptables-raw-drop">page-prefetch (non-W) + i40e + batch-16 + iptables-raw-drop</a></h3>
-<div class="outline-text-3" id="text-page-prefetch%20%28non-W%29%20%2B%20i40e%20%2B%20batch-16%20%2B%20iptables-raw-drop">
+<div id="outline-container-page-prefetch--non-W----i40e---batch-16---iptables-raw-drop" class="outline-3">
+<h3 id="page-prefetch--non-W----i40e---batch-16---iptables-raw-drop"><a href="#page-prefetch--non-W----i40e---batch-16---iptables-raw-drop">page-prefetch (non-W) + i40e + batch-16 + iptables-raw-drop</a></h3>
+<div class="outline-text-3" id="text-page-prefetch--non-W----i40e---batch-16---iptables-raw-drop">
 <pre class="example">
 $ sudo ./xdp_redirect_cpu --prog 0 --dev i40e1 --qsize 128 --cpu 5
 Running XDP/eBPF prog_num:0
@@ -1138,9 +1143,9 @@ IpExtInNoECTPkts                5264948            0.0
 </div>
 </div>
 
-<div id="outline-container-Eval%20prefetch%20of%20xdp_frame%20area" class="outline-2">
-<h2 id="Eval%20prefetch%20of%20xdp_frame%20area"><a href="#Eval%20prefetch%20of%20xdp_frame%20area">Eval prefetch of xdp_frame area</a></h2>
-<div class="outline-text-2" id="text-Eval%20prefetch%20of%20xdp_frame%20area">
+<div id="outline-container-Eval-prefetch-of-xdp_frame-area" class="outline-2">
+<h2 id="Eval-prefetch-of-xdp_frame-area"><a href="#Eval-prefetch-of-xdp_frame-area">Eval prefetch of xdp_frame area</a></h2>
+<div class="outline-text-2" id="text-Eval-prefetch-of-xdp_frame-area">
 <p>
 Normal prefetch of xdp_frame area didn't improve performance (batch 16).
 One theory is eviction from L1-cache.
@@ -1158,9 +1163,9 @@ do a L2-cache prefetch.
 </p>
 </div>
 
-<div id="outline-container-prefetchw%20xdp_frame" class="outline-3">
-<h3 id="prefetchw%20xdp_frame"><a href="#prefetchw%20xdp_frame">prefetchw xdp_frame</a></h3>
-<div class="outline-text-3" id="text-prefetchw%20xdp_frame">
+<div id="outline-container-prefetchw-xdp_frame" class="outline-3">
+<h3 id="prefetchw-xdp_frame"><a href="#prefetchw-xdp_frame">prefetchw xdp_frame</a></h3>
+<div class="outline-text-3" id="text-prefetchw-xdp_frame">
 <p>
 Using prefetchw helped:
 </p>
@@ -1194,9 +1199,9 @@ $ perf stat -C4 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.f
 </div>
 </div>
 
-<div id="outline-container-remove%20any%20prefetch%20of%20xdp_frame" class="outline-3">
-<h3 id="remove%20any%20prefetch%20of%20xdp_frame"><a href="#remove%20any%20prefetch%20of%20xdp_frame">remove any prefetch of xdp_frame</a></h3>
-<div class="outline-text-3" id="text-remove%20any%20prefetch%20of%20xdp_frame">
+<div id="outline-container-remove-any-prefetch-of-xdp_frame" class="outline-3">
+<h3 id="remove-any-prefetch-of-xdp_frame"><a href="#remove-any-prefetch-of-xdp_frame">remove any prefetch of xdp_frame</a></h3>
+<div class="outline-text-3" id="text-remove-any-prefetch-of-xdp_frame">
 <pre class="example">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -1245,9 +1250,9 @@ Notice how: l1d_pend_miss.fb_full was reduced from 89.670.480 to 20.614.863.
 </div>
 </div>
 
-<div id="outline-container-test%20reduce%20CPUMAP_BATCH%20to%208" class="outline-3">
-<h3 id="test%20reduce%20CPUMAP_BATCH%20to%208"><a href="#test%20reduce%20CPUMAP_BATCH%20to%208">test reduce CPUMAP_BATCH to 8</a></h3>
-<div class="outline-text-3" id="text-test%20reduce%20CPUMAP_BATCH%20to%208">
+<div id="outline-container-test-reduce-CPUMAP_BATCH-to-8" class="outline-3">
+<h3 id="test-reduce-CPUMAP_BATCH-to-8"><a href="#test-reduce-CPUMAP_BATCH-to-8">test reduce CPUMAP_BATCH to 8</a></h3>
+<div class="outline-text-3" id="text-test-reduce-CPUMAP_BATCH-to-8">
 <p>
 This hurt performance:
 </p>
@@ -1303,9 +1308,9 @@ reduced).
 </div>
 </div>
 
-<div id="outline-container-Test%3A%20prefetchw%20single%20%2B%20i%2B1" class="outline-3">
-<h3 id="Test%3A%20prefetchw%20single%20%2B%20i%2B1"><a href="#Test%3A%20prefetchw%20single%20%2B%20i%2B1">Test: prefetchw single + i+1</a></h3>
-<div class="outline-text-3" id="text-Test%3A%20prefetchw%20single%20%2B%20i%2B1">
+<div id="outline-container-Test--prefetchw-single---i-1" class="outline-3">
+<h3 id="Test--prefetchw-single---i-1"><a href="#Test--prefetchw-single---i-1">Test: prefetchw single + i+1</a></h3>
+<div class="outline-text-3" id="text-Test--prefetchw-single---i-1">
 <p>
 Test if prefetch xdp_frame i+1 before cpu_map_build_skb() works.
 </p>
@@ -1373,9 +1378,9 @@ $ perf stat -C5 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.f
 </div>
 </div>
 
-<div id="outline-container-Test%3A%20Remove%20all%20prefetches" class="outline-3">
-<h3 id="Test%3A%20Remove%20all%20prefetches"><a href="#Test%3A%20Remove%20all%20prefetches">Test: Remove all prefetches</a></h3>
-<div class="outline-text-3" id="text-Test%3A%20Remove%20all%20prefetches">
+<div id="outline-container-Test--Remove-all-prefetches" class="outline-3">
+<h3 id="Test--Remove-all-prefetches"><a href="#Test--Remove-all-prefetches">Test: Remove all prefetches</a></h3>
+<div class="outline-text-3" id="text-Test--Remove-all-prefetches">
 <p>
 Very significant performance drop:
 </p>
@@ -1413,9 +1418,9 @@ $ perf stat -C5 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.f
 
 
 
-<div id="outline-container-Hack%20use%20Felix%20kfree_skb_list%20bulk" class="outline-2">
-<h2 id="Hack%20use%20Felix%20kfree_skb_list%20bulk"><a href="#Hack%20use%20Felix%20kfree_skb_list%20bulk">Hack use Felix kfree_skb_list bulk</a></h2>
-<div class="outline-text-2" id="text-Hack%20use%20Felix%20kfree_skb_list%20bulk">
+<div id="outline-container-Hack-use-Felix-kfree_skb_list-bulk" class="outline-2">
+<h2 id="Hack-use-Felix-kfree_skb_list-bulk"><a href="#Hack-use-Felix-kfree_skb_list-bulk">Hack use Felix kfree_skb_list bulk</a></h2>
+<div class="outline-text-2" id="text-Hack-use-Felix-kfree_skb_list-bulk">
 <p>
 Replace netif_receive_skb_list_core() with bulk free variant of Felix'es
 kfree_skb_list.
@@ -1610,9 +1615,9 @@ The memset is in two functions
 </ul>
 </div>
 
-<div id="outline-container-test%3A%20remove%20kmem_cache_free_bulk" class="outline-3">
-<h3 id="test%3A%20remove%20kmem_cache_free_bulk"><a href="#test%3A%20remove%20kmem_cache_free_bulk">test: remove kmem_cache_free_bulk</a></h3>
-<div class="outline-text-3" id="text-test%3A%20remove%20kmem_cache_free_bulk">
+<div id="outline-container-test--remove-kmem_cache_free_bulk" class="outline-3">
+<h3 id="test--remove-kmem_cache_free_bulk"><a href="#test--remove-kmem_cache_free_bulk">test: remove kmem_cache_free_bulk</a></h3>
+<div class="outline-text-3" id="text-test--remove-kmem_cache_free_bulk">
 <p>
 Isolate the effect of using <code>kmem_cache_free_bulk()</code>. The change the bulk
 variant of <code>kfree_skb_list</code>, to revert back to use <code>kfree_skb()</code>, which
@@ -1731,9 +1736,9 @@ perf record -g -e cycles:pp,cpu/event=0xd1,umask=0x4,name=L3_Bound_MEM_LOAD_UOPS
 </div>
 </div>
 
-<div id="outline-container-Experiment%3A%20cut-out%20netfilter-code-path" class="outline-3">
-<h3 id="Experiment%3A%20cut-out%20netfilter-code-path"><a href="#Experiment%3A%20cut-out%20netfilter-code-path">Experiment: cut-out netfilter-code-path</a></h3>
-<div class="outline-text-3" id="text-Experiment%3A%20cut-out%20netfilter-code-path">
+<div id="outline-container-Experiment--cut-out-netfilter-code-path" class="outline-3">
+<h3 id="Experiment--cut-out-netfilter-code-path"><a href="#Experiment--cut-out-netfilter-code-path">Experiment: cut-out netfilter-code-path</a></h3>
+<div class="outline-text-3" id="text-Experiment--cut-out-netfilter-code-path">
 <p>
 Ugly hack cut-out nf_nook invocation, and drop all SKBs directly in NF_HOOK_LIST.
 </p>

@@ -7,12 +7,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Benchmarks for branch mvneta_03_page_pool_recycle</title>
 <meta name="generator" content="Org mode" />
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="/styles/readtheorg/css/readtheorg.css"/>
-<script type="text/javascript" src="/styles/lib/js/jquery.min.js"></script>
-<script type="text/javascript" src="/styles/lib/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
 <script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
-<script type="text/javascript" src="/styles/readtheorg/js/readtheorg.js"></script>
 </head>
 <body>
 <div id="content">
@@ -21,17 +26,17 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#Patch%20desc%20notes">Patch desc notes</a>
+<li><a href="#Patch-desc-notes">Patch desc notes</a>
 <ul>
-<li><a href="#Patch%20desc%3A%20net%3A%20core%3A%20add%20recycle%20capabilities%20on%20skbs%20via%20page_pool%20API">Patch desc: net: core: add recycle capabilities on skbs via page_pool API</a></li>
+<li><a href="#Patch-desc--net--core--add-recycle-capabilities-on-skbs-via-page_pool-API">Patch desc: net: core: add recycle capabilities on skbs via page_pool API</a></li>
 </ul>
 </li>
-<li><a href="#Experiments%20while%20testing">Experiments while testing</a>
+<li><a href="#Experiments-while-testing">Experiments while testing</a>
 <ul>
-<li><a href="#Remove%20wrong%20prefetch%20in%20mvneta_rx_swbm">Remove wrong prefetch in mvneta_rx_swbm</a></li>
-<li><a href="#Instruction%20cache%20misses">Instruction cache misses</a></li>
-<li><a href="#kfree_skb%20instead%20of%20napi_gro_receive">kfree_skb instead of napi_gro_receive</a></li>
-<li><a href="#Use%20netif_receive_skb_list">Use netif_receive_skb_list</a></li>
+<li><a href="#Remove-wrong-prefetch-in-mvneta_rx_swbm">Remove wrong prefetch in mvneta_rx_swbm</a></li>
+<li><a href="#Instruction-cache-misses">Instruction cache misses</a></li>
+<li><a href="#kfree_skb-instead-of-napi_gro_receive">kfree_skb instead of napi_gro_receive</a></li>
+<li><a href="#Use-netif_receive_skb_list">Use netif_receive_skb_list</a></li>
 </ul>
 </li>
 </ul>
@@ -59,17 +64,17 @@ This netstack/SKB callback hook is one of the mentioned solutions in:
 <li><a href="../mem/page_pool01_evolving_API.html">../mem/page_pool01_evolving_API.html</a></li>
 </ul>
 
-<div id="outline-container-Patch%20desc%20notes" class="outline-2">
-<h2 id="Patch%20desc%20notes"><a href="#Patch%20desc%20notes">Patch desc notes</a></h2>
-<div class="outline-text-2" id="text-Patch%20desc%20notes">
+<div id="outline-container-Patch-desc-notes" class="outline-2">
+<h2 id="Patch-desc-notes"><a href="#Patch-desc-notes">Patch desc notes</a></h2>
+<div class="outline-text-2" id="text-Patch-desc-notes">
 <p>
 For branch mvneta_03_page_pool_recycle
 </p>
 </div>
 
-<div id="outline-container-Patch%20desc%3A%20net%3A%20core%3A%20add%20recycle%20capabilities%20on%20skbs%20via%20page_pool%20API" class="outline-3">
-<h3 id="Patch%20desc%3A%20net%3A%20core%3A%20add%20recycle%20capabilities%20on%20skbs%20via%20page_pool%20API"><a href="#Patch%20desc%3A%20net%3A%20core%3A%20add%20recycle%20capabilities%20on%20skbs%20via%20page_pool%20API">Patch desc: net: core: add recycle capabilities on skbs via page_pool API</a></h3>
-<div class="outline-text-3" id="text-Patch%20desc%3A%20net%3A%20core%3A%20add%20recycle%20capabilities%20on%20skbs%20via%20page_pool%20API">
+<div id="outline-container-Patch-desc--net--core--add-recycle-capabilities-on-skbs-via-page_pool-API" class="outline-3">
+<h3 id="Patch-desc--net--core--add-recycle-capabilities-on-skbs-via-page_pool-API"><a href="#Patch-desc--net--core--add-recycle-capabilities-on-skbs-via-page_pool-API">Patch desc: net: core: add recycle capabilities on skbs via page_pool API</a></h3>
+<div class="outline-text-3" id="text-Patch-desc--net--core--add-recycle-capabilities-on-skbs-via-page_pool-API">
 <p>
 net: core: add recycle capabilities on skbs via page_pool API
 </p>
@@ -93,13 +98,13 @@ require another patch to be reviewable.
 </div>
 </div>
 
-<div id="outline-container-Experiments%20while%20testing" class="outline-2">
-<h2 id="Experiments%20while%20testing"><a href="#Experiments%20while%20testing">Experiments while testing</a></h2>
-<div class="outline-text-2" id="text-Experiments%20while%20testing">
+<div id="outline-container-Experiments-while-testing" class="outline-2">
+<h2 id="Experiments-while-testing"><a href="#Experiments-while-testing">Experiments while testing</a></h2>
+<div class="outline-text-2" id="text-Experiments-while-testing">
 </div>
-<div id="outline-container-Remove%20wrong%20prefetch%20in%20mvneta_rx_swbm" class="outline-3">
-<h3 id="Remove%20wrong%20prefetch%20in%20mvneta_rx_swbm"><a href="#Remove%20wrong%20prefetch%20in%20mvneta_rx_swbm">Remove wrong prefetch in mvneta_rx_swbm</a></h3>
-<div class="outline-text-3" id="text-Remove%20wrong%20prefetch%20in%20mvneta_rx_swbm">
+<div id="outline-container-Remove-wrong-prefetch-in-mvneta_rx_swbm" class="outline-3">
+<h3 id="Remove-wrong-prefetch-in-mvneta_rx_swbm"><a href="#Remove-wrong-prefetch-in-mvneta_rx_swbm">Remove wrong prefetch in mvneta_rx_swbm</a></h3>
+<div class="outline-text-3" id="text-Remove-wrong-prefetch-in-mvneta_rx_swbm">
 <p>
 Before (with wrong prefetch):
 </p>
@@ -164,9 +169,9 @@ Performance counter stats for 'CPU(s) 0' (3 runs):
 </div>
 </div>
 
-<div id="outline-container-Instruction%20cache%20misses" class="outline-3">
-<h3 id="Instruction%20cache%20misses"><a href="#Instruction%20cache%20misses">Instruction cache misses</a></h3>
-<div class="outline-text-3" id="text-Instruction%20cache%20misses">
+<div id="outline-container-Instruction-cache-misses" class="outline-3">
+<h3 id="Instruction-cache-misses"><a href="#Instruction-cache-misses">Instruction cache misses</a></h3>
+<div class="outline-text-3" id="text-Instruction-cache-misses">
 <p>
 It is very alarming that the L1-icache-load-misses is so high!
 </p>
@@ -200,9 +205,9 @@ Ethtool(wan     ) stat:       249016 (        249,016) &lt;= rx_packets /sec
 </div>
 </div>
 
-<div id="outline-container-kfree_skb%20instead%20of%20napi_gro_receive" class="outline-3">
-<h3 id="kfree_skb%20instead%20of%20napi_gro_receive"><a href="#kfree_skb%20instead%20of%20napi_gro_receive">kfree_skb instead of napi_gro_receive</a></h3>
-<div class="outline-text-3" id="text-kfree_skb%20instead%20of%20napi_gro_receive">
+<div id="outline-container-kfree_skb-instead-of-napi_gro_receive" class="outline-3">
+<h3 id="kfree_skb-instead-of-napi_gro_receive"><a href="#kfree_skb-instead-of-napi_gro_receive">kfree_skb instead of napi_gro_receive</a></h3>
+<div class="outline-text-3" id="text-kfree_skb-instead-of-napi_gro_receive">
 <p>
 A quick test to estimate HW early drop speeds, is to simply replace
 driver call to napi_gro_receive() with kfree_skb().
@@ -243,9 +248,9 @@ Performance counter stats for 'CPU(s) 0' (3 runs):
 </div>
 
 
-<div id="outline-container-Use%20netif_receive_skb_list" class="outline-3">
-<h3 id="Use%20netif_receive_skb_list"><a href="#Use%20netif_receive_skb_list">Use netif_receive_skb_list</a></h3>
-<div class="outline-text-3" id="text-Use%20netif_receive_skb_list">
+<div id="outline-container-Use-netif_receive_skb_list" class="outline-3">
+<h3 id="Use-netif_receive_skb_list"><a href="#Use-netif_receive_skb_list">Use netif_receive_skb_list</a></h3>
+<div class="outline-text-3" id="text-Use-netif_receive_skb_list">
 <p>
 TODO: Test if using netif_receive_skb_list() helps performance.
 As that is also an I-cache optimization.
