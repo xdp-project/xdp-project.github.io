@@ -157,7 +157,7 @@ account for possibly missed packets etc.
 +           (u64) pkt[5] &lt;&lt; 40  | (u64) pkt[4] &lt;&lt; 32 |
 +           (u64) pkt[3] &lt;&lt; 24 | (u64) pkt[2] &lt;&lt; 16 |
 +           (u64) pkt[1] &lt;&lt; 8  | (u64) pkt[0];
-+       packets[cnt] = (tss - ts) * 10; /* multiply value depends on CNTFRQ_EL0 */
++       packets[cnt] = (tss - ts) * X; /* X = multiply value depends on CNTFRQ_EL0 */
 +       cnt++;
         hex_dump(pkt, descs[i].len, descs[i].addr);
     }
@@ -208,7 +208,7 @@ latencies and compare them with the default linux network stack.
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-01-30 Thu 17:55</p>
+<p class="date">Date: 2020-03-03 Tue 14:45</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

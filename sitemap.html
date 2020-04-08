@@ -21,11 +21,29 @@
 </head>
 <body>
 <div id="content">
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#Site-navigation">Site navigation</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-Site-navigation" class="outline-2">
+<h2 id="Site-navigation"><a href="#Site-navigation">Site navigation</a></h2>
+<div class="outline-text-2" id="text-Site-navigation">
+<p>
+The repository contains a number of files that track more specific areas of XDP
+development. These are included in the following list:
+</p>
 <ul class="org-ul">
+<li><a href="index.html">Top-level XDP project management</a></li>
+
 <li><a href="brainstorm.html">Brainstorm notes</a></li>
 <li><a href="conference.html">Conference planning document</a></li>
 <li><a href="people.html">People involved in XDP development</a></li>
 <li><a href="planning.html">Project management: Planning who is working on what</a></li>
+<li><a href="student-projects.html">XDP-related project ideas for students</a></li>
 <li>areas
 <ul class="org-ul">
 <li><a href="areas/xdp_flowcache.html">Brainstorming around XDP-accelerated flowcache</a></li>
@@ -34,60 +52,10 @@
 <li><a href="areas/drivers.html">Project management for XDP driver support</a></li>
 <li><a href="areas/xdp-tutorial.html">Project management for XDP-tutorial</a></li>
 <li><a href="areas/mem.html">Project management for areas/mem</a></li>
-<li>arm64
-<ul class="org-ul">
-<li><a href="areas/arm64/board_espressobin08_bench_xdp.html">Benchmarks for Espressobin driver mvneta</a></li>
-<li><a href="areas/arm64/board_espressobin03_bench_page_pool.html">Benchmarks for branch mvneta_03_page_pool_recycle</a></li>
-<li><a href="areas/arm64/board_espressobin05_bench_xdp.html">Benchmarks for branch mvneta_04_page_pool_recycle_xdp</a></li>
-<li><a href="areas/arm64/board_espressobin04_bench_xdp.html">Benchmarks for branch mvneta_04_page_pool_xdp</a></li>
-<li><a href="areas/arm64/board_espressobin07_kernel_config.html">Espressobin config based on macchiatobin</a></li>
-<li><a href="areas/arm64/board_espressobin02_initial_benchmarks.html">Espressobin initial benchmarks</a></li>
-<li><a href="areas/arm64/arm01_selecting_hardware.html">Finding ARM64 hardware for XDP project</a></li>
-<li><a href="areas/arm64/board_macchiatobin02_initial_benchmarks.html">MacchiatoBIN initial benchmarks and troubleshooting</a></li>
-<li><a href="areas/arm64/board_espressobin06_RFC_patchset.html">Prepare RFC patchset for upstream to show page_pool plans</a></li>
-<li><a href="areas/arm64/arm02_cross_compile_setup.html">Setup ARM cross compiler on build server</a></li>
-<li><a href="areas/arm64/board_espressobin01_setup.html">Setup notes for board espressobin</a></li>
-<li><a href="areas/arm64/board_macchiatobin01_setup.html">Setup notes for board macchiatobin</a></li>
-<li><a href="areas/arm64/board_espressobin09_setup.html">V2: Setup notes for board espressobin</a></li>
-<li><a href="areas/arm64/xdp_for_tsn.html">xdp_for_tsn</a></li>
-<li>board_nxp_ls1088
-<ul class="org-ul">
-<li><a href="areas/arm64/board_nxp_ls1088/nxp-board02-create-rootfs.html">NXP LS1088A - Create rootfs</a></li>
-<li><a href="areas/arm64/board_nxp_ls1088/nxp-board03-NIC-setup.html">NXP LS1088A - NIC setup</a></li>
-</ul></li>
-</ul></li>
-<li>core
-<ul class="org-ul">
-<li><a href="areas/core/xdp_per_rxq01.html">Design: Having XDP programs per RX-queue</a></li>
-<li><a href="areas/core/xdp_fwd01_notes.html">Improvements to xdp_fwd sample</a></li>
-<li><a href="areas/core/libbpf01-map-pinning-reuse.html">Using libbpf to share maps between programs</a></li>
-<li><a href="areas/core/xdp-multi-buffer01-design.html">XDP multi buffer design</a></li>
-<li><a href="areas/core/xdp-stats01-design.html">xdp-stats01-design</a></li>
-</ul></li>
-<li>cpumap
-<ul class="org-ul">
-<li><a href="areas/cpumap/cpumap02-optimizations.html">CPUMAP optimizations patchset-V1</a></li>
-<li><a href="areas/cpumap/cpumap03-optimizations.html">CPUMAP optimizations patchset-V2</a></li>
-<li><a href="areas/cpumap/cpumap01-bugfix.html">Hunting bug in CPUMAP</a></li>
-</ul></li>
-<li>dma
-<ul class="org-ul">
-<li><a href="areas/dma/dma01_test_hellwig_direct_dma.html">Testing Hellwig "dma-direct-calls" patchset</a></li>
-</ul></li>
-<li>mem
-<ul class="org-ul">
-<li><a href="areas/mem/page_pool04_inflight_changes.html">Change page_pool handling in-flight frames during shutdown</a></li>
-<li><a href="areas/mem/page_pool01_evolving_API.html">Evolving the page_pool API</a></li>
-<li><a href="areas/mem/page_pool05_SKB_recycle_rfc.html">Implementing page_pool return-hook via SKB</a></li>
-<li><a href="areas/mem/page_pool02_SKB_return_callback.html">Implementing page_pool return-hook via SKB</a></li>
-<li><a href="areas/mem/page_pool03_shutdown_inflight.html">page_pool handling in-flight frames during shutdown</a></li>
-<li>bpftrace
-<ul class="org-ul">
-<li><a href="areas/mem/bpftrace/INSTALL.html">Installing bpftrace and manage with stow</a></li>
-</ul></li>
-</ul></li>
 </ul></li>
 </ul>
+</div>
+</div>
 </div>
 <div id="postamble" class="status">
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>

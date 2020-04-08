@@ -26,6 +26,8 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
+<li><a href="#Various-brainstorm-ideas">Various brainstorm ideas</a>
+<ul>
 <li><a href="#General--Make-Generic-XDP-complient-with-Native-XDP-features">General: Make Generic-XDP complient with Native-XDP features</a></li>
 <li><a href="#XDP-on-ARM-boards">XDP on ARM-boards</a></li>
 <li><a href="#Crazy-idea--XDP-redirect-re-handle-about-to-be-dropped-packets">Crazy-idea: XDP-redirect re-handle about-to-be-dropped packets</a></li>
@@ -50,9 +52,12 @@
 <li><a href="#Potential-bug--Mlx5-fix-dma-unmap-call--after-xdp-return-frame-">Potential-bug: Mlx5 fix dma unmap call (after xdp return frame)</a></li>
 <li><a href="#Retpoline-performance-issue-for-xdp">Retpoline performance issue for xdp</a></li>
 <li><a href="#Retpoline--mlx5-too-many-indirect-calls">Retpoline: mlx5 too many indirect calls</a></li>
-<li><a href="#Old-list--watch-out-for-dublicates">Old list: watch out for dublicates</a></li>
 <li><a href="#XDP-metadata--dynamic-descriptor-offloads-via-BTF">XDP metadata: dynamic descriptor offloads via BTF</a></li>
 <li><a href="#Napatech-have-descriptors-in-front-of-packet-payload">Napatech have descriptors in-front of packet payload</a></li>
+</ul>
+</li>
+<li><a href="#Old-list--watch-out-for-dublicates">Old list: watch out for dublicates</a></li>
+<li><a href="#Site-navigation">Site navigation</a></li>
 </ul>
 </div>
 </div>
@@ -66,23 +71,27 @@ Turn these notes into real issue or bug descriptions and move them
 into other docs like <a href="xdp_issues.html">xdp_issues.html</a>
 </p>
 
-<div id="outline-container-General--Make-Generic-XDP-complient-with-Native-XDP-features" class="outline-2">
-<h2 id="General--Make-Generic-XDP-complient-with-Native-XDP-features"><a href="#General--Make-Generic-XDP-complient-with-Native-XDP-features">General: Make Generic-XDP complient with Native-XDP features</a></h2>
+<div id="outline-container-Various-brainstorm-ideas" class="outline-2">
+<h2 id="Various-brainstorm-ideas"><a href="#Various-brainstorm-ideas">Various brainstorm ideas</a></h2>
+<div class="outline-text-2" id="text-Various-brainstorm-ideas">
+</div>
+<div id="outline-container-General--Make-Generic-XDP-complient-with-Native-XDP-features" class="outline-3">
+<h3 id="General--Make-Generic-XDP-complient-with-Native-XDP-features"><a href="#General--Make-Generic-XDP-complient-with-Native-XDP-features">General: Make Generic-XDP complient with Native-XDP features</a></h3>
 </div>
 
 
-<div id="outline-container-XDP-on-ARM-boards" class="outline-2">
-<h2 id="XDP-on-ARM-boards"><a href="#XDP-on-ARM-boards">XDP on ARM-boards</a></h2>
-<div class="outline-text-2" id="text-XDP-on-ARM-boards">
+<div id="outline-container-XDP-on-ARM-boards" class="outline-3">
+<h3 id="XDP-on-ARM-boards"><a href="#XDP-on-ARM-boards">XDP on ARM-boards</a></h3>
+<div class="outline-text-3" id="text-XDP-on-ARM-boards">
 <p>
 See <a href="areas/arm64/README.html">areas/arm64/README.html</a>
 </p>
 </div>
 </div>
 
-<div id="outline-container-Crazy-idea--XDP-redirect-re-handle-about-to-be-dropped-packets" class="outline-2">
-<h2 id="Crazy-idea--XDP-redirect-re-handle-about-to-be-dropped-packets"><a href="#Crazy-idea--XDP-redirect-re-handle-about-to-be-dropped-packets">Crazy-idea: XDP-redirect re-handle about-to-be-dropped packets</a></h2>
-<div class="outline-text-2" id="text-Crazy-idea--XDP-redirect-re-handle-about-to-be-dropped-packets">
+<div id="outline-container-Crazy-idea--XDP-redirect-re-handle-about-to-be-dropped-packets" class="outline-3">
+<h3 id="Crazy-idea--XDP-redirect-re-handle-about-to-be-dropped-packets"><a href="#Crazy-idea--XDP-redirect-re-handle-about-to-be-dropped-packets">Crazy-idea: XDP-redirect re-handle about-to-be-dropped packets</a></h3>
+<div class="outline-text-3" id="text-Crazy-idea--XDP-redirect-re-handle-about-to-be-dropped-packets">
 <p>
 Ref slides: <a href="http://people.netfilter.org/hawk/presentations/NetConf2017_Seoul/XDP_devel_update_NetConf2017_Seoul.pdf">http://people.netfilter.org/hawk/presentations/NetConf2017_Seoul/XDP_devel_update_NetConf2017_Seoul.pdf</a>
 </p>
@@ -99,9 +108,9 @@ in the slide, and blow-your-mind! (<a href="https://youtu.be/BO0QhaxBRr0">https:
 </div>
 
 
-<div id="outline-container-Tracking-and-troubleshooting-eBPF" class="outline-2">
-<h2 id="Tracking-and-troubleshooting-eBPF"><a href="#Tracking-and-troubleshooting-eBPF">Tracking and troubleshooting eBPF</a></h2>
-<div class="outline-text-2" id="text-Tracking-and-troubleshooting-eBPF">
+<div id="outline-container-Tracking-and-troubleshooting-eBPF" class="outline-3">
+<h3 id="Tracking-and-troubleshooting-eBPF"><a href="#Tracking-and-troubleshooting-eBPF">Tracking and troubleshooting eBPF</a></h3>
+<div class="outline-text-3" id="text-Tracking-and-troubleshooting-eBPF">
 <p>
 Want to track when BPF progs gets loaded/unloaded
 </p>
@@ -119,9 +128,9 @@ BPF code do have LSM/SElinux hooks
 </div>
 </div>
 
-<div id="outline-container-Usability--XDP-redirect-not-impl-by-driver-gives-WARN_ON" class="outline-2">
-<h2 id="Usability--XDP-redirect-not-impl-by-driver-gives-WARN_ON"><a href="#Usability--XDP-redirect-not-impl-by-driver-gives-WARN_ON">Usability: XDP redirect not impl by driver gives WARN_ON</a></h2>
-<div class="outline-text-2" id="text-Usability--XDP-redirect-not-impl-by-driver-gives-WARN_ON">
+<div id="outline-container-Usability--XDP-redirect-not-impl-by-driver-gives-WARN_ON" class="outline-3">
+<h3 id="Usability--XDP-redirect-not-impl-by-driver-gives-WARN_ON"><a href="#Usability--XDP-redirect-not-impl-by-driver-gives-WARN_ON">Usability: XDP redirect not impl by driver gives WARN_ON</a></h3>
+<div class="outline-text-3" id="text-Usability--XDP-redirect-not-impl-by-driver-gives-WARN_ON">
 <p>
 E.g. AF_XDP via xdpsock uses redirect, and there is not feedback when
 running prog on driver without redirect-support.  Need to look in
@@ -130,9 +139,9 @@ dmesg to see big splast.
 </div>
 </div>
 
-<div id="outline-container-Usability--HW-offload-on-non-supported-driver-firmware-return-EINVAL" class="outline-2">
-<h2 id="Usability--HW-offload-on-non-supported-driver-firmware-return-EINVAL"><a href="#Usability--HW-offload-on-non-supported-driver-firmware-return-EINVAL">Usability: HW offload on non-supported driver/firmware return EINVAL</a></h2>
-<div class="outline-text-2" id="text-Usability--HW-offload-on-non-supported-driver-firmware-return-EINVAL">
+<div id="outline-container-Usability--HW-offload-on-non-supported-driver-firmware-return-EINVAL" class="outline-3">
+<h3 id="Usability--HW-offload-on-non-supported-driver-firmware-return-EINVAL"><a href="#Usability--HW-offload-on-non-supported-driver-firmware-return-EINVAL">Usability: HW offload on non-supported driver/firmware return EINVAL</a></h3>
+<div class="outline-text-3" id="text-Usability--HW-offload-on-non-supported-driver-firmware-return-EINVAL">
 <p>
 E.g. Loading XDP/ebpf prog with HW offload on Netronome NIC, but wrong
 firmware, just says EINVAL.  No help or hints that firmware needs to
@@ -151,9 +160,9 @@ the cases?
 </div>
 </div>
 
-<div id="outline-container-Extend-xdp_buff-with-member-data_hard_end" class="outline-2">
-<h2 id="Extend-xdp_buff-with-member-data_hard_end"><a href="#Extend-xdp_buff-with-member-data_hard_end">Extend xdp_buff with member data_hard_end</a></h2>
-<div class="outline-text-2" id="text-Extend-xdp_buff-with-member-data_hard_end">
+<div id="outline-container-Extend-xdp_buff-with-member-data_hard_end" class="outline-3">
+<h3 id="Extend-xdp_buff-with-member-data_hard_end"><a href="#Extend-xdp_buff-with-member-data_hard_end">Extend xdp_buff with member data_hard_end</a></h3>
+<div class="outline-text-3" id="text-Extend-xdp_buff-with-member-data_hard_end">
 <p>
 Issue arose when driver ixgbe and i40e choose to violate
 one-page-per-packet.  After this point, the frame-tail size became
@@ -186,35 +195,35 @@ skb_shared_info section consistently.  (2) Use correct truesize.
 </div>
 
 
-<div id="outline-container-DMA-mapping-xdp_frame" class="outline-2">
-<h2 id="DMA-mapping-xdp_frame"><a href="#DMA-mapping-xdp_frame">DMA mapping xdp_frame</a></h2>
-<div class="outline-text-2" id="text-DMA-mapping-xdp_frame">
+<div id="outline-container-DMA-mapping-xdp_frame" class="outline-3">
+<h3 id="DMA-mapping-xdp_frame"><a href="#DMA-mapping-xdp_frame">DMA mapping xdp_frame</a></h3>
+<div class="outline-text-3" id="text-DMA-mapping-xdp_frame">
 <p>
 Keeping DMA mapping in XDP return API.
 </p>
 </div>
 </div>
 
-<div id="outline-container-Convert-samples-bpf--to-use-libbpf-as-elf-loader" class="outline-2">
-<h2 id="Convert-samples-bpf--to-use-libbpf-as-elf-loader"><a href="#Convert-samples-bpf--to-use-libbpf-as-elf-loader">Convert samples/bpf/ to use libbpf as elf-loader</a></h2>
+<div id="outline-container-Convert-samples-bpf--to-use-libbpf-as-elf-loader" class="outline-3">
+<h3 id="Convert-samples-bpf--to-use-libbpf-as-elf-loader"><a href="#Convert-samples-bpf--to-use-libbpf-as-elf-loader">Convert samples/bpf/ to use libbpf as elf-loader</a></h3>
 </div>
 
-<div id="outline-container-sample-bpf-output-XDP-mode--as-QA-forget-to-report-" class="outline-2">
-<h2 id="sample-bpf-output-XDP-mode--as-QA-forget-to-report-"><a href="#sample-bpf-output-XDP-mode--as-QA-forget-to-report-">sample/bpf output XDP-mode (as QA forget to report)</a></h2>
+<div id="outline-container-sample-bpf-output-XDP-mode--as-QA-forget-to-report-" class="outline-3">
+<h3 id="sample-bpf-output-XDP-mode--as-QA-forget-to-report-"><a href="#sample-bpf-output-XDP-mode--as-QA-forget-to-report-">sample/bpf output XDP-mode (as QA forget to report)</a></h3>
 </div>
 
-<div id="outline-container-sample-bpf-output-Driver--as-QA-forget-to-report-" class="outline-2">
-<h2 id="sample-bpf-output-Driver--as-QA-forget-to-report-"><a href="#sample-bpf-output-Driver--as-QA-forget-to-report-">sample/bpf output Driver (as QA forget to report)</a></h2>
+<div id="outline-container-sample-bpf-output-Driver--as-QA-forget-to-report-" class="outline-3">
+<h3 id="sample-bpf-output-Driver--as-QA-forget-to-report-"><a href="#sample-bpf-output-Driver--as-QA-forget-to-report-">sample/bpf output Driver (as QA forget to report)</a></h3>
 </div>
 
 
-<div id="outline-container-GROUP--CPU-map-redirect-things" class="outline-2">
-<h2 id="GROUP--CPU-map-redirect-things"><a href="#GROUP--CPU-map-redirect-things">GROUP: CPU-map redirect things</a></h2>
+<div id="outline-container-GROUP--CPU-map-redirect-things" class="outline-3">
+<h3 id="GROUP--CPU-map-redirect-things"><a href="#GROUP--CPU-map-redirect-things">GROUP: CPU-map redirect things</a></h3>
 </div>
 
-<div id="outline-container-samples-bpf-upstream-napi_monitor" class="outline-2">
-<h2 id="samples-bpf-upstream-napi_monitor"><a href="#samples-bpf-upstream-napi_monitor">samples/bpf upstream napi_monitor</a></h2>
-<div class="outline-text-2" id="text-samples-bpf-upstream-napi_monitor">
+<div id="outline-container-samples-bpf-upstream-napi_monitor" class="outline-3">
+<h3 id="samples-bpf-upstream-napi_monitor"><a href="#samples-bpf-upstream-napi_monitor">samples/bpf upstream napi_monitor</a></h3>
+<div class="outline-text-3" id="text-samples-bpf-upstream-napi_monitor">
 <p>
 Missing an ifindex to match on in tracepoint
 </p>
@@ -224,113 +233,70 @@ Missing an ifindex to match on in tracepoint
 
 
 
-<div id="outline-container-Generic-xdp-how-to-assure-NAPI-protect-" class="outline-2">
-<h2 id="Generic-xdp-how-to-assure-NAPI-protect-"><a href="#Generic-xdp-how-to-assure-NAPI-protect-">Generic-xdp how-to assure NAPI protect?</a></h2>
+<div id="outline-container-Generic-xdp-how-to-assure-NAPI-protect-" class="outline-3">
+<h3 id="Generic-xdp-how-to-assure-NAPI-protect-"><a href="#Generic-xdp-how-to-assure-NAPI-protect-">Generic-xdp how-to assure NAPI protect?</a></h3>
 </div>
 
-<div id="outline-container-Make-bulk-work-for-generic-xdp-with-devmap" class="outline-2">
-<h2 id="Make-bulk-work-for-generic-xdp-with-devmap"><a href="#Make-bulk-work-for-generic-xdp-with-devmap">Make bulk work for generic xdp with devmap</a></h2>
+<div id="outline-container-Make-bulk-work-for-generic-xdp-with-devmap" class="outline-3">
+<h3 id="Make-bulk-work-for-generic-xdp-with-devmap"><a href="#Make-bulk-work-for-generic-xdp-with-devmap">Make bulk work for generic xdp with devmap</a></h3>
 </div>
 
-<div id="outline-container-Meta-data-implement-missing-for-many-drivers" class="outline-2">
-<h2 id="Meta-data-implement-missing-for-many-drivers"><a href="#Meta-data-implement-missing-for-many-drivers">Meta data implement missing for many drivers</a></h2>
+<div id="outline-container-Meta-data-implement-missing-for-many-drivers" class="outline-3">
+<h3 id="Meta-data-implement-missing-for-many-drivers"><a href="#Meta-data-implement-missing-for-many-drivers">Meta data implement missing for many drivers</a></h3>
 </div>
 
-<div id="outline-container-Should-we-standardize-ethtool-stats-for-xdp-" class="outline-2">
-<h2 id="Should-we-standardize-ethtool-stats-for-xdp-"><a href="#Should-we-standardize-ethtool-stats-for-xdp-">Should we standardize ethtool stats for xdp?</a></h2>
+<div id="outline-container-Should-we-standardize-ethtool-stats-for-xdp-" class="outline-3">
+<h3 id="Should-we-standardize-ethtool-stats-for-xdp-"><a href="#Should-we-standardize-ethtool-stats-for-xdp-">Should we standardize ethtool stats for xdp?</a></h3>
 </div>
 
-<div id="outline-container-Adding-and-removing-ethtool-channels-runtime-semantics-" class="outline-2">
-<h2 id="Adding-and-removing-ethtool-channels-runtime-semantics-"><a href="#Adding-and-removing-ethtool-channels-runtime-semantics-">Adding and removing ethtool channels runtime semantics?</a></h2>
-<div class="outline-text-2" id="text-Adding-and-removing-ethtool-channels-runtime-semantics-">
+<div id="outline-container-Adding-and-removing-ethtool-channels-runtime-semantics-" class="outline-3">
+<h3 id="Adding-and-removing-ethtool-channels-runtime-semantics-"><a href="#Adding-and-removing-ethtool-channels-runtime-semantics-">Adding and removing ethtool channels runtime semantics?</a></h3>
+<div class="outline-text-3" id="text-Adding-and-removing-ethtool-channels-runtime-semantics-">
 <p>
 (Jakub question this)
 </p>
 </div>
 </div>
 
-<div id="outline-container-Frame-to-skb--missing-csum-hw-info" class="outline-2">
-<h2 id="Frame-to-skb--missing-csum-hw-info"><a href="#Frame-to-skb--missing-csum-hw-info">Frame to skb, missing csum hw info</a></h2>
-<div class="outline-text-2" id="text-Frame-to-skb--missing-csum-hw-info">
+<div id="outline-container-Frame-to-skb--missing-csum-hw-info" class="outline-3">
+<h3 id="Frame-to-skb--missing-csum-hw-info"><a href="#Frame-to-skb--missing-csum-hw-info">Frame to skb, missing csum hw info</a></h3>
+<div class="outline-text-3" id="text-Frame-to-skb--missing-csum-hw-info">
 <p>
 (Plus other info)
 </p>
 </div>
 </div>
 
-<div id="outline-container-Frame-to-skb--use-full-headroom" class="outline-2">
-<h2 id="Frame-to-skb--use-full-headroom"><a href="#Frame-to-skb--use-full-headroom">Frame to skb, use full headroom</a></h2>
+<div id="outline-container-Frame-to-skb--use-full-headroom" class="outline-3">
+<h3 id="Frame-to-skb--use-full-headroom"><a href="#Frame-to-skb--use-full-headroom">Frame to skb, use full headroom</a></h3>
 </div>
 
-<div id="outline-container-BUG--Generic-XDP-does-not-work-for-TCP--in-certain-cases-" class="outline-2">
-<h2 id="BUG--Generic-XDP-does-not-work-for-TCP--in-certain-cases-"><a href="#BUG--Generic-XDP-does-not-work-for-TCP--in-certain-cases-">BUG: Generic-XDP does not work for TCP (in certain cases)</a></h2>
-</div>
-
-
-<div id="outline-container-Potential-bug--Mlx5-fix-dma-unmap-call--after-xdp-return-frame-" class="outline-2">
-<h2 id="Potential-bug--Mlx5-fix-dma-unmap-call--after-xdp-return-frame-"><a href="#Potential-bug--Mlx5-fix-dma-unmap-call--after-xdp-return-frame-">Potential-bug: Mlx5 fix dma unmap call (after xdp return frame)</a></h2>
-</div>
-
-<div id="outline-container-Retpoline-performance-issue-for-xdp" class="outline-2">
-<h2 id="Retpoline-performance-issue-for-xdp"><a href="#Retpoline-performance-issue-for-xdp">Retpoline performance issue for xdp</a></h2>
-</div>
-
-<div id="outline-container-Retpoline--mlx5-too-many-indirect-calls" class="outline-2">
-<h2 id="Retpoline--mlx5-too-many-indirect-calls"><a href="#Retpoline--mlx5-too-many-indirect-calls">Retpoline: mlx5 too many indirect calls</a></h2>
+<div id="outline-container-BUG--Generic-XDP-does-not-work-for-TCP--in-certain-cases-" class="outline-3">
+<h3 id="BUG--Generic-XDP-does-not-work-for-TCP--in-certain-cases-"><a href="#BUG--Generic-XDP-does-not-work-for-TCP--in-certain-cases-">BUG: Generic-XDP does not work for TCP (in certain cases)</a></h3>
 </div>
 
 
-
-<div id="outline-container-Old-list--watch-out-for-dublicates" class="outline-2">
-<h2 id="Old-list--watch-out-for-dublicates"><a href="#Old-list--watch-out-for-dublicates">Old list: watch out for dublicates</a></h2>
-<div class="outline-text-2" id="text-Old-list--watch-out-for-dublicates">
-<p>
-Old list of stuff I need to work-on/fix for XDP/bpf project:
-</p>
-<ul class="org-ul">
-<li>XDP return frame API (needed by AF_XDP ZC)</li>
-<li>Bulking API for return frame API</li>
-<li>Bulking API for ndo_xdp_xmit</li>
-<li>Address massive XDP regression due to CONFIG_RETPOLINE</li>
-<li>Introduce bulking for generic-XDP (PoC test show +30% perf!!!)</li>
-<li>Implement ndo_xdp_xmit for macvlan (fast guest delivery)</li>
-<li>Improve BPF doc</li>
-<li>Improve XDP doc</li>
-<li>Work on XDP article with Toke+Alexei+Daniel</li>
-<li>Better integration of XDP in Suricata (multiple small thing)</li>
-<li>Find XDP feature/capability API (use in Suricata)</li>
-<li>Help integrate AF_XDP in Suricata</li>
-<li>Ship bpftool in distros (start with static linked libbpf)</li>
-<li>Make libbpf a shared lib in distros (fix lib versioning)</li>
-<li>Help (Ahern) get XDP route/FIB lookup helper integrated</li>
-<li>Work on bridge FIB table lookup helper</li>
-<li>XDP get more info transferred to CPUMAP skb creation time</li>
-<li>cpumap: RX hash support</li>
-<li>cpumap: HW csum offload/info</li>
-<li>Improve XDP cpumap redirect example: flow hashing (fix NIC HW hash)</li>
-<li>Help get AF_XDP API and performance aligned</li>
-<li>Help get AF_XDP zero-copy integrated via XDP return API</li>
-<li>convert tracepoint to use ifindex instead of names (strcpy overhead)</li>
-<li>XDP_REDIRECT: Detect buggy-drivers forgetting to clear per-CPU map</li>
-<li>Streamline eBPF map-create return codes on errors</li>
-<li>Upstream xdp_bench01 sample to be standard way to measure XDP perf</li>
-<li>Fix that TCP traffic with XDP generic on virtual net_devices are broken</li>
-<li>xdp: avoid leaking info stored in xdp_frame data on page reuse</li>
-<li>XDP_REDIRECT implemement in every driver</li>
-<li>XDP data-meta implemement in every driver</li>
-<li>Improve samples/bpf: XDP progs should take ifconfig/net_device names</li>
-<li>Improve samples/bpf: Avoid including ./arch/x86/include/asm/cpufeature.h</li>
-</ul>
-</div>
+<div id="outline-container-Potential-bug--Mlx5-fix-dma-unmap-call--after-xdp-return-frame-" class="outline-3">
+<h3 id="Potential-bug--Mlx5-fix-dma-unmap-call--after-xdp-return-frame-"><a href="#Potential-bug--Mlx5-fix-dma-unmap-call--after-xdp-return-frame-">Potential-bug: Mlx5 fix dma unmap call (after xdp return frame)</a></h3>
 </div>
 
-<div id="outline-container-XDP-metadata--dynamic-descriptor-offloads-via-BTF" class="outline-2">
-<h2 id="XDP-metadata--dynamic-descriptor-offloads-via-BTF"><a href="#XDP-metadata--dynamic-descriptor-offloads-via-BTF">XDP metadata: dynamic descriptor offloads via BTF</a></h2>
+<div id="outline-container-Retpoline-performance-issue-for-xdp" class="outline-3">
+<h3 id="Retpoline-performance-issue-for-xdp"><a href="#Retpoline-performance-issue-for-xdp">Retpoline performance issue for xdp</a></h3>
 </div>
 
-<div id="outline-container-Napatech-have-descriptors-in-front-of-packet-payload" class="outline-2">
-<h2 id="Napatech-have-descriptors-in-front-of-packet-payload"><a href="#Napatech-have-descriptors-in-front-of-packet-payload">Napatech have descriptors in-front of packet payload</a></h2>
-<div class="outline-text-2" id="text-Napatech-have-descriptors-in-front-of-packet-payload">
+<div id="outline-container-Retpoline--mlx5-too-many-indirect-calls" class="outline-3">
+<h3 id="Retpoline--mlx5-too-many-indirect-calls"><a href="#Retpoline--mlx5-too-many-indirect-calls">Retpoline: mlx5 too many indirect calls</a></h3>
+</div>
+
+
+
+<div id="outline-container-XDP-metadata--dynamic-descriptor-offloads-via-BTF" class="outline-3">
+<h3 id="XDP-metadata--dynamic-descriptor-offloads-via-BTF"><a href="#XDP-metadata--dynamic-descriptor-offloads-via-BTF">XDP metadata: dynamic descriptor offloads via BTF</a></h3>
+</div>
+
+<div id="outline-container-Napatech-have-descriptors-in-front-of-packet-payload" class="outline-3">
+<h3 id="Napatech-have-descriptors-in-front-of-packet-payload"><a href="#Napatech-have-descriptors-in-front-of-packet-payload">Napatech have descriptors in-front of packet payload</a></h3>
+<div class="outline-text-3" id="text-Napatech-have-descriptors-in-front-of-packet-payload">
 <p>
 Proprietary commercial companies like NapaTech, which also maps packets
 into userspace, deliver dynamic descriptor info in-front of the packet,
@@ -384,8 +350,80 @@ contains a lot of info on the types in different layers, see[10][11][12].
 </div>
 </div>
 </div>
+<div id="outline-container-Old-list--watch-out-for-dublicates" class="outline-2">
+<h2 id="Old-list--watch-out-for-dublicates"><a href="#Old-list--watch-out-for-dublicates">Old list: watch out for dublicates</a></h2>
+<div class="outline-text-2" id="text-Old-list--watch-out-for-dublicates">
+<p>
+Old list of stuff I need to work-on/fix for XDP/bpf project:
+</p>
+<ul class="org-ul">
+<li>XDP return frame API (needed by AF_XDP ZC)</li>
+<li>Bulking API for return frame API</li>
+<li>Bulking API for ndo_xdp_xmit</li>
+<li>Address massive XDP regression due to CONFIG_RETPOLINE</li>
+<li>Introduce bulking for generic-XDP (PoC test show +30% perf!!!)</li>
+<li>Implement ndo_xdp_xmit for macvlan (fast guest delivery)</li>
+<li>Improve BPF doc</li>
+<li>Improve XDP doc</li>
+<li>Work on XDP article with Toke+Alexei+Daniel</li>
+<li>Better integration of XDP in Suricata (multiple small thing)</li>
+<li>Find XDP feature/capability API (use in Suricata)</li>
+<li>Help integrate AF_XDP in Suricata</li>
+<li>Ship bpftool in distros (start with static linked libbpf)</li>
+<li>Make libbpf a shared lib in distros (fix lib versioning)</li>
+<li>Help (Ahern) get XDP route/FIB lookup helper integrated</li>
+<li>Work on bridge FIB table lookup helper</li>
+<li>XDP get more info transferred to CPUMAP skb creation time</li>
+<li>cpumap: RX hash support</li>
+<li>cpumap: HW csum offload/info</li>
+<li>Improve XDP cpumap redirect example: flow hashing (fix NIC HW hash)</li>
+<li>Help get AF_XDP API and performance aligned</li>
+<li>Help get AF_XDP zero-copy integrated via XDP return API</li>
+<li>convert tracepoint to use ifindex instead of names (strcpy overhead)</li>
+<li>XDP_REDIRECT: Detect buggy-drivers forgetting to clear per-CPU map</li>
+<li>Streamline eBPF map-create return codes on errors</li>
+<li>Upstream xdp_bench01 sample to be standard way to measure XDP perf</li>
+<li>Fix that TCP traffic with XDP generic on virtual net_devices are broken</li>
+<li>xdp: avoid leaking info stored in xdp_frame data on page reuse</li>
+<li>XDP_REDIRECT implemement in every driver</li>
+<li>XDP data-meta implemement in every driver</li>
+<li>Improve samples/bpf: XDP progs should take ifconfig/net_device names</li>
+<li>Improve samples/bpf: Avoid including ./arch/x86/include/asm/cpufeature.h</li>
+</ul>
+</div>
+</div>
+
+
+<div id="outline-container-Site-navigation" class="outline-2">
+<h2 id="Site-navigation"><a href="#Site-navigation">Site navigation</a></h2>
+<div class="outline-text-2" id="text-Site-navigation">
+<p>
+The repository contains a number of files that track more specific areas of XDP
+development. These are included in the following list:
+</p>
+<ul class="org-ul">
+<li><a href="index.html">Top-level XDP project management</a></li>
+
+<li><a href="brainstorm.html">Brainstorm notes</a></li>
+<li><a href="conference.html">Conference planning document</a></li>
+<li><a href="people.html">People involved in XDP development</a></li>
+<li><a href="planning.html">Project management: Planning who is working on what</a></li>
+<li><a href="student-projects.html">XDP-related project ideas for students</a></li>
+<li>areas
+<ul class="org-ul">
+<li><a href="areas/xdp_flowcache.html">Brainstorming around XDP-accelerated flowcache</a></li>
+<li><a href="areas/cpumap.html">Project management for CPUMAP</a></li>
+<li><a href="areas/ovs.html">Project management for XDP and Open vSwitch integration</a></li>
+<li><a href="areas/drivers.html">Project management for XDP driver support</a></li>
+<li><a href="areas/xdp-tutorial.html">Project management for XDP-tutorial</a></li>
+<li><a href="areas/mem.html">Project management for areas/mem</a></li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
 <div id="postamble" class="status">
-<p class="date">Date: 2019-02-07 Thu 16:34</p>
+<p class="date">Date: 2020-04-08 Wed 15:29</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

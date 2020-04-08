@@ -26,14 +26,14 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
+<li><a href="#Items-being-actively-worked-on">Items being actively worked on</a>
+<ul>
 <li><a href="#Multiple-XDP-program-on-a-single-NIC">Multiple-XDP program on a single NIC</a></li>
-<li><a href="#XDP-clone-multicast">XDP clone+multicast</a></li>
 <li><a href="#BPF-helper--Conntrack-lookup">BPF-helper: Conntrack lookup</a></li>
 <li><a href="#XDP-egress-hook-programs">XDP egress hook/programs</a></li>
 <li><a href="#XDP-feature-bits">XDP-feature bits</a></li>
 <li><a href="#Consistency-for-statistics-with-XDP">Consistency for statistics with XDP</a></li>
 <li><a href="#BPF-helper--Bridge-lookup">BPF-helper: Bridge lookup</a></li>
-<li><a href="#XDP-data-hard-end">XDP-data-hard-end</a></li>
 <li><a href="#Better--TX--ndo_xdp_xmit-resource-management">Better "TX" ndo_xdp_xmit resource management</a></li>
 <li><a href="#SKB-outside-drivers">SKB outside drivers</a></li>
 <li><a href="#NIC-BTF-HW-offload-feature">NIC BTF HW-offload feature</a></li>
@@ -41,7 +41,16 @@
 <li><a href="#page_pool--use-in-SKB-free-return-path">page_pool: use in SKB free/return path</a></li>
 <li><a href="#page_pool--add-stats">page_pool: add stats</a></li>
 <li><a href="#XDP-multi-frame-work">XDP multi-frame work</a></li>
+</ul>
+</li>
+<li><a href="#Not-being-actively-worked-on">Not being actively worked on</a>
+<ul>
+<li><a href="#XDP-clone-multicast">XDP clone+multicast</a></li>
+<li><a href="#XDP-data-hard-end">XDP-data-hard-end</a></li>
 <li><a href="#BPF-helper--OvS-lookup">BPF-helper: OvS lookup</a></li>
+</ul>
+</li>
+<li><a href="#Site-navigation">Site navigation</a></li>
 </ul>
 </div>
 </div>
@@ -49,54 +58,49 @@
 This document tries to get an overview on who is working on what.
 </p>
 
-<div id="outline-container-Multiple-XDP-program-on-a-single-NIC" class="outline-2">
-<h2 id="Multiple-XDP-program-on-a-single-NIC"><a href="#Multiple-XDP-program-on-a-single-NIC">Multiple-XDP program on a single NIC</a></h2>
-<div class="outline-text-2" id="text-Multiple-XDP-program-on-a-single-NIC">
+<div id="outline-container-Items-being-actively-worked-on" class="outline-2">
+<h2 id="Items-being-actively-worked-on"><a href="#Items-being-actively-worked-on">Items being actively worked on</a></h2>
+<div class="outline-text-2" id="text-Items-being-actively-worked-on">
+</div>
+<div id="outline-container-Multiple-XDP-program-on-a-single-NIC" class="outline-3">
+<h3 id="Multiple-XDP-program-on-a-single-NIC"><a href="#Multiple-XDP-program-on-a-single-NIC">Multiple-XDP program on a single NIC</a></h3>
+<div class="outline-text-3" id="text-Multiple-XDP-program-on-a-single-NIC">
 <ul class="org-ul">
 <li>Assigned: Toke</li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-XDP-clone-multicast" class="outline-2">
-<h2 id="XDP-clone-multicast"><a href="#XDP-clone-multicast">XDP clone+multicast</a></h2>
-<div class="outline-text-2" id="text-XDP-clone-multicast">
-<ul class="org-ul">
-<li>Assigned: Nobody</li>
-</ul>
-</div>
-</div>
-
-<div id="outline-container-BPF-helper--Conntrack-lookup" class="outline-2">
-<h2 id="BPF-helper--Conntrack-lookup"><a href="#BPF-helper--Conntrack-lookup">BPF-helper: Conntrack lookup</a></h2>
-<div class="outline-text-2" id="text-BPF-helper--Conntrack-lookup">
+<div id="outline-container-BPF-helper--Conntrack-lookup" class="outline-3">
+<h3 id="BPF-helper--Conntrack-lookup"><a href="#BPF-helper--Conntrack-lookup">BPF-helper: Conntrack lookup</a></h3>
+<div class="outline-text-3" id="text-BPF-helper--Conntrack-lookup">
 <ul class="org-ul">
 <li>Assigned: Matt Cover &lt;werekraken@gmail.com&gt;</li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-XDP-egress-hook-programs" class="outline-2">
-<h2 id="XDP-egress-hook-programs"><a href="#XDP-egress-hook-programs">XDP egress hook/programs</a></h2>
-<div class="outline-text-2" id="text-XDP-egress-hook-programs">
+<div id="outline-container-XDP-egress-hook-programs" class="outline-3">
+<h3 id="XDP-egress-hook-programs"><a href="#XDP-egress-hook-programs">XDP egress hook/programs</a></h3>
+<div class="outline-text-3" id="text-XDP-egress-hook-programs">
 <ul class="org-ul">
 <li>Assigned: Ahern + jason Wang</li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-XDP-feature-bits" class="outline-2">
-<h2 id="XDP-feature-bits"><a href="#XDP-feature-bits">XDP-feature bits</a></h2>
-<div class="outline-text-2" id="text-XDP-feature-bits">
+<div id="outline-container-XDP-feature-bits" class="outline-3">
+<h3 id="XDP-feature-bits"><a href="#XDP-feature-bits">XDP-feature bits</a></h3>
+<div class="outline-text-3" id="text-XDP-feature-bits">
 <ul class="org-ul">
 <li>Assigned: Maybe Anton (Linode)</li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-Consistency-for-statistics-with-XDP" class="outline-2">
-<h2 id="Consistency-for-statistics-with-XDP"><a href="#Consistency-for-statistics-with-XDP">Consistency for statistics with XDP</a></h2>
-<div class="outline-text-2" id="text-Consistency-for-statistics-with-XDP">
+<div id="outline-container-Consistency-for-statistics-with-XDP" class="outline-3">
+<h3 id="Consistency-for-statistics-with-XDP"><a href="#Consistency-for-statistics-with-XDP">Consistency for statistics with XDP</a></h3>
+<div class="outline-text-3" id="text-Consistency-for-statistics-with-XDP">
 <ul class="org-ul">
 <li>Assigned: Lorenzo</li>
 <li>David Ahern was working on this, but currently dropped.</li>
@@ -104,38 +108,28 @@ This document tries to get an overview on who is working on what.
 </div>
 </div>
 
-<div id="outline-container-BPF-helper--Bridge-lookup" class="outline-2">
-<h2 id="BPF-helper--Bridge-lookup"><a href="#BPF-helper--Bridge-lookup">BPF-helper: Bridge lookup</a></h2>
-<div class="outline-text-2" id="text-BPF-helper--Bridge-lookup">
+<div id="outline-container-BPF-helper--Bridge-lookup" class="outline-3">
+<h3 id="BPF-helper--Bridge-lookup"><a href="#BPF-helper--Bridge-lookup">BPF-helper: Bridge lookup</a></h3>
+<div class="outline-text-3" id="text-BPF-helper--Bridge-lookup">
 <ul class="org-ul">
 <li>Assigned: Lorenzo</li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-XDP-data-hard-end" class="outline-2">
-<h2 id="XDP-data-hard-end"><a href="#XDP-data-hard-end">XDP-data-hard-end</a></h2>
-<div class="outline-text-2" id="text-XDP-data-hard-end">
-<ul class="org-ul">
-<li>Assigned: nobody</li>
-<li>Needed for multi-frame</li>
-<li>Needed for SKB outside drivers</li>
-</ul>
-</div>
-</div>
-
-<div id="outline-container-Better--TX--ndo_xdp_xmit-resource-management" class="outline-2">
-<h2 id="Better--TX--ndo_xdp_xmit-resource-management"><a href="#Better--TX--ndo_xdp_xmit-resource-management">Better "TX" ndo_xdp_xmit resource management</a></h2>
-<div class="outline-text-2" id="text-Better--TX--ndo_xdp_xmit-resource-management">
+<div id="outline-container-Better--TX--ndo_xdp_xmit-resource-management" class="outline-3">
+<h3 id="Better--TX--ndo_xdp_xmit-resource-management"><a href="#Better--TX--ndo_xdp_xmit-resource-management">Better "TX" ndo_xdp_xmit resource management</a></h3>
+<div class="outline-text-3" id="text-Better--TX--ndo_xdp_xmit-resource-management">
 <ul class="org-ul">
 <li>Assigned: Toke / Magnus</li>
 <li>Stalled on queue work from Intel (Magnus)</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-SKB-outside-drivers" class="outline-2">
-<h2 id="SKB-outside-drivers"><a href="#SKB-outside-drivers">SKB outside drivers</a></h2>
-<div class="outline-text-2" id="text-SKB-outside-drivers">
+
+<div id="outline-container-SKB-outside-drivers" class="outline-3">
+<h3 id="SKB-outside-drivers"><a href="#SKB-outside-drivers">SKB outside drivers</a></h3>
+<div class="outline-text-3" id="text-SKB-outside-drivers">
 <ul class="org-ul">
 <li>Assigned: Jesper</li>
 <li>Blocked on: XDP-data-hard-end</li>
@@ -144,62 +138,117 @@ This document tries to get an overview on who is working on what.
 </div>
 </div>
 
-<div id="outline-container-NIC-BTF-HW-offload-feature" class="outline-2">
-<h2 id="NIC-BTF-HW-offload-feature"><a href="#NIC-BTF-HW-offload-feature">NIC BTF HW-offload feature</a></h2>
-<div class="outline-text-2" id="text-NIC-BTF-HW-offload-feature">
+<div id="outline-container-NIC-BTF-HW-offload-feature" class="outline-3">
+<h3 id="NIC-BTF-HW-offload-feature"><a href="#NIC-BTF-HW-offload-feature">NIC BTF HW-offload feature</a></h3>
+<div class="outline-text-3" id="text-NIC-BTF-HW-offload-feature">
 <ul class="org-ul">
 <li>Assigned: Tom Herbert (Intel) (working group under ZabiPlane)</li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-page_pool--measure-and-optimize-performance" class="outline-2">
-<h2 id="page_pool--measure-and-optimize-performance"><a href="#page_pool--measure-and-optimize-performance">page_pool: measure and optimize performance</a></h2>
-<div class="outline-text-2" id="text-page_pool--measure-and-optimize-performance">
+<div id="outline-container-page_pool--measure-and-optimize-performance" class="outline-3">
+<h3 id="page_pool--measure-and-optimize-performance"><a href="#page_pool--measure-and-optimize-performance">page_pool: measure and optimize performance</a></h3>
+<div class="outline-text-3" id="text-page_pool--measure-and-optimize-performance">
 <ul class="org-ul">
 <li>Assigned: Jesper</li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-page_pool--use-in-SKB-free-return-path" class="outline-2">
-<h2 id="page_pool--use-in-SKB-free-return-path"><a href="#page_pool--use-in-SKB-free-return-path">page_pool: use in SKB free/return path</a></h2>
-<div class="outline-text-2" id="text-page_pool--use-in-SKB-free-return-path">
+<div id="outline-container-page_pool--use-in-SKB-free-return-path" class="outline-3">
+<h3 id="page_pool--use-in-SKB-free-return-path"><a href="#page_pool--use-in-SKB-free-return-path">page_pool: use in SKB free/return path</a></h3>
+<div class="outline-text-3" id="text-page_pool--use-in-SKB-free-return-path">
 <ul class="org-ul">
 <li>Assigned: Ilias (Linaro) and Lorenzo</li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-page_pool--add-stats" class="outline-2">
-<h2 id="page_pool--add-stats"><a href="#page_pool--add-stats">page_pool: add stats</a></h2>
-<div class="outline-text-2" id="text-page_pool--add-stats">
+<div id="outline-container-page_pool--add-stats" class="outline-3">
+<h3 id="page_pool--add-stats"><a href="#page_pool--add-stats">page_pool: add stats</a></h3>
+<div class="outline-text-3" id="text-page_pool--add-stats">
 <ul class="org-ul">
 <li>Assigned: Jonathan (Facebook)</li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-XDP-multi-frame-work" class="outline-2">
-<h2 id="XDP-multi-frame-work"><a href="#XDP-multi-frame-work">XDP multi-frame work</a></h2>
-<div class="outline-text-2" id="text-XDP-multi-frame-work">
+<div id="outline-container-XDP-multi-frame-work" class="outline-3">
+<h3 id="XDP-multi-frame-work"><a href="#XDP-multi-frame-work">XDP multi-frame work</a></h3>
+<div class="outline-text-3" id="text-XDP-multi-frame-work">
 <ul class="org-ul">
 <li>Assigned: Amazon ("Jubran, Samih" &lt;sameehj@amazon.com&gt;)</li>
 </ul>
 </div>
 </div>
+</div>
 
-<div id="outline-container-BPF-helper--OvS-lookup" class="outline-2">
-<h2 id="BPF-helper--OvS-lookup"><a href="#BPF-helper--OvS-lookup">BPF-helper: OvS lookup</a></h2>
-<div class="outline-text-2" id="text-BPF-helper--OvS-lookup">
+<div id="outline-container-Not-being-actively-worked-on" class="outline-2">
+<h2 id="Not-being-actively-worked-on"><a href="#Not-being-actively-worked-on">Not being actively worked on</a></h2>
+<div class="outline-text-2" id="text-Not-being-actively-worked-on">
+</div>
+<div id="outline-container-XDP-clone-multicast" class="outline-3">
+<h3 id="XDP-clone-multicast"><a href="#XDP-clone-multicast">XDP clone+multicast</a></h3>
+<div class="outline-text-3" id="text-XDP-clone-multicast">
+<ul class="org-ul">
+<li>Assigned: Nobody</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-XDP-data-hard-end" class="outline-3">
+<h3 id="XDP-data-hard-end"><a href="#XDP-data-hard-end">XDP-data-hard-end</a></h3>
+<div class="outline-text-3" id="text-XDP-data-hard-end">
+<ul class="org-ul">
+<li>Assigned: nobody</li>
+<li>Needed for multi-frame</li>
+<li>Needed for SKB outside drivers</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-BPF-helper--OvS-lookup" class="outline-3">
+<h3 id="BPF-helper--OvS-lookup"><a href="#BPF-helper--OvS-lookup">BPF-helper: OvS lookup</a></h3>
+<div class="outline-text-3" id="text-BPF-helper--OvS-lookup">
 <ul class="org-ul">
 <li>Assigned: Nobody</li>
 </ul>
 </div>
 </div>
 </div>
+
+
+<div id="outline-container-Site-navigation" class="outline-2">
+<h2 id="Site-navigation"><a href="#Site-navigation">Site navigation</a></h2>
+<div class="outline-text-2" id="text-Site-navigation">
+<p>
+The repository contains a number of files that track more specific areas of XDP
+development. These are included in the following list:
+</p>
+<ul class="org-ul">
+<li><a href="index.html">Top-level XDP project management</a></li>
+
+<li><a href="brainstorm.html">Brainstorm notes</a></li>
+<li><a href="conference.html">Conference planning document</a></li>
+<li><a href="people.html">People involved in XDP development</a></li>
+<li><a href="planning.html">Project management: Planning who is working on what</a></li>
+<li><a href="student-projects.html">XDP-related project ideas for students</a></li>
+<li>areas
+<ul class="org-ul">
+<li><a href="areas/xdp_flowcache.html">Brainstorming around XDP-accelerated flowcache</a></li>
+<li><a href="areas/cpumap.html">Project management for CPUMAP</a></li>
+<li><a href="areas/ovs.html">Project management for XDP and Open vSwitch integration</a></li>
+<li><a href="areas/drivers.html">Project management for XDP driver support</a></li>
+<li><a href="areas/xdp-tutorial.html">Project management for XDP-tutorial</a></li>
+<li><a href="areas/mem.html">Project management for areas/mem</a></li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-01-24 Fri 15:02</p>
+<p class="date">Date: 2020-04-08 Wed 15:29</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

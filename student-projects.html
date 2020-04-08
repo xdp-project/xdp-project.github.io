@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>XDP-related project ideas for students</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">XDP-related project ideas for students</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#Userspace-projects">Userspace projects</a>
+<ul>
+<li><a href="#Improve-the-XDP-tutorial">Improve the XDP tutorial</a></li>
+<li><a href="#Add-XDP-support-to-a-userspace-application">Add XDP support to a userspace application</a></li>
+<li><a href="#Add-new-tools-to-the-xdp-tools-repository">Add new tools to the xdp-tools repository</a></li>
+</ul>
+</li>
+<li><a href="#Kernel-projects">Kernel projects</a>
+<ul>
+<li><a href="#Improve-the-programs-in-samples-bpf-or-BPF-selftests">Improve the programs in samples/bpf or BPF selftests</a></li>
+</ul>
+</li>
+<li><a href="#Site-navigation">Site navigation</a></li>
+</ul>
+</div>
+</div>
+<p>
+This file seeks to collect ideas for smaller, self-contained projects suitable
+for completing for a student as part of a bachelor or master's thesis. Or just
+as a starting project for someone who wants to contribute to XDP but doesn't
+know where to start.
+</p>
+
+<p>
+Feel free to pick up any of these projects and start working on it. You can ask
+questions by opening <a href="https://github.com/xdp-project/xdp-project/issues">an issue</a>.
+</p>
+
+<p>
+Got an idea for a suitable project? Open <a href="https://github.com/xdp-project/xdp-project/pulls">a pull request</a> with your idea added to
+this file.
+</p>
+
+<div id="outline-container-Userspace-projects" class="outline-2">
+<h2 id="Userspace-projects"><a href="#Userspace-projects">Userspace projects</a></h2>
+<div class="outline-text-2" id="text-Userspace-projects">
+</div>
+<div id="outline-container-Improve-the-XDP-tutorial" class="outline-3">
+<h3 id="Improve-the-XDP-tutorial"><a href="#Improve-the-XDP-tutorial">Improve the XDP tutorial</a></h3>
+<div class="outline-text-3" id="text-Improve-the-XDP-tutorial">
+<p>
+The <a href="https://github.com/xdp-project/xdp-tutorial">XDP tutorial</a> is our go-to introduction to XDP, but it can always use
+improving! Try running through the tutorial and think about anything that might
+be missing; then implement that as an addition to the tutorial. Look at the
+tutorial issues for inspiration, or just try to think of something for yourself!
+</p>
+</div>
+</div>
+
+<div id="outline-container-Add-XDP-support-to-a-userspace-application" class="outline-3">
+<h3 id="Add-XDP-support-to-a-userspace-application"><a href="#Add-XDP-support-to-a-userspace-application">Add XDP support to a userspace application</a></h3>
+<div class="outline-text-3" id="text-Add-XDP-support-to-a-userspace-application">
+<p>
+Some applications can benefit from accelerating their network support using XDP.
+This could be by adding AF_XDP support to get packets quickly into userspace, or
+by thinking about how the application could split (parts of) its network
+processing into an XDP program running in the kernel (and communicate with it
+via maps).
+</p>
+</div>
+</div>
+
+<div id="outline-container-Add-new-tools-to-the-xdp-tools-repository" class="outline-3">
+<h3 id="Add-new-tools-to-the-xdp-tools-repository"><a href="#Add-new-tools-to-the-xdp-tools-repository">Add new tools to the xdp-tools repository</a></h3>
+<div class="outline-text-3" id="text-Add-new-tools-to-the-xdp-tools-repository">
+<p>
+The <a href="https://github.com/xdp-project/xdp-tools">XDP-tools</a> repository contains tools that will be shipped by distributions as
+a collection of small useful tools related to XDP. Can you think of anything
+that might be missing here? Look at the existing tools and improve one of those,
+or maybe add a whole new one?
+</p>
+
+<p>
+Ideas:
+</p>
+
+<ul class="org-ul">
+<li>Look in <a href="https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git/tree/samples/bpf">samples/bpf</a> in the kernel tree and port utilities from there; the
+xdp_monitor utility could be useful in a more general form.</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Kernel-projects" class="outline-2">
+<h2 id="Kernel-projects"><a href="#Kernel-projects">Kernel projects</a></h2>
+<div class="outline-text-2" id="text-Kernel-projects">
+</div>
+<div id="outline-container-Improve-the-programs-in-samples-bpf-or-BPF-selftests" class="outline-3">
+<h3 id="Improve-the-programs-in-samples-bpf-or-BPF-selftests"><a href="#Improve-the-programs-in-samples-bpf-or-BPF-selftests">Improve the programs in samples/bpf or BPF selftests</a></h3>
+<div class="outline-text-3" id="text-Improve-the-programs-in-samples-bpf-or-BPF-selftests">
+<p>
+There are several ideas for improvements to the programs in the samples/bpf
+directory of the kernel source tree, or the BPF selftests. See:
+</p>
+
+<ul class="org-ul">
+<li><a href="xdp-project.html#ID-6b723feb-c079-46c5-b64f-d5a10fb83f92">Usability of programs in samples/bpf</a></li>
+<li><a href="xdp-project.html#ID-66ba72d4-a1ab-4627-ac03-89fed5aa8b23">BPF-selftests - top-level TODOs</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-Site-navigation" class="outline-2">
+<h2 id="Site-navigation"><a href="#Site-navigation">Site navigation</a></h2>
+<div class="outline-text-2" id="text-Site-navigation">
+<p>
+The repository contains a number of files that track more specific areas of XDP
+development. These are included in the following list:
+</p>
+<ul class="org-ul">
+<li><a href="index.html">Top-level XDP project management</a></li>
+
+<li><a href="brainstorm.html">Brainstorm notes</a></li>
+<li><a href="conference.html">Conference planning document</a></li>
+<li><a href="people.html">People involved in XDP development</a></li>
+<li><a href="planning.html">Project management: Planning who is working on what</a></li>
+<li><a href="student-projects.html">XDP-related project ideas for students</a></li>
+<li>areas
+<ul class="org-ul">
+<li><a href="areas/xdp_flowcache.html">Brainstorming around XDP-accelerated flowcache</a></li>
+<li><a href="areas/cpumap.html">Project management for CPUMAP</a></li>
+<li><a href="areas/ovs.html">Project management for XDP and Open vSwitch integration</a></li>
+<li><a href="areas/drivers.html">Project management for XDP driver support</a></li>
+<li><a href="areas/xdp-tutorial.html">Project management for XDP-tutorial</a></li>
+<li><a href="areas/mem.html">Project management for areas/mem</a></li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Date: 2020-04-08 Wed 15:20</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
