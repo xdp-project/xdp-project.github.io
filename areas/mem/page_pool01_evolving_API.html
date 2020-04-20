@@ -7,7 +7,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Evolving the page_pool API</title>
 <meta name="generator" content="Org mode" />
-<meta name="author" content="Travis CI User" />
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
@@ -106,7 +105,7 @@ The overall goals of the page_pool is:
 
 <p>
 (1) Keep pages DMA-mapped (driver only use DMA-sync where needed).
-(2) Faster recycle API than page-allocator (see <a href="#org8b7e7af">No description for this link</a>)
+(2) Faster recycle API than page-allocator (see <a href="#org441ceae">No description for this link</a>)
 (3) Common allocator API for simplifying NIC drivers.
 (4) Better integration with network stack, not just XDP usage.
 </p>
@@ -573,7 +572,7 @@ same RX-queue.
 </p>
 
 <p>
-See <a href="#org8b7e7af">No description for this link</a> for benchmarks showing this is still very fast, in the non-lock
+See <a href="#org441ceae">No description for this link</a> for benchmarks showing this is still very fast, in the non-lock
 congested case.
 </p>
 
@@ -597,7 +596,7 @@ kernel is running in (softirq/bh, hardirq, process-context).
 <h2 id="Benchmark-based-development"><a href="#Benchmark-based-development">Benchmark based development</a></h2>
 <div class="outline-text-2" id="text-Benchmark-based-development">
 <p>
-<a id="org8b7e7af"></a>
+<a id="org441ceae"></a>
 </p>
 
 <p>
@@ -682,8 +681,7 @@ be used for TX.
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-01-31 Fri 18:38</p>
-<p class="author">Author: Travis CI User</p>
+<p class="date">Date: 2020-02-07 Fri 10:17</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
