@@ -7,6 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Implementing page_pool return-hook via SKB</title>
 <meta name="generator" content="Org mode" />
+<meta name="author" content="Travis CI User" />
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
@@ -73,13 +74,13 @@ return hook.
 <div class="org-src-container">
 <pre class="src src-C"><span style="font-weight: bold; text-decoration: underline;">void</span> <span style="font-weight: bold;">__kfree_skb</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">sk_buff</span> *<span style="font-weight: bold; font-style: italic;">skb</span>)
 {
-        skb_release_all(skb) {
+        <span style="font-weight: bold;">skb_release_all</span>(skb) {
                 <span style="font-weight: bold;">if</span> (likely(skb-&gt;head)) {
-                        skb_release_data(skb) {
-                                skb_free_head(skb) {
+                        <span style="font-weight: bold;">skb_release_data</span>(skb) {
+                                <span style="font-weight: bold;">skb_free_head</span>(skb) {
                                         <span style="font-weight: bold; font-style: italic;">// </span><span style="font-weight: bold; font-style: italic;">Catch page_pool pages here via xdp_return_skb_page</span>
                                         <span style="font-weight: bold;">if</span> (skb-&gt;head_frag) {
-                                                skb_free_frag(skb-&gt;head) {
+                                                <span style="font-weight: bold;">skb_free_frag</span>(skb-&gt;head) {
                                                         page_frag_free(addr);
                                                 }
                                         }
@@ -391,7 +392,8 @@ or from a host send a file to espressobin via scp
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2019-05-21 Tue 17:31</p>
+<p class="date">Date: 2020-01-31 Fri 18:38</p>
+<p class="author">Author: Travis CI User</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

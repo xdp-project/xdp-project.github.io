@@ -7,6 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Project management for areas/mem</title>
 <meta name="generator" content="Org mode" />
+<meta name="author" content="Travis CI User" />
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
@@ -147,8 +148,8 @@ Should we create a workqueue?
 wq = alloc_workqueue(<span style="font-style: italic;">"xdp_mem_dismantle_wq"</span>, 0, 0);
 <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">work_struct</span> <span style="font-weight: bold; font-style: italic;">free_work</span>; <span style="font-weight: bold; font-style: italic;">// </span><span style="font-weight: bold; font-style: italic;">embed in struct xdp_mem_allocator?</span>
 INIT_WORK(&amp;free_work, __unreg_mem_model_schedule);
-<span style="font-weight: bold;">queue_work</span>(wq, &amp;free_work);
-<span style="font-weight: bold;">queue_delayed_work</span>(wq, <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">delayed_work</span> *<span style="font-weight: bold; font-style: italic;">dwork</span>, delay);
+queue_work(wq, &amp;free_work);
+queue_delayed_work(wq, <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">delayed_work</span> *<span style="font-weight: bold; font-style: italic;">dwork</span>, delay);
 </pre>
 </div>
 
@@ -161,8 +162,8 @@ default worker thread 'events/n'.
 The function calls used instead of <code>queue_work</code> and <code>queue_delayed_work</code>.
 </p>
 <div class="org-src-container">
-<pre class="src src-C"><span style="font-weight: bold;">schedule_work</span>(wq);
-<span style="font-weight: bold;">schedule_delayed_work</span>(wq, delay);
+<pre class="src src-C">schedule_work(wq);
+schedule_delayed_work(wq, delay);
 </pre>
 </div>
 
@@ -215,7 +216,8 @@ development. These are included in the following list:
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-04-08 Wed 15:20</p>
+<p class="date">Date: 2020-04-08 Wed 13:20</p>
+<p class="author">Author: Travis CI User</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

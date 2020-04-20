@@ -7,6 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Hunting bug in CPUMAP</title>
 <meta name="generator" content="Org mode" />
+<meta name="author" content="Travis CI User" />
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
@@ -647,7 +648,7 @@ Layout of skb_shared_info:
 </p>
 <div class="org-src-container">
 <pre class="src src-C">$ pahole -C skb_shared_info vmlinux
-<span style="font-weight: bold;">struct</span> skb_shared_info {
+<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">skb_shared_info</span> {
         <span style="font-weight: bold; text-decoration: underline;">__u8</span>                       <span style="font-weight: bold; font-style: italic;">__unused</span>;             <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">0     1 </span><span style="font-weight: bold; font-style: italic;">*/</span>
         <span style="font-weight: bold; text-decoration: underline;">__u8</span>                       <span style="font-weight: bold; font-style: italic;">meta_len</span>;             <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">1     1 </span><span style="font-weight: bold; font-style: italic;">*/</span>
         <span style="font-weight: bold; text-decoration: underline;">__u8</span>                       <span style="font-weight: bold; font-style: italic;">nr_frags</span>;             <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">2     1 </span><span style="font-weight: bold; font-style: italic;">*/</span>
@@ -684,7 +685,8 @@ Size of skb_frag_t must be 16 bytes, as 272/17 = 16 bytes.
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2019-03-29 Fri 12:52</p>
+<p class="date">Date: 2020-01-31 Fri 18:38</p>
+<p class="author">Author: Travis CI User</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
