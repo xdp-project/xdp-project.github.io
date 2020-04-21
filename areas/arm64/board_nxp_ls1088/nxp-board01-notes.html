@@ -32,6 +32,7 @@
 <li>
 <ul>
 <li><a href="#Boot-workaround-on-v5.2-and-above">Boot workaround on v5.2 and above</a></li>
+<li><a href="#Workaround--No-network-due-to-missing-qdisc">Workaround: No network due to missing qdisc</a></li>
 </ul>
 </li>
 </ul>
@@ -113,6 +114,31 @@ easy addition of extra boot args via U-Boot env 'othbootargs':
 </div>
 </div>
 </div>
+
+<div id="outline-container-Workaround--No-network-due-to-missing-qdisc" class="outline-4">
+<h4 id="Workaround--No-network-due-to-missing-qdisc"><a href="#Workaround--No-network-due-to-missing-qdisc">Workaround: No network due to missing qdisc</a></h4>
+<div class="outline-text-4" id="text-Workaround--No-network-due-to-missing-qdisc">
+<p>
+On devel kernel v5.7-rc1 board cannot transmit packets. This is due to
+default qdisc not getting assigned correctly, resulting in device driver
+dpaa2-eth getting assigned qdisc <code>noop</code>.
+</p>
+
+<pre class="example">
+root@LS1088ARDB-PB:~# ip link show dev eth0
+3: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noop state UP mode DEFAULT group default qlen 1000
+    link/ether 00:04:9f:06:08:f0 brd ff:ff:ff:ff:ff:ff
+</pre>
+
+<p>
+The workaround is to manually install a qdisc on the board:
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">tc qdisc add dev eth0 root pfifo
+</pre>
+</div>
+</div>
+</div>
 </div>
 
 <div id="outline-container-Kernel-config-adjustments" class="outline-2">
@@ -146,7 +172,7 @@ Config adjustments:
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-04-20 Mon 13:22</p>
+<p class="date">Date: 2020-04-21 Tue 13:34</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
