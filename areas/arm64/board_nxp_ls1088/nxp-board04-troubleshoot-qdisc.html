@@ -1,0 +1,471 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NXP LS1088A - Troubleshooting qdisc network problem</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">NXP LS1088A - Troubleshooting qdisc network problem</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#Issue--No-network-due-to-missing-qdisc">Issue: No network due to missing qdisc</a>
+<ul>
+<li><a href="#Workaround-manual">Workaround manual</a></li>
+</ul>
+</li>
+<li><a href="#Issue-triggered-by-default_qdisc">Issue triggered by default_qdisc</a>
+<ul>
+<li><a href="#Workaround-setup">Workaround setup</a></li>
+</ul>
+</li>
+<li><a href="#Troubleshoot--iproute2-tc-version">Troubleshoot: iproute2 tc version</a></li>
+<li><a href="#Troubleshoot--via-ftrace-trace-cmd">Troubleshoot: via ftrace trace-cmd</a>
+<ul>
+<li><a href="#Setup-ftrace-trace-cmd">Setup ftrace trace-cmd</a></li>
+<li><a href="#Ftrace--mq_init">Ftrace: mq_init</a></li>
+<li><a href="#Ftrace--fq_codel_init">Ftrace: fq_codel_init</a></li>
+</ul>
+</li>
+<li><a href="#Analyzing-code">Analyzing code</a>
+<ul>
+<li><a href="#Blaming-driver-dpaa2-eth.c-code--dpaa2_eth_setup_tc">Blaming driver dpaa2-eth.c code: dpaa2_eth_setup_tc</a></li>
+<li><a href="#Blaming-code-calling-ndo_setup_tc">Blaming code calling ndo_setup_tc</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+Board LS1088ARDB-PB.
+</p>
+<ul class="org-ul">
+<li>SoC: LS1088AE Rev1.0 (0x87030010)</li>
+</ul>
+
+<div id="outline-container-Issue--No-network-due-to-missing-qdisc" class="outline-2">
+<h2 id="Issue--No-network-due-to-missing-qdisc"><a href="#Issue--No-network-due-to-missing-qdisc">Issue: No network due to missing qdisc</a></h2>
+<div class="outline-text-2" id="text-Issue--No-network-due-to-missing-qdisc">
+<p>
+On devel kernel v5.7-rc1 board cannot transmit packets. This is due to
+default qdisc not getting assigned correctly, resulting in device driver
+dpaa2-eth getting assigned qdisc <code>noop</code>.
+</p>
+
+<pre class="example">
+root@LS1088ARDB-PB:~# ip link show dev eth0
+3: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noop state UP mode DEFAULT group default qlen 1000
+    link/ether 00:04:9f:06:08:f0 brd ff:ff:ff:ff:ff:ff
+</pre>
+</div>
+
+<div id="outline-container-Workaround-manual" class="outline-3">
+<h3 id="Workaround-manual"><a href="#Workaround-manual">Workaround manual</a></h3>
+<div class="outline-text-3" id="text-Workaround-manual">
+<p>
+The workaround is to manually install a qdisc on the board via serial port:
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">tc qdisc add dev eth0 root pfifo
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Issue-triggered-by-default_qdisc" class="outline-2">
+<h2 id="Issue-triggered-by-default_qdisc"><a href="#Issue-triggered-by-default_qdisc">Issue triggered by default_qdisc</a></h2>
+<div class="outline-text-2" id="text-Issue-triggered-by-default_qdisc">
+<p>
+All modern distros have switched to fq_codel, via changing the default_qdisc
+via sysctl (/proc/sys/net/core/default_qdisc).
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh"><span style="font-weight: bold; font-style: italic;"># </span><span style="font-weight: bold; font-style: italic;">sysctl net/core/default_qdisc=fq_codel</span>
+</pre>
+</div>
+
+<p>
+On this Ubuntu (18.04) system it is configured under:
+<code>/usr/lib/sysctl.d/50-default.conf</code>
+</p>
+
+<p>
+For some unknown reason, when adding qdisc fq_codel to dpaa2-eth it fails.
+If I change the sysctl net/core/default_qdisc to pfifo_fast, then it works
+fine.
+</p>
+</div>
+
+<div id="outline-container-Workaround-setup" class="outline-3">
+<h3 id="Workaround-setup"><a href="#Workaround-setup">Workaround setup</a></h3>
+<div class="outline-text-3" id="text-Workaround-setup">
+<p>
+One can workaround via changing the sysctl config, and compile kernel with
+config option:
+</p>
+<pre class="example">
+CONFIG_DEFAULT_NET_SCH="pfifo_fast"
+</pre>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-Troubleshoot--iproute2-tc-version" class="outline-2">
+<h2 id="Troubleshoot--iproute2-tc-version"><a href="#Troubleshoot--iproute2-tc-version">Troubleshoot: iproute2 tc version</a></h2>
+<div class="outline-text-2" id="text-Troubleshoot--iproute2-tc-version">
+<p>
+Ideas: Is 'tc' (iproute2) version too old?
+</p>
+<pre class="example">
+root@LS1088ARDB-PB:~# apt show iproute2
+Package: iproute2
+Version: 4.15.0-2ubuntu1
+[...]
+</pre>
+
+<p>
+Git clone git://git.kernel.org/pub/scm/network/iproute2/iproute2.git
+and compile newest version of tc.
+</p>
+
+<p>
+Try old 'tc' and new 'tc' version:
+</p>
+<pre class="example">
+root@LS1088ARDB-PB:~# tc qdisc add dev eth0 root fq_codel
+RTNETLINK answers: Invalid argument
+
+root@LS1088ARDB-PB:~/git/iproute2/tc# ./tc qdisc add dev eth0 root fq_codel
+RTNETLINK answers: Invalid argument
+</pre>
+
+<p>
+This indicate that it is not <code>tc</code> version related.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Troubleshoot--via-ftrace-trace-cmd" class="outline-2">
+<h2 id="Troubleshoot--via-ftrace-trace-cmd"><a href="#Troubleshoot--via-ftrace-trace-cmd">Troubleshoot: via ftrace trace-cmd</a></h2>
+<div class="outline-text-2" id="text-Troubleshoot--via-ftrace-trace-cmd">
+<p>
+We can reproduce issue when <code>default_qdisc</code> is <code>fq_codel</code> and loading the
+<code>mq</code> qdisc (as assigning a single <code>fq_codel</code> root qdisc will be a
+performance issue on TX for the net_device).
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh"><span style="font-weight: bold; font-style: italic;"># </span><span style="font-weight: bold; font-style: italic;">tc qdisc del dev eth0 root</span>
+<span style="font-weight: bold; font-style: italic;"># </span><span style="font-weight: bold; font-style: italic;">tc qdisc add dev eth0 root mq</span>
+</pre>
+</div>
+</div>
+
+<div id="outline-container-Setup-ftrace-trace-cmd" class="outline-3">
+<h3 id="Setup-ftrace-trace-cmd"><a href="#Setup-ftrace-trace-cmd">Setup ftrace trace-cmd</a></h3>
+<div class="outline-text-3" id="text-Setup-ftrace-trace-cmd">
+<p>
+System doesn't have trace-cmd (and apt-get it somehow broke on sdcard).
+Git clone and compile:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">git clone git://git.kernel.org/pub/scm/linux/kernel/git/rostedt/trace-cmd.git
+<span style="font-weight: bold;">cd</span> trace-cmd
+make
+make install
+</pre>
+</div>
+
+<p>
+System also didn't have mounted the /sys/kernel/tracing directory:
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">mount -t tracefs nodev /sys/kernel/tracing
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Ftrace--mq_init" class="outline-3">
+<h3 id="Ftrace--mq_init"><a href="#Ftrace--mq_init">Ftrace: mq_init</a></h3>
+<div class="outline-text-3" id="text-Ftrace--mq_init">
+<p>
+Pick kernel function <code>mq_init</code> that we know gets called when assigning <code>mq</code>
+qdisc. Use ftrace <code>trace-cmd</code> to track this function call.
+</p>
+
+<p>
+Record sequence (via serial console):
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">trace-cmd record -p function_graph -g mq_init &amp;
+sleep 3
+tc qdisc add dev eth0 root mq
+</pre>
+</div>
+
+<p>
+Partial output from <code>trace-cmd report</code>:
+</p>
+<pre class="example">
+|  mq_init() {
+|    __kmalloc() {
+|      kmalloc_slab();
+|      should_failslab();
+|      memcg_kmem_put_cache();
+|    }
+|    qdisc_create_dflt() {
+|      try_module_get();
+|      qdisc_alloc() {
+|        __kmalloc_node() {
+|          kmalloc_slab();
+|          should_failslab();
+|          memcg_kmem_put_cache();
+|        }
+|      }
+|      fq_codel_init() {
+|        tcf_block_get() {
+|          tcf_block_get_ext() {
+[...]
+|            }
+|          }
+|        }
+|      }
+|      qdisc_put.part.47() {
+|        qdisc_destroy() {
+|          qdisc_hash_del() {
+|            gic_handle_irq() {
+|              handle_IPI() {
+</pre>
+
+<p>
+In <code>qdisc_create_dflt()</code> the <code>qdisc_put(sch)</code> only happens when
+the <code>ops-&gt;init</code> operation fails:
+</p>
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">Qdisc</span> *<span style="font-weight: bold;">qdisc_create_dflt</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">netdev_queue</span> *<span style="font-weight: bold; font-style: italic;">dev_queue</span>,
+                                <span style="font-weight: bold;">const</span> <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">Qdisc_ops</span> *<span style="font-weight: bold; font-style: italic;">ops</span>,
+                                <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span> <span style="font-weight: bold; font-style: italic;">parentid</span>,
+                                <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">netlink_ext_ack</span> *<span style="font-weight: bold; font-style: italic;">extack</span>)
+{
+        [... cut ...]
+        <span style="font-weight: bold;">if</span> (!ops-&gt;init || ops-&gt;init(sch, <span style="font-weight: bold; text-decoration: underline;">NULL</span>, extack) == 0)
+                <span style="font-weight: bold;">return</span> sch;
+
+        qdisc_put(sch);
+        <span style="font-weight: bold;">return</span> <span style="font-weight: bold; text-decoration: underline;">NULL</span>;
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Ftrace--fq_codel_init" class="outline-3">
+<h3 id="Ftrace--fq_codel_init"><a href="#Ftrace--fq_codel_init">Ftrace: fq_codel_init</a></h3>
+<div class="outline-text-3" id="text-Ftrace--fq_codel_init">
+<p>
+Lets zoom in on <code>fq_codel_init()</code> as previous ftrace shows this function
+call fails (for a yet unknown reason).
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">trace-cmd record -p function_graph -g fq_codel_init &amp;
+sleep 4
+tc qdisc add dev eth0 root fq_codel
+<span style="font-weight: bold;">kill</span> %1
+</pre>
+</div>
+
+<p>
+trace-cmd report:
+</p>
+<pre class="example">
+ |  fq_codel_init() {
+ |    fq_codel_change() {
+ |      rtnl_is_locked() {
+ |        mutex_is_locked();
+ |      }
+ |      _raw_spin_lock_bh();
+ |      qdisc_tree_reduce_backlog();
+ |      rtnl_is_locked() {
+ |        mutex_is_locked();
+ |      }
+ |      _raw_spin_unlock_bh() {
+ |        __local_bh_enable_ip();
+ |      }
+ |    }
+ |    tcf_block_get() {
+ |      tcf_block_get_ext() {
+ |        kmem_cache_alloc_trace() {
+ |          should_failslab();
+ |          memcg_kmem_put_cache();
+ |        }
+ |        __mutex_init();
+ |        __mutex_init();
+ |        __init_rwsem();
+ |        kmem_cache_alloc_trace() {
+ |          should_failslab();
+ |          memcg_kmem_put_cache();
+ |        }
+ |        kmem_cache_alloc_trace() {
+ |          should_failslab();
+ |          memcg_kmem_put_cache();
+ |        }
+ |        mutex_lock();
+ |        mutex_unlock();
+ |        down_write();
+ |        tcf_block_offload_cmd.isra.52() {
+ |          dpaa2_eth_setup_tc();
+NOTICE XXX  ^^^^^^^^^^^^^^^^^^^^
+
+ |        }
+ |        up_write();
+ |        tcf_chain0_head_change_cb_del.isra.56() {
+ |          mutex_lock();
+ |          mutex_unlock();
+ |          kfree();
+ |        }
+ |        tcf_block_owner_del() {
+ |          kfree();
+ |        }
+ |        __tcf_block_put() {
+ |          mutex_lock();
+ |          mutex_unlock();
+ |          kfree_call_rcu() {
+ |            _raw_spin_lock();
+ |            queue_delayed_work_on() {
+ |              __queue_delayed_work() {
+ |                add_timer() {
+ |                  lock_timer_base() {
+ |                    _raw_spin_lock_irqsave();
+ |                  }
+ |                  detach_if_pending();
+ |                  get_nohz_timer_target();
+ |                  __internal_add_timer() {
+ |                    calc_wheel_index();
+ |                    enqueue_timer();
+ |                  }
+ |                  trigger_dyntick_cpu.isra.33();
+ |                  _raw_spin_unlock_irqrestore();
+ |                }
+ |              }
+ |            }
+ |            _raw_spin_unlock();
+ |          }
+ |        }
+ |      }
+ |    }
+ |  }
+</pre>
+
+<p>
+This is driver related, because (deep) TC init code-path calls
+<code>ndo_setup_tc</code>, which calls driver <code>dpaa2_eth_setup_tc()</code>.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Analyzing-code" class="outline-2">
+<h2 id="Analyzing-code"><a href="#Analyzing-code">Analyzing code</a></h2>
+<div class="outline-text-2" id="text-Analyzing-code">
+</div>
+<div id="outline-container-Blaming-driver-dpaa2-eth.c-code--dpaa2_eth_setup_tc" class="outline-3">
+<h3 id="Blaming-driver-dpaa2-eth.c-code--dpaa2_eth_setup_tc"><a href="#Blaming-driver-dpaa2-eth.c-code--dpaa2_eth_setup_tc">Blaming driver dpaa2-eth.c code: dpaa2_eth_setup_tc</a></h3>
+<div class="outline-text-3" id="text-Blaming-driver-dpaa2-eth.c-code--dpaa2_eth_setup_tc">
+<p>
+Ftrace session identified driver function:
+</p>
+<ul class="org-ul">
+<li><a href="https://elixir.bootlin.com/linux/v5.6/source/drivers/net/ethernet/freescale/dpaa2/dpaa2-eth.c#L2007">dpaa2_eth_setup_tc</a></li>
+</ul>
+
+<p>
+Look at the code, it is clear that this will only work for <code>mqprio</code> qdisc:
+</p>
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">static</span> <span style="font-weight: bold; text-decoration: underline;">int</span> <span style="font-weight: bold;">dpaa2_eth_setup_tc</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">net_device</span> *<span style="font-weight: bold; font-style: italic;">net_dev</span>,
+                              <span style="font-weight: bold;">enum</span> <span style="font-weight: bold; text-decoration: underline;">tc_setup_type</span> <span style="font-weight: bold; font-style: italic;">type</span>, <span style="font-weight: bold; text-decoration: underline;">void</span> *<span style="font-weight: bold; font-style: italic;">type_data</span>)
+{
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">dpaa2_eth_priv</span> *<span style="font-weight: bold; font-style: italic;">priv</span> = netdev_priv(net_dev);
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">tc_mqprio_qopt</span> *<span style="font-weight: bold; font-style: italic;">mqprio</span> = type_data;
+        <span style="font-weight: bold; text-decoration: underline;">u8</span> <span style="font-weight: bold; font-style: italic;">num_tc</span>, <span style="font-weight: bold; font-style: italic;">num_queues</span>;
+        <span style="font-weight: bold; text-decoration: underline;">int</span> <span style="font-weight: bold; font-style: italic;">i</span>;
+
+        <span style="font-weight: bold;">if</span> (type != TC_SETUP_QDISC_MQPRIO)
+                <span style="font-weight: bold;">return</span> -EINVAL;
+[... cut ...]
+</pre>
+</div>
+
+<p>
+This code was introduced in kernel v5.3 (specifically <a href="https://git.kernel.org/torvalds/c/v5.3-rc1~140%5E2~271%5E2">v5.3-rc1~140^2~271^2</a>)
+</p>
+<ul class="org-ul">
+<li>commit: ("dpaa2-eth: Add mqprio support") (Author: Ioana Radulescu)</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-Blaming-code-calling-ndo_setup_tc" class="outline-3">
+<h3 id="Blaming-code-calling-ndo_setup_tc"><a href="#Blaming-code-calling-ndo_setup_tc">Blaming code calling ndo_setup_tc</a></h3>
+<div class="outline-text-3" id="text-Blaming-code-calling-ndo_setup_tc">
+<p>
+The driver <code>ndo_setup_tc</code> code <code>dpaa2_eth_setup_tc</code> might not be to blame,
+if other changes have caused this to be invoked when driver wasn't expecting
+this. Pablo (Netfilter maintainer) have recently change code in this area
+(e.g. <a href="https://git.kernel.org/torvalds/c/v5.3-rc1~140%5E2~6%5E2~5">v5.3-rc1~140^2~6^2~5</a>).
+</p>
+
+<p>
+A possible fix could also be to return <code>-EOPNOTSUPP</code> instead of <code>-EINVAL</code>,
+as <code>tcf_block_offload_bind</code> calling <code>tcf_block_offload_cmd</code> exclude this
+return code from failing.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">static</span> <span style="font-weight: bold; text-decoration: underline;">int</span> <span style="font-weight: bold; font-style: italic;">tcf_block_offload_bind</span> [...]
+        [...]
+        err = tcf_block_offload_cmd(block, dev, ei, FLOW_BLOCK_BIND, extack);
+        <span style="font-weight: bold;">if</span> (err == -EOPNOTSUPP)
+                <span style="font-weight: bold;">goto</span> <span style="font-weight: bold; text-decoration: underline;">no_offload_dev_inc</span>;
+        <span style="font-weight: bold;">if</span> (err)
+                <span style="font-weight: bold;">goto</span> <span style="font-weight: bold; text-decoration: underline;">err_unlock</span>;
+</pre>
+</div>
+
+<p>
+Looking at other drivers code for their <code>ndo_setup_tc</code>, there is a strong
+indication that the fix is to return <code>-EOPNOTSUPP</code>.
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Date: 2020-04-23 Thu 14:31</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
