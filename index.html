@@ -64,7 +64,8 @@
 </li>
 <li><a href="#Multiple-XDP-programs-on-a-single-interface"><span class="todo TODO">TODO</span> Multiple XDP programs on a single interface</a>
 <ul>
-<li><a href="#Build-an-XDP-chain-loader-on-top-of-the-kernel-support"><span class="todo TODO">TODO</span> Build an XDP chain loader on top of the kernel support</a></li>
+<li><a href="#Build-an-XDP-chain-loader-on-top-of-the-kernel-support"><span class="done DONE">DONE</span> Build an XDP chain loader on top of the kernel support</a></li>
+<li><a href="#Implement-freplace-re-attachment"><span class="todo TODO">TODO</span> Implement freplace re-attachment</a></li>
 </ul>
 </li>
 </ul>
@@ -567,11 +568,26 @@ of the kernel functionality for this was posted upstream on January 18th:
 </div>
 
 <div id="outline-container-Build-an-XDP-chain-loader-on-top-of-the-kernel-support" class="outline-4">
-<h4 id="Build-an-XDP-chain-loader-on-top-of-the-kernel-support"><a href="#Build-an-XDP-chain-loader-on-top-of-the-kernel-support"><span class="todo TODO">TODO</span> Build an XDP chain loader on top of the kernel support</a></h4>
+<h4 id="Build-an-XDP-chain-loader-on-top-of-the-kernel-support"><a href="#Build-an-XDP-chain-loader-on-top-of-the-kernel-support"><span class="done DONE">DONE</span> Build an XDP chain loader on top of the kernel support</a></h4>
 <div class="outline-text-4" id="text-Build-an-XDP-chain-loader-on-top-of-the-kernel-support">
+<p><span class="timestamp-wrapper"><span class="timestamp-kwd">CLOSED:</span> <span class="timestamp">[2020-06-02 Tue 18:45]</span></span></p>
 <p>
-This will be included in <a href="https://github.com/xdp-project/xdp-tools">https://github.com/xdp-project/xdp-tools</a> in both
-library and binary form, to hopefully be widely applicable.
+This is implemented as part of libxdp in the <a href="https://github.com/xdp-project/xdp-tools">XDP tools repo</a>. The current
+implementation works for loading a dispatcher with multiple programs, but
+only if they are all attached at the same time (until kernel support for
+re-attaching freplace programs land).
+</p>
+</div>
+</div>
+
+<div id="outline-container-Implement-freplace-re-attachment" class="outline-4">
+<h4 id="Implement-freplace-re-attachment"><a href="#Implement-freplace-re-attachment"><span class="todo TODO">TODO</span> Implement freplace re-attachment</a></h4>
+<div class="outline-text-4" id="text-Implement-freplace-re-attachment">
+<p>
+To support seamlessly attaching additional XDP programs onto an interface,
+we need the kernel to support re-attaching an existing freplace program in
+multiple places, so the programs can be attached to a new dispatcher which
+can then be atomically swapped onto the interface XDP hook.
 </p>
 </div>
 </div>
