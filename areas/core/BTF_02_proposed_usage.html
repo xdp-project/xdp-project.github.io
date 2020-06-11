@@ -1,0 +1,670 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BTF (Bpf Type Format) proposal for dynamic map-values</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">BTF (Bpf Type Format) proposal for dynamic map-values</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#Patches-attempt-1--Rejected">Patches attempt-1: Rejected</a>
+<ul>
+<li><a href="#stgit">stgit</a></li>
+<li><a href="#PATCH--bpf--move-struct-bpf_devmap_val-out-of-UAPI">PATCH: bpf: move struct bpf_devmap_val out of UAPI</a></li>
+<li><a href="#PATCH-bpf--devmap-dynamic-map-value-storage-area-based-on-BTF">PATCH bpf: devmap dynamic map-value storage area based on BTF</a></li>
+<li><a href="#PATCH--samples-bpf--change-xdp_fwd-to-use-new-BTF-config-interface">PATCH: samples/bpf: change xdp_fwd to use new BTF config interface</a></li>
+</ul>
+</li>
+<li><a href="#Working-on-attempt-2">Working on attempt-2</a>
+<ul>
+<li><a href="#Argue-why-not-a-uapi-header">Argue why not a uapi header</a></li>
+<li><a href="#Argue-in-patch-description">Argue in patch description</a></li>
+<li><a href="#Details-on-ifindex-zero">Details on ifindex zero</a></li>
+<li><a href="#Issue-with-Aherns-patch">Issue with Aherns patch</a></li>
+<li><a href="#Update-selftests">Update selftests</a></li>
+</ul>
+</li>
+<li><a href="#Patchset--attempt-2--Good-BTF-code-example--but-rejected-">Patchset: attempt-2: Good BTF-code example (but rejected)</a>
+<ul>
+<li><a href="#PATCH--bpf--devmap-dynamic-map-value-area-based-on-BTF">PATCH: bpf: devmap dynamic map-value area based on BTF</a></li>
+</ul>
+</li>
+<li><a href="#Patchset--attempt-3---no-FD-zero">Patchset: attempt-3 - no FD zero</a>
+<ul>
+<li><a href="#Cover-letter">Cover-letter</a>
+<ul>
+<li><a href="#stg-mail">stg mail</a></li>
+</ul>
+</li>
+<li><a href="#Patch-1--bpf--syscall-to-start-at-file-descriptor-1">Patch-1: bpf: syscall to start at file-descriptor 1</a></li>
+<li><a href="#Patch-2-">Patch-2:</a></li>
+<li><a href="#Patch-3-">Patch-3:</a></li>
+</ul>
+</li>
+<li><a href="#Patchset--attempt-4">Patchset: attempt-4</a>
+<ul>
+<li><a href="#cover-letter">cover-letter</a>
+<ul>
+<li><a href="#cover-letter--stg-mail">stg mail</a></li>
+</ul>
+</li>
+<li><a href="#patch-">patch:</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+This approach of <i>dynamic map-values via BTF</i> was <b>rejected upstream</b>:
+</p>
+<ul class="org-ul">
+<li><a href="https://lore.kernel.org/netdev/159119908343.1649854.17264745504030734400.stgit@firesoul/">https://lore.kernel.org/netdev/159119908343.1649854.17264745504030734400.stgit@firesoul/</a></li>
+</ul>
+
+<p>
+It implements a fully dynamic UAPI/ABI that userspace defines via defining
+the struct layout via BTF (at map_create), and the kernel-side validates
+BTF-info and restrict possible struct member names, which are remapped to
+offsets inside the kernel.
+</p>
+
+<p>
+Keeping this document around, because the link above show code on how to use
+kernel functions for walking and interacting with the BTF layout from the
+kernel side.
+</p>
+
+<div id="outline-container-Patches-attempt-1--Rejected" class="outline-2">
+<h2 id="Patches-attempt-1--Rejected"><a href="#Patches-attempt-1--Rejected">Patches attempt-1: Rejected</a></h2>
+<div class="outline-text-2" id="text-Patches-attempt-1--Rejected">
+<p>
+<a href="https://lore.kernel.org/netdev/159076794319.1387573.8722376887638960093.stgit@firesoul/">link</a>
+</p>
+
+<blockquote>
+<p>
+bpf: dynamic map-value config layout via BTF
+</p>
+
+<p>
+This patchset is based on top of David Ahern's work V3: "bpf: Add support
+for XDP programs in DEVMAP entries"[1]. The purpose is to address the kABI
+interfaces that is introduced in that patchset, before it is released.
+</p>
+
+<p>
+[1] <a href="https://lore.kernel.org/netdev/20200529052057.69378-1-dsahern@kernel.org">https://lore.kernel.org/netdev/20200529052057.69378-1-dsahern@kernel.org</a>
+</p>
+
+<p>
+The map-value of these special maps are evolving into configuration
+interface between userspace and kernel. The approach in[1] is to expose a
+binary struct layout that can only be grown in the end of the struct.
+</p>
+
+<p>
+With the BTF technology it is possible to create an interface that is much
+more dynamic and flexible.
+</p>
+</blockquote>
+</div>
+
+<div id="outline-container-stgit" class="outline-3">
+<h3 id="stgit"><a href="#stgit">stgit</a></h3>
+<div class="outline-text-3" id="text-stgit">
+<pre class="example">
+stg mail --version="bpf-next RFC" --cc meup --edit-cover \
+  --to ahern --to bpf --to netdev --cc daniel --cc alexei --cc andrii \
+  move_struct..samples-bpf
+</pre>
+</div>
+</div>
+
+<div id="outline-container-PATCH--bpf--move-struct-bpf_devmap_val-out-of-UAPI" class="outline-3">
+<h3 id="PATCH--bpf--move-struct-bpf_devmap_val-out-of-UAPI"><a href="#PATCH--bpf--move-struct-bpf_devmap_val-out-of-UAPI">PATCH: bpf: move struct bpf_devmap_val out of UAPI</a></h3>
+<div class="outline-text-3" id="text-PATCH--bpf--move-struct-bpf_devmap_val-out-of-UAPI">
+<p>
+<a href="https://lore.kernel.org/netdev/159076798058.1387573.3077178618799401182.stgit@firesoul/">link</a>
+</p>
+
+<blockquote>
+<p>
+The struct bpf_devmap_val doesn't belong in uapi/linux/bpf.h, because this
+is a struct that BPF-progs can define themselves, and can provide different
+sizes to the kernel.
+</p>
+
+<p>
+While moving the struct change the union to be a named union, with the name
+"bpf_prog". This makes it easier to identify with BTF in next patch.
+</p>
+</blockquote>
+</div>
+</div>
+
+<div id="outline-container-PATCH-bpf--devmap-dynamic-map-value-storage-area-based-on-BTF" class="outline-3">
+<h3 id="PATCH-bpf--devmap-dynamic-map-value-storage-area-based-on-BTF"><a href="#PATCH-bpf--devmap-dynamic-map-value-storage-area-based-on-BTF">PATCH bpf: devmap dynamic map-value storage area based on BTF</a></h3>
+<div class="outline-text-3" id="text-PATCH-bpf--devmap-dynamic-map-value-storage-area-based-on-BTF">
+<p>
+<a href="https://lore.kernel.org/netdev/159076798566.1387573.8417040652693679408.stgit@firesoul/">link</a>
+</p>
+
+<blockquote>
+<p>
+The devmap map-value can be read from BPF-prog side, and could be used for a
+storage area per device. This could e.g. contain info on headers that need
+to be added when packet egress this device.
+</p>
+
+<p>
+This patchset adds a 'storage' member to struct bpf_devmap_val. More
+importantly the struct bpf_devmap_val is made dynamic via leveraging and
+requiring BTF for struct sizes above 4. The only mandatory struct member is
+'ifindex' with a fixed offset of zero.
+</p>
+</blockquote>
+</div>
+</div>
+
+<div id="outline-container-PATCH--samples-bpf--change-xdp_fwd-to-use-new-BTF-config-interface" class="outline-3">
+<h3 id="PATCH--samples-bpf--change-xdp_fwd-to-use-new-BTF-config-interface"><a href="#PATCH--samples-bpf--change-xdp_fwd-to-use-new-BTF-config-interface">PATCH: samples/bpf: change xdp_fwd to use new BTF config interface</a></h3>
+<div class="outline-text-3" id="text-PATCH--samples-bpf--change-xdp_fwd-to-use-new-BTF-config-interface">
+<p>
+<a href="https://lore.kernel.org/netdev/159076799073.1387573.15478442988219832285.stgit@firesoul/">link</a>
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Working-on-attempt-2" class="outline-2">
+<h2 id="Working-on-attempt-2"><a href="#Working-on-attempt-2">Working on attempt-2</a></h2>
+<div class="outline-text-2" id="text-Working-on-attempt-2">
+</div>
+<div id="outline-container-Argue-why-not-a-uapi-header" class="outline-3">
+<h3 id="Argue-why-not-a-uapi-header"><a href="#Argue-why-not-a-uapi-header">Argue why not a uapi header</a></h3>
+<div class="outline-text-3" id="text-Argue-why-not-a-uapi-header">
+<p>
+Adding struct bpf_devmap_val to UAPI header file is problematic, because a
+userspace program that uses this header file will start to fail inserting
+into map when compiled with the newer struct. Why, because previously it
+didn't use the bpf_prog feature (and don't want to), but because bpf_prog.fd
+needs to be -1 (to not use the feature) the map-insert now fails.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Argue-in-patch-description" class="outline-3">
+<h3 id="Argue-in-patch-description"><a href="#Argue-in-patch-description">Argue in patch description</a></h3>
+<div class="outline-text-3" id="text-Argue-in-patch-description">
+<p>
+This allows userspace to skip handling of 'bpf_prog' on map-inserts. The
+bpf_prog.fd feature needs a file-descriptor (pointing to a bpf_prog) as
+input. In-order to not use the feature userspace programs must handle this
+by inserting minus-1 as the file-descriptor number.
+</p>
+
+<p>
+Allow skip using this feature, via not including the member 'bpf_prog' in
+the map-value struct, which is propagated/described via BTF.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Details-on-ifindex-zero" class="outline-3">
+<h3 id="Details-on-ifindex-zero"><a href="#Details-on-ifindex-zero">Details on ifindex zero</a></h3>
+<div class="outline-text-3" id="text-Details-on-ifindex-zero">
+<p>
+Found an annoying detail. In the original commit that introduced devmap
+546ac1ffb70d ("bpf: add devmap, a map for storing net device references")
+(Author: John Fastabend), inserting ifindex==0 will result in <code>xchg</code> with a
+<code>NULL</code> pointer, which is basically a delete operation. The map already have
+a delete function call (<code>dev_map_delete_elem</code>). This property is not used by
+devmap_hash type. IMHO is it a mistake, and should result in <code>-EINVAL</code>
+instead of deleting.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Issue-with-Aherns-patch" class="outline-3">
+<h3 id="Issue-with-Aherns-patch"><a href="#Issue-with-Aherns-patch">Issue with Aherns patch</a></h3>
+<div class="outline-text-3" id="text-Issue-with-Aherns-patch">
+<p>
+This function is called from <code>net/core/dev.c</code> in <code>generic_xdp_install()</code> to
+refuse usage of devmap's with "egress" xdp_prog for generic-XDP. This binary
+struct extend-at-end system result in that ALL future extension for devmap
+cannot be used by generic-XDP.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold; text-decoration: underline;">bool</span> <span style="font-weight: bold;">dev_map_can_have_prog</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">bpf_map</span> *<span style="font-weight: bold; font-style: italic;">map</span>)
+{
+        <span style="font-weight: bold;">if</span> ((map-&gt;map_type == BPF_MAP_TYPE_DEVMAP ||
+             map-&gt;map_type == BPF_MAP_TYPE_DEVMAP_HASH) &amp;&amp;
+            map-&gt;value_size != offsetofend(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">bpf_devmap_val</span>, ifindex))
+                <span style="font-weight: bold;">return</span> <span style="font-weight: bold; text-decoration: underline;">true</span>;
+
+        <span style="font-weight: bold;">return</span> <span style="font-weight: bold; text-decoration: underline;">false</span>;
+}
+</pre>
+</div>
+
+<p>
+This can be fixed with the dynamic-BTF proposal. Fixing this is an excellent
+argument why BTF validation is needed.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Update-selftests" class="outline-3">
+<h3 id="Update-selftests"><a href="#Update-selftests">Update selftests</a></h3>
+<div class="outline-text-3" id="text-Update-selftests">
+<p>
+Update selftests added in d39aec79e592 ("selftest: Add tests for XDP
+programs in devmap entries") (Author: David Ahern).
+</p>
+
+<pre class="example">
+$ git whatchanged d39aec79e5923bf984df991ffe51d4a2b7a9e746
+ tools/testing/selftests/bpf/prog_tests/xdp_devmap_attach.c
+ tools/testing/selftests/bpf/progs/test_xdp_devmap_helpers.c
+ tools/testing/selftests/bpf/progs/test_xdp_with_devmap_helpers.c
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Patchset--attempt-2--Good-BTF-code-example--but-rejected-" class="outline-2">
+<h2 id="Patchset--attempt-2--Good-BTF-code-example--but-rejected-"><a href="#Patchset--attempt-2--Good-BTF-code-example--but-rejected-">Patchset: attempt-2: Good BTF-code example (but rejected)</a></h2>
+<div class="outline-text-2" id="text-Patchset--attempt-2--Good-BTF-code-example--but-rejected-">
+<p>
+Rejected with unproductive argument "make no sense" <a href="https://lore.kernel.org/netdev/20200604174806.29130b81@carbon/">link</a>.
+</p>
+</div>
+
+<div id="outline-container-PATCH--bpf--devmap-dynamic-map-value-area-based-on-BTF" class="outline-3">
+<h3 id="PATCH--bpf--devmap-dynamic-map-value-area-based-on-BTF"><a href="#PATCH--bpf--devmap-dynamic-map-value-area-based-on-BTF">PATCH: bpf: devmap dynamic map-value area based on BTF</a></h3>
+<div class="outline-text-3" id="text-PATCH--bpf--devmap-dynamic-map-value-area-based-on-BTF">
+<p>
+<a href="https://lore.kernel.org/netdev/159119908343.1649854.17264745504030734400.stgit@firesoul/">link</a>
+</p>
+
+<blockquote>
+<p>
+bpf: devmap dynamic map-value area based on BTF
+</p>
+
+<p>
+The recent commit fbee97feed9b ("bpf: Add support to attach bpf program to a
+devmap entry"), introduced ability to attach (and run) a separate XDP
+bpf_prog for each devmap entry. A bpf_prog is added via a file-descriptor,
+thus not using the feature requires using value minus-1. The UAPI is
+extended via tail-extending struct bpf_devmap_val and using map-&gt;value_size
+to determine the feature set.
+</p>
+
+<p>
+There is a specific problem with dev_map_can_have_prog() check, which is
+called from net/core/dev.c in generic_xdp_install() to refuse usage of
+devmap's from generic-XDP that support these bpf_prog's. The check is size
+based. This means that all newer features will be blocked from being use by
+generic-XDP.
+</p>
+
+<p>
+This patch allows userspace to skip handling of 'bpf_prog' on map-inserts.
+The feature can be skipped, via not including the member 'bpf_prog' in the
+map-value struct, which is propagated/described via BTF.
+</p>
+
+<p>
+Fixes: fbee97feed9b ("bpf: Add support to attach bpf program to a devmap entry")
+Signed-off-by: Jesper Dangaard Brouer &lt;brouer@redhat.com&gt;
+</p>
+</blockquote>
+
+<p>
+Need this patch in, while there is still time before we have to support
+size=8 forever.
+</p>
+
+<p>
+Further more, BPF userspace programs using struct bpf_devmap_val will get
+surprised when including it as the tail-extended member will have to be
+initialised to minus-1.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">stg mail --version=<span style="font-style: italic;">"bpf-next V1"</span> --cc meup <span style="font-style: italic;">\</span>
+  --to ahern --to bpf --cc netdev --cc daniel --to alexei --cc andrii <span style="font-style: italic;">\</span>
+  --cc lore <span style="font-style: italic;">\</span>
+  bpf-devmap-dynamic-map-value
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Patchset--attempt-3---no-FD-zero" class="outline-2">
+<h2 id="Patchset--attempt-3---no-FD-zero"><a href="#Patchset--attempt-3---no-FD-zero">Patchset: attempt-3 - no FD zero</a></h2>
+<div class="outline-text-2" id="text-Patchset--attempt-3---no-FD-zero">
+<p>
+<b>New direction</b>: Simply avoid FD zero is used by BPF
+</p>
+<ul class="org-ul">
+<li>This drops using BTF</li>
+</ul>
+
+<p>
+Above attempts tried to solve the kABI issue in a too advanced fashion (via
+making it dynamic via BTF). The <b>real practical issue</b> is that it is hard to
+extend a binary API (tail extending the struct) when the value must be
+initialised with something else than zero. As this breaks userspace programs
+running (and compiled with new UAPI header) against a newer kernel.
+</p>
+</div>
+
+<div id="outline-container-Cover-letter" class="outline-3">
+<h3 id="Cover-letter"><a href="#Cover-letter">Cover-letter</a></h3>
+<div class="outline-text-3" id="text-Cover-letter">
+<blockquote>
+<p>
+bpf: avoid using/returning file descriptor value zero
+</p>
+
+<p>
+Make it easier to handle UAPI/kABI extensions by avoid BPF using/returning
+file descriptor value zero. Use this in recent devmap extension to keep
+older applications compatible with newer kernels.
+</p>
+
+<p>
+For special type maps (e.g. devmap and cpumap) the map-value data-layout is
+a configuration interface. This is a kernel Application Binary Interface
+(kABI) that can only be tail extended. Thus, new members (and thus features)
+can only be added to the end of this structure, and the kernel uses the
+map-&gt;value_size from userspace to determine feature set 'version'.
+</p>
+
+<p>
+For this kind of kABI to be extensible and backward compatible, is it common
+that new members/fields (that represent a new feature) in the struct are
+initialised as zero, which indicate that the feature isn't used. This makes
+it possible to write userspace applications that are unaware of new kernel
+features, but just include latest uapi headers, zero-init struct and
+populate features it knows about.
+</p>
+
+<p>
+The recent extension of devmap with a bpf_prog.fd requires end-user to
+supply the file-descriptor value minus-1 to communicate that the features
+isn't used. This isn't compatible with the described kABI extension model.
+</p>
+</blockquote>
+</div>
+
+<div id="outline-container-stg-mail" class="outline-4">
+<h4 id="stg-mail"><a href="#stg-mail">stg mail</a></h4>
+<div class="outline-text-4" id="text-stg-mail">
+<pre class="example">
+stg mail --version="bpf" --cc meup --edit-cover \
+ --to ahern --to bpf --cc netdev --cc daniel --to alexei \
+ --cc andrii --cc lore \
+ 01-start_fd_1..03-tools_and_selftests
+</pre>
+
+<p>
+Message-ID: &lt;159163498340.1967373.5048584263152085317.stgit@firesoul&gt;
+</p>
+<ul class="org-ul">
+<li><a href="https://lore.kernel.org/bpf/159163498340.1967373.5048584263152085317.stgit@firesoul/">link</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Patch-1--bpf--syscall-to-start-at-file-descriptor-1" class="outline-3">
+<h3 id="Patch-1--bpf--syscall-to-start-at-file-descriptor-1"><a href="#Patch-1--bpf--syscall-to-start-at-file-descriptor-1">Patch-1: bpf: syscall to start at file-descriptor 1</a></h3>
+<div class="outline-text-3" id="text-Patch-1--bpf--syscall-to-start-at-file-descriptor-1">
+<p>
+<a href="https://lore.kernel.org/netdev/159163507753.1967373.62249862728421448.stgit@firesoul/">link</a>
+</p>
+
+<blockquote>
+<p>
+This patch change BPF syscall to avoid returning file descriptor value zero.
+</p>
+
+<p>
+As mentioned in cover letter, it is very impractical when extending kABI
+that the file-descriptor value 'zero' is valid, as this requires new fields
+must be initialised as minus-1. First step is to change the kernel such that
+BPF-syscall simply doesn't return value zero as a FD number.
+</p>
+
+<p>
+This patch achieves this by similar code to anon_inode_getfd(), with the
+exception of getting unused FD starting from 1. The kernel already supports
+starting from a specific FD value, as this is used by f_dupfd(). It seems
+simpler to replicate part of anon_inode_getfd() code and use this start from
+offset feature, instead of using f_dupfd() handling afterwards.
+</p>
+</blockquote>
+</div>
+</div>
+
+<div id="outline-container-Patch-2-" class="outline-3">
+<h3 id="Patch-2-"><a href="#Patch-2-">Patch-2:</a></h3>
+<div class="outline-text-3" id="text-Patch-2-">
+<p>
+<a href="https://lore.kernel.org/bpf/159163508261.1967373.10375683361894729822.stgit@firesoul/">link</a>
+</p>
+
+<blockquote>
+<p>
+bpf: devmap adjust uapi for attach bpf program
+</p>
+
+<p>
+The recent commit fbee97feed9b ("bpf: Add support to attach bpf program to a
+devmap entry"), introduced ability to attach (and run) a separate XDP
+bpf_prog for each devmap entry. A bpf_prog is added via a file-descriptor.
+As zero were a valid FD, not using the feature requires using value minus-1.
+The UAPI is extended via tail-extending struct bpf_devmap_val and using
+map-&gt;value_size to determine the feature set.
+</p>
+
+<p>
+This will break older userspace applications not using the bpf_prog feature.
+Consider an old userspace app that is compiled against newer kernel
+uapi/bpf.h, it will not know that it need to initialise the member
+bpf_prog.fd to minus-1. Thus, users will be forced to update source code to
+get program running on newer kernels.
+</p>
+
+<p>
+As previous patch changed BPF-syscall to avoid returning file descriptor
+value zero, we can remove the minus-1 checks, and have zero mean feature
+isn't used.
+</p>
+
+<p>
+Fixes: fbee97feed9b ("bpf: Add support to attach bpf program to a devmap entry")
+</p>
+</blockquote>
+</div>
+</div>
+
+<div id="outline-container-Patch-3-" class="outline-3">
+<h3 id="Patch-3-"><a href="#Patch-3-">Patch-3:</a></h3>
+<div class="outline-text-3" id="text-Patch-3-">
+<p>
+<a href="https://lore.kernel.org/bpf/159163508769.1967373.9026895070748918567.stgit@firesoul/">link</a>
+</p>
+
+<blockquote>
+<p>
+bpf: selftests and tools use struct bpf_devmap_val from uapi
+</p>
+
+<p>
+Sync tools uapi bpf.h header file and selftests that use struct
+bpf_devmap_val.
+</p>
+</blockquote>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-Patchset--attempt-4" class="outline-2">
+<h2 id="Patchset--attempt-4"><a href="#Patchset--attempt-4">Patchset: attempt-4</a></h2>
+<div class="outline-text-2" id="text-Patchset--attempt-4">
+<p>
+Alexei didn't like patch1, but wanted to patch 2+3.
+</p>
+<ul class="org-ul">
+<li><a href="https://lore.kernel.org/bpf/20200609013410.5ktyuzlqu5xpbp4a@ast-mbp.dhcp.thefacebook.com/">link</a></li>
+<li>Message-ID: &lt;20200609013410.5ktyuzlqu5xpbp4a@ast-mbp.dhcp.thefacebook.com&gt;</li>
+</ul>
+
+<p>
+I disagree, and think patch-1 is a pre-requisite, but it is more important
+to fix the UAPI (ABI) issue of minus-1. So, I can live with the unlikely
+case of getting FD=0 back.
+</p>
+</div>
+
+<div id="outline-container-cover-letter" class="outline-3">
+<h3 id="cover-letter"><a href="#cover-letter">cover-letter</a></h3>
+<div class="outline-text-3" id="text-cover-letter">
+<p>
+Message-ID: &lt;159170947966.2102545.14401752480810420709.stgit@firesoul
+</p>
+<ul class="org-ul">
+<li><a href="https://lore.kernel.org/bpf/159170947966.2102545.14401752480810420709.stgit@firesoul/">link</a></li>
+</ul>
+
+<blockquote>
+<p>
+bpf: adjust uapi for devmap prior to kernel release
+</p>
+
+<p>
+For special type maps (e.g. devmap and cpumap) the map-value data-layout is
+a configuration interface. This is uapi that can only be tail extended.
+Thus, new members (and thus features) can only be added to the end of this
+structure, and the kernel uses the map-&gt;value_size from userspace to
+determine feature set 'version'.
+</p>
+
+<p>
+For this kind of uapi to be extensible and backward compatible, is it common
+that new members/fields (that represent a new feature) in the struct are
+initialized as zero, which indicate that the feature isn't used. This makes
+it possible to write userspace applications that are unaware of new kernel
+features, but just include latest uapi headers, zero-init struct and
+populate features it knows about.
+</p>
+
+<p>
+The recent extension of devmap with a bpf_prog.fd requires end-user to
+supply the file-descriptor value minus-1 to communicate that the features
+isn't used. This isn't compatible with the described kABI extension model.
+</p>
+
+<p>
+V2: Drop patch-1 that changed BPF-syscall to start at file-descriptor 1
+</p>
+</blockquote>
+</div>
+
+<div id="outline-container-cover-letter--stg-mail" class="outline-4">
+<h4 id="cover-letter--stg-mail"><a href="#cover-letter--stg-mail">stg mail</a></h4>
+<div class="outline-text-4" id="text-cover-letter--stg-mail">
+<div class="org-src-container">
+<pre class="src src-sh">stg mail --version=<span style="font-style: italic;">"bpf V2"</span> --cc meup --edit-cover <span style="font-style: italic;">\</span>
+ --in-reply-to=<span style="font-style: italic;">"20200609013410.5ktyuzlqu5xpbp4a@ast-mbp.dhcp.thefacebook.com"</span> <span style="font-style: italic;">\</span>
+ --to ahern --to bpf --cc netdev --cc daniel --to alexei <span style="font-style: italic;">\</span>
+ --cc andrii --cc lore <span style="font-style: italic;">\</span>
+ bpf-devmap-adjust-uapi-for..bpf-selftests-and-tools-use
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-patch-" class="outline-3">
+<h3 id="patch-"><a href="#patch-">patch:</a></h3>
+<div class="outline-text-3" id="text-patch-">
+<blockquote>
+<p>
+bpf: devmap adjust uapi for attach bpf program
+</p>
+
+<p>
+V2:
+</p>
+<ul class="org-ul">
+<li>Defer changing BPF-syscall to start at file-descriptor 1</li>
+<li>Use {} to zero initialise struct.</li>
+</ul>
+
+<p>
+The recent commit fbee97feed9b ("bpf: Add support to attach bpf program to a
+devmap entry"), introduced ability to attach (and run) a separate XDP
+bpf_prog for each devmap entry. A bpf_prog is added via a file-descriptor.
+As zero were a valid FD, not using the feature requires using value minus-1.
+The UAPI is extended via tail-extending struct bpf_devmap_val and using
+map-&gt;value_size to determine the feature set.
+</p>
+
+<p>
+This will break older userspace applications not using the bpf_prog feature.
+Consider an old userspace app that is compiled against newer kernel
+uapi/bpf.h, it will not know that it need to initialise the member
+bpf_prog.fd to minus-1. Thus, users will be forced to update source code to
+get program running on newer kernels.
+</p>
+
+<p>
+This patch remove the minus-1 checks, and have zero mean feature isn't used.
+</p>
+
+<p>
+Followup patches either for kernel or libbpf should handle and avoid
+returning file-descriptor zero in the first place.
+</p>
+
+<p>
+Fixes: fbee97feed9b ("bpf: Add support to attach bpf program to a devmap entry")
+</p>
+</blockquote>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Date: 2020-06-11 Thu 14:10</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

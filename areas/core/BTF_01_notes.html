@@ -1,0 +1,561 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BTF (Bpf Type Format) notes</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">BTF (Bpf Type Format) notes</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#Motivation">Motivation</a>
+<ul>
+<li><a href="#Use-case--devmap-and-cpumap">Use-case: devmap and cpumap</a></li>
+<li><a href="#Reason-for-dynamic-map-value">Reason for dynamic map-value</a></li>
+</ul>
+</li>
+<li><a href="#Investigate-other-code">Investigate other code</a>
+<ul>
+<li><a href="#bpf_spin_lock-approach">bpf_spin_lock approach</a>
+<ul>
+<li><a href="#Dynamic-offset">Dynamic offset</a></li>
+<li><a href="#Insight--name-of-struct-is-important">Insight: name of struct is important</a></li>
+</ul>
+</li>
+<li><a href="#map_check_btf">map_check_btf</a>
+<ul>
+<li><a href="#Maps-using-map_check_btf">Maps using map_check_btf</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#Experimenting">Experimenting</a>
+<ul>
+<li><a href="#What-happen--Adding-BTF-to-cpumap">What happen: Adding BTF to cpumap</a>
+<ul>
+<li><a href="#Using-ftrace-and-trace-cmd">Using ftrace and trace-cmd</a></li>
+<li><a href="#Propose-changing-return-code">Propose changing return code</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#Code-notes">Code notes</a>
+<ul>
+<li><a href="#How-to-reject-">How to reject?</a></li>
+<li><a href="#devmap-read-only-from-eBPF-side">devmap read-only from eBPF side</a></li>
+<li><a href="#Extra-storage-space-argument">Extra storage space argument</a></li>
+<li><a href="#Existing-functions">Existing functions</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+The BPF Type Format (BTF) is a <a href="https://facebookmicrosites.github.io/bpf/blog/2018/11/14/btf-enhancement.html">really cool feature</a> that allows us to
+describe data types used in e.g. BPF-maps (both key and value).
+</p>
+
+<p>
+The <a href="https://www.kernel.org/doc/html/latest/bpf/btf.html#bpf-type-format-btf">kernel BTF documentation</a> is all about encoding details, and not about
+how to use BTF.
+</p>
+
+<p>
+This is my notes for trying to understand how to use BTF
+<b>from within the kernel</b>.  The last part is important, the target audience
+of this document are other kernel developers.
+</p>
+
+<div id="outline-container-Motivation" class="outline-2">
+<h2 id="Motivation"><a href="#Motivation">Motivation</a></h2>
+<div class="outline-text-2" id="text-Motivation">
+<p>
+Specifically I want to figure out, if we can use BTF to allow for
+dynamically extending and changing e.g. the map value type, and still have
+the kernel validate the contents.
+</p>
+</div>
+
+<div id="outline-container-Use-case--devmap-and-cpumap" class="outline-3">
+<h3 id="Use-case--devmap-and-cpumap"><a href="#Use-case--devmap-and-cpumap">Use-case: devmap and cpumap</a></h3>
+<div class="outline-text-3" id="text-Use-case--devmap-and-cpumap">
+<p>
+The practical use-case is extending <code>devmap</code> and <code>cpumap</code> with a BPF-prog
+that is run when an <code>xdp_frame</code> is redirected to a entry in the map.
+</p>
+
+<p>
+David Ahern have <a href="https://lore.kernel.org/netdev/20200522010526.14649-1-dsahern@kernel.org/">posted RFC</a> on extending <code>devmap</code>.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Reason-for-dynamic-map-value" class="outline-3">
+<h3 id="Reason-for-dynamic-map-value"><a href="#Reason-for-dynamic-map-value">Reason for dynamic map-value</a></h3>
+<div class="outline-text-3" id="text-Reason-for-dynamic-map-value">
+<p>
+The reason I want to have the map-value more dynamic (both for <code>devmap</code> and
+<code>cpumap</code>) is to allow extending this later. Adding an XDP-prog to run is
+only the first step.
+</p>
+
+<p>
+Future extensions that could happen:
+</p>
+
+<ol class="org-ol">
+<li>Add XDP-prog that see packet(s) when ndo_xdp_xmit fails.</li>
+
+<li>Add overflow-queue object/setup that hold packets on ndo_xdp_xmit fails.</li>
+
+<li>Add TX-queue object/setup that determine TX-queue in ndo_xdp_xmit call.</li>
+</ol>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Investigate-other-code" class="outline-2">
+<h2 id="Investigate-other-code"><a href="#Investigate-other-code">Investigate other code</a></h2>
+<div class="outline-text-2" id="text-Investigate-other-code">
+<p>
+The "bpf_spin_lock" changes does a lot of checks based on BTF.
+</p>
+
+<p>
+TODO: Investigate their approach.
+</p>
+</div>
+
+<div id="outline-container-bpf_spin_lock-approach" class="outline-3">
+<h3 id="bpf_spin_lock-approach"><a href="#bpf_spin_lock-approach">bpf_spin_lock approach</a></h3>
+<div class="outline-text-3" id="text-bpf_spin_lock-approach">
+<p>
+Main introducing commit:
+</p>
+<ul class="org-ul">
+<li><a href="https://git.kernel.org/torvalds/c/d83525ca62cf">d83525ca62cf</a> ("bpf: introduce bpf_spin_lock")</li>
+</ul>
+
+<p>
+The "bpf_spin_lock" approach is significantly more advanced than we
+actually need. So, need to figure out what parts we want to leverage.
+</p>
+</div>
+
+<div id="outline-container-Dynamic-offset" class="outline-4">
+<h4 id="Dynamic-offset"><a href="#Dynamic-offset">Dynamic offset</a></h4>
+<div class="outline-text-4" id="text-Dynamic-offset">
+<p>
+A data-type <code>struct bpf_spin_lock anyname</code> can be located at any (aligned)
+offset in the map value.
+</p>
+
+<p>
+See code function <code>btf_find_spin_lock()</code> in kernel/bpf/btf.c
+</p>
+<ul class="org-ul">
+<li><a href="https://elixir.bootlin.com/linux/v5.6.14/ident/btf_find_spin_lock">Search btf_find_spin_lock</a></li>
+<li>Code: <a href="https://elixir.bootlin.com/linux/v5.6.14/source/kernel/bpf/btf.c#L2327">btf_find_spin_lock()</a></li>
+</ul>
+
+<p>
+I think it will be overkill for our use-case, to allow dynamic offset. On
+the-other-hand, allowing dynamic offset will make it easier to extend the
+value data-type.
+</p>
+
+<p>
+Even allowing users to add their own user specific "opaque" info. For our
+<code>devmap</code> use-case, it could be practical to store the egress MAC or VLAN
+address directly in the devmap.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Insight--name-of-struct-is-important" class="outline-4">
+<h4 id="Insight--name-of-struct-is-important"><a href="#Insight--name-of-struct-is-important">Insight: name of struct is important</a></h4>
+<div class="outline-text-4" id="text-Insight--name-of-struct-is-important">
+<p>
+It is the text string <code>"bpf_spin_lock"</code> that is used for identifying the
+spinlock. This originates from the BTF info for <code>struct bpf_spin_lock</code>. The
+variable name that is chosen for the spinlock is not used.
+</p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-map_check_btf" class="outline-3">
+<h3 id="map_check_btf"><a href="#map_check_btf">map_check_btf</a></h3>
+<div class="outline-text-3" id="text-map_check_btf">
+<p>
+The function <code>map_check_btf()</code> have an explicit call to
+<code>btf_find_spin_lock</code>. But more interesting each map can implement it's own
+callback <code>map-&gt;ops-&gt;map_check_btf()</code>.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">static</span> <span style="font-weight: bold; text-decoration: underline;">int</span> <span style="font-weight: bold;">map_check_btf</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">bpf_map</span> *<span style="font-weight: bold; font-style: italic;">map</span>, <span style="font-weight: bold;">const</span> <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">btf</span> *<span style="font-weight: bold; font-style: italic;">btf</span>,
+                         <span style="font-weight: bold; text-decoration: underline;">u32</span> <span style="font-weight: bold; font-style: italic;">btf_key_id</span>, <span style="font-weight: bold; text-decoration: underline;">u32</span> <span style="font-weight: bold; font-style: italic;">btf_value_id</span>)
+{
+ [...]
+        <span style="font-weight: bold;">if</span> (map-&gt;ops-&gt;map_check_btf)
+                ret = map-&gt;ops-&gt;map_check_btf(map, btf, key_type, value_type);
+}
+</pre>
+</div>
+
+<p>
+The <code>map_create()</code> calls <code>map_check_btf()</code>, <b>after</b> <code>map_alloc()</code> have
+allocated map. Usually <code>attr-&gt;key_size</code> and <code>attr-&gt;value_size</code> are used in
+the map specific map_alloc (e.g. <code>cpu_map_alloc()</code>) to reject creation of
+the map, if the key or value size are incorrect.  Depending on how dynamic
+we want this, these size checks might need to be relaxed.
+</p>
+</div>
+
+<div id="outline-container-Maps-using-map_check_btf" class="outline-4">
+<h4 id="Maps-using-map_check_btf"><a href="#Maps-using-map_check_btf">Maps using map_check_btf</a></h4>
+<div class="outline-text-4" id="text-Maps-using-map_check_btf">
+<p>
+Key <code>BTF_KIND_INT</code> validation example in array_map_check_btf().
+</p>
+
+<p>
+Other candidates:
+</p>
+<ul class="org-ul">
+<li>cgroup_storage_check_btf</li>
+<li>trie_check_btf</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Experimenting" class="outline-2">
+<h2 id="Experimenting"><a href="#Experimenting">Experimenting</a></h2>
+<div class="outline-text-2" id="text-Experimenting">
+</div>
+<div id="outline-container-What-happen--Adding-BTF-to-cpumap" class="outline-3">
+<h3 id="What-happen--Adding-BTF-to-cpumap"><a href="#What-happen--Adding-BTF-to-cpumap">What happen: Adding BTF to cpumap</a></h3>
+<div class="outline-text-3" id="text-What-happen--Adding-BTF-to-cpumap">
+<p>
+Add BTF description when creating cpumap (<code>BPF_MAP_TYPE_CPUMAP</code>), without
+modifying kernel. This caused libbpf to fail with these error/warning
+message:
+</p>
+
+<pre class="example">
+libbpf: Error in bpf_create_map_xattr(cpu_map):ERROR: strerror_r(-524)=22(-524). Retrying without BTF.
+
+libbpf: Error in bpf_create_map_xattr(cpu_map):Invalid argument(-22). Retrying without BTF.
+</pre>
+
+<p>
+As libbpf retries without BTF info it succeeds anyhow, e.g this is just a
+warning. The first error message does look a bit odd and originates from
+this code:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C">map-&gt;fd = bpf_create_map_xattr(&amp;create_attr);
+<span style="font-weight: bold;">if</span> (map-&gt;fd &lt; 0 &amp;&amp; (create_attr.btf_key_type_id ||
+                    create_attr.btf_value_type_id)) {
+        <span style="font-weight: bold; text-decoration: underline;">char</span> *<span style="font-weight: bold; font-style: italic;">cp</span>, <span style="font-weight: bold; font-style: italic;">errmsg</span>[STRERR_BUFSIZE];
+        <span style="font-weight: bold; text-decoration: underline;">int</span> <span style="font-weight: bold; font-style: italic;">err</span> = -errno;
+
+        cp = libbpf_strerror_r(err, errmsg, <span style="font-weight: bold;">sizeof</span>(errmsg));
+        pr_warn(<span style="font-style: italic;">"Error in bpf_create_map_xattr(%s):%s(%d). Retrying without BTF.\n"</span>,
+                map-&gt;name, cp, err);
+        create_attr.btf_fd = 0;
+        create_attr.btf_key_type_id = 0;
+        create_attr.btf_value_type_id = 0;
+        map-&gt;btf_key_type_id = 0;
+        map-&gt;btf_value_type_id = 0;
+        map-&gt;fd = bpf_create_map_xattr(&amp;create_attr);
+}
+</pre>
+</div>
+
+<p>
+The strange error message comes when I added a slightly more advanced BTF
+struct as value.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">cpu_map_value</span> {
+        <span style="font-weight: bold; text-decoration: underline;">__u32</span> <span style="font-weight: bold; font-style: italic;">qsize</span>;
+};
+
+<span style="font-weight: bold;">struct</span> {
+        __uint(type, BPF_MAP_TYPE_CPUMAP);
+        __type(key, u32);
+        __type(value, <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">cpu_map_value</span>);
+        __uint(max_entries, MAX_CPUS);
+} <span style="font-weight: bold; text-decoration: underline;">cpu_map</span> <span style="font-weight: bold;">SEC</span>(<span style="font-style: italic;">".maps"</span>);
+</pre>
+</div>
+
+<p>
+Trying to debug what kernel function call that returns this error.
+</p>
+
+<p>
+Using <code>strace</code> it is easy trace all BPF syscalls (<code>-e trace=bpf</code>) and then
+filter to the ones that fails (<code>--failed-only or -Z</code>):
+</p>
+
+<pre class="example">
+sudo strace -e trace=bpf --failed-only ./xdp_redirect_cpu -F --dev mlx5p1 --q 1024 --cpu 4 --prog xdp_cpu_map0 
+bpf(BPF_MAP_CREATE, {map_type=BPF_MAP_TYPE_CPUMAP, key_size=4, value_size=4, max_entries=8192, map_flags=0, inner_map_fd=0, map_name="cpu_map", map_ifindex=0, btf_fd=3, btf_key_type_id=7, btf_value_type_id=27, btf_vmlinux_value_type_id=0}, 120) = -1 ENOTSUPP (Unknown error 524)
+libbpf: Error in bpf_create_map_xattr(cpu_map):ERROR: strerror_r(-524)=22(-524). Retrying without BTF.
+</pre>
+
+<p>
+It shows what we already knows, that <code>BPF_MAP_CREATE</code> fails with error
+code 524. This errno is defined as <code>ENOTSUPP</code>, and is part of the kernels
+internal errno in file <a href="https://github.com/torvalds/linux/blob/master/include/linux/errno.h">include/linux/errno.h</a>. As is stated in the file,
+these "should never be seen by user programs."
+</p>
+
+<pre class="example">
+#define ENOTSUPP        524     /* Operation is not supported */
+</pre>
+
+<p>
+What we really wanted was to identify and record the kernel functions
+involved to figure out what kernel function fails.
+</p>
+
+<p>
+The BPF tracepoint were removed in commit 4d220ed0f814 ("bpf: remove
+tracepoints from bpf core") (Author: Alexei Starovoitov). This makes it
+harder debug and isolate 'map_create' function call (as it get inlined).
+</p>
+</div>
+
+<div id="outline-container-Using-ftrace-and-trace-cmd" class="outline-4">
+<h4 id="Using-ftrace-and-trace-cmd"><a href="#Using-ftrace-and-trace-cmd">Using ftrace and trace-cmd</a></h4>
+<div class="outline-text-4" id="text-Using-ftrace-and-trace-cmd">
+<p>
+Finding BPF syscall to ftrace:
+</p>
+<pre class="example">
+$ sudo trace-cmd list -f SyS_bpf
+__x64_sys_bpf
+__ia32_sys_bpf
+</pre>
+
+<p>
+In another terminal record via trace-cmd:
+</p>
+<pre class="example">
+sudo trace-cmd record -p function_graph -g __x64_sys_bpf
+</pre>
+
+<p>
+Run the failing command:
+</p>
+<pre class="example">
+sudo ./xdp_redirect_cpu -F --dev mlx5p1 --q 1024 --cpu 4 --prog xdp_cpu_map0
+libbpf: Error in bpf_create_map_xattr(cpu_map):ERROR: strerror_r(-524)=22(-524). Retrying without BTF.
+libbpf: map 'cpu_map': failed to create: ERROR: strerror_r(-524)=22(-524)
+libbpf: failed to load object './xdp_redirect_cpu_kern.o'
+</pre>
+
+<p>
+Viewing the result via:
+</p>
+<pre class="example">
+trace-cmd report | less
+</pre>
+
+<p>
+In general there is way too much data. Thus it is hard to use for anything.
+Given I manually found this was related to <code>map_check_no_btf</code>, it is
+possible to search for "map_check_no_btf" and indirectly see that it fails
+as the code calls <code>btf_put()</code>.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Propose-changing-return-code" class="outline-4">
+<h4 id="Propose-changing-return-code"><a href="#Propose-changing-return-code">Propose changing return code</a></h4>
+<div class="outline-text-4" id="text-Propose-changing-return-code">
+<p>
+Proposal for changing the return code:
+</p>
+<ul class="org-ul">
+<li>V1: <a href="https://lore.kernel.org/bpf/159050511046.148183.1806612131878890638.stgit@firesoul">https://lore.kernel.org/bpf/159050511046.148183.1806612131878890638.stgit@firesoul</a></li>
+<li>V2: <a href="https://lore.kernel.org/bpf/159057923399.191121.11186124752660899399.stgit@firesoul">https://lore.kernel.org/bpf/159057923399.191121.11186124752660899399.stgit@firesoul</a></li>
+</ul>
+
+<blockquote>
+<p>
+bpf: Fix map_check_no_btf return code
+</p>
+
+<p>
+When a BPF-map type doesn't support having a BTF info associated, the
+bpf_map_ops-&gt;map_check_btf is set to map_check_no_btf(). This function
+map_check_no_btf() currently returns -ENOTSUPP, which result in a very
+confusing error message in libbpf, see below.
+</p>
+
+<p>
+The errno ENOTSUPP is part of the kernels internal errno in file
+include/linux/errno.h. As is stated in the file, these "should never be
+seen by user programs". This is not a not a standard Unix error.
+</p>
+
+<p>
+This should likely have been EOPNOTSUPP instead. This seems to be a common
+mistake, which even checkpatch tried to catch see commit 6b9ea5ff5abd
+("checkpatch: warn about uses of ENOTSUPP").
+</p>
+
+<p>
+Before this change end-users of libbpf will see:
+ libbpf: Error in bpf_create_map_xattr(cpu_map):ERROR: strerror_r(-524)=22(-524). Retrying without BTF.
+</p>
+
+<p>
+After this change end-users of libbpf will see:
+ libbpf: Error in bpf_create_map_xattr(cpu_map):Operation not supported(-95). Retrying without BTF.
+</p>
+
+<p>
+V2: Use EOPNOTSUPP instead of EUCLEAN.
+</p>
+
+<p>
+Fixes: e8d2bec04579 ("bpf: decouple btf from seq bpf fs dump and enable more maps")
+Signed-off-by: Jesper Dangaard Brouer &lt;brouer@redhat.com&gt;
+</p>
+</blockquote>
+
+<p>
+Andrii suggests: to use EOPNOTSUPP (instead of errno ENOTSUPP)
+</p>
+
+<pre class="example">
+libbpf: Error in bpf_create_map_xattr(cpu_map):Operation not supported(-95). Retrying without BTF.
+</pre>
+
+<p>
+V2: Add &#x2013;cc kuba@kernel.org
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">stg mail --version=<span style="font-style: italic;">'bpf-next V2'</span> --cc meup <span style="font-style: italic;">\</span>
+ --to bpf --cc daniel --cc alexei --cc jakub --cc andrii <span style="font-style: italic;">\</span>
+  fix_map_check_no_btf
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Code-notes" class="outline-2">
+<h2 id="Code-notes"><a href="#Code-notes">Code notes</a></h2>
+<div class="outline-text-2" id="text-Code-notes">
+</div>
+<div id="outline-container-How-to-reject-" class="outline-3">
+<h3 id="How-to-reject-"><a href="#How-to-reject-">How to reject?</a></h3>
+<div class="outline-text-3" id="text-How-to-reject-">
+<p>
+If loading BPF-map + BTF fails, then libbpf will retry without BTF.
+</p>
+
+<p>
+Thus, to requires BTF we need (ability) to reject a map_create, when there
+isn't any BTF id.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">static</span> <span style="font-weight: bold; text-decoration: underline;">int</span> <span style="font-weight: bold;">dev_map_init_map</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">bpf_dtab</span> *<span style="font-weight: bold; font-style: italic;">dtab</span>, <span style="font-weight: bold;">union</span> <span style="font-weight: bold; text-decoration: underline;">bpf_attr</span> *<span style="font-weight: bold; font-style: italic;">attr</span>)
+{
+
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">Enforce BTF for userspace, unless dealing with legacy kABI </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">if</span> (attr-&gt;value_size != 4 &amp;&amp;
+            (!attr-&gt;btf_key_type_id || !attr-&gt;btf_value_type_id))
+                <span style="font-weight: bold;">return</span> -EOPNOTSUPP;
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-devmap-read-only-from-eBPF-side" class="outline-3">
+<h3 id="devmap-read-only-from-eBPF-side"><a href="#devmap-read-only-from-eBPF-side">devmap read-only from eBPF side</a></h3>
+<div class="outline-text-3" id="text-devmap-read-only-from-eBPF-side">
+<p>
+See commit 0cdbb4b09a06 ("devmap: Allow map lookups from eBPF")
+</p>
+</div>
+</div>
+
+<div id="outline-container-Extra-storage-space-argument" class="outline-3">
+<h3 id="Extra-storage-space-argument"><a href="#Extra-storage-space-argument">Extra storage space argument</a></h3>
+<div class="outline-text-3" id="text-Extra-storage-space-argument">
+<p>
+With BTF we can allow userspace to store extra data in map-value in the
+devmap. It does require a lookup in the "devmap-egress" XDP-prog (likely
+with it's own ifindex), but prog that need such extra-info would need to do
+a map lookup anyhow (and we know devmap will be in L1 cache).
+</p>
+
+<p>
+To make this forward-compatible, the area need to be encapsulated in a named
+struct e.g. "storage". As in newer kernel, we want to add new members.
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-Existing-functions" class="outline-3">
+<h3 id="Existing-functions"><a href="#Existing-functions">Existing functions</a></h3>
+<div class="outline-text-3" id="text-Existing-functions">
+<p>
+Q: What existing function exist that compared two BTF layouts?
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">Compare BTFs of given program with BTF of target program </span><span style="font-weight: bold; font-style: italic;">*/</span>
+
+<span style="font-weight: bold; text-decoration: underline;">int</span> <span style="font-weight: bold;">btf_check_type_match</span>(
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">bpf_verifier_env</span> *<span style="font-weight: bold; font-style: italic;">env</span>, <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">bpf_prog</span> *<span style="font-weight: bold; font-style: italic;">prog</span>,
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">btf</span> *<span style="font-weight: bold; font-style: italic;">btf2</span>, <span style="font-weight: bold;">const</span> <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">btf_type</span> *<span style="font-weight: bold; font-style: italic;">t2</span>)
+{
+ [...]
+ calls btf_check_func_type_match()
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Date: 2020-06-11 Thu 14:10</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
