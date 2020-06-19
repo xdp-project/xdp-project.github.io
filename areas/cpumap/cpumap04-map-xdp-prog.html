@@ -1,0 +1,1263 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Test cpumap running 2nd XDP-prog on remote CPU</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Test cpumap running 2nd XDP-prog on remote CPU</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#Testing-git-tree">Testing git tree</a>
+<ul>
+<li><a href="#V9-reference">V9 reference</a></li>
+<li><a href="#V10-reference">V10 reference</a></li>
+</ul>
+</li>
+<li><a href="#Testlab-machine">Testlab machine</a></li>
+<li><a href="#Baseline-benchmarks-RX-CPU">Baseline benchmarks RX-CPU</a>
+<ul>
+<li><a href="#Baseline--RX-NAPI-CPU-handle--driver--i40e-">Baseline: RX-NAPI CPU handle (driver: i40e)</a>
+<ul>
+<li><a href="#baseline-i40e---UdpNoPorts--3-649-402-pps">baseline(i40e): UdpNoPorts: 3,649,402 pps</a></li>
+<li><a href="#baseline-i40e---iptables-raw-drop--4-727-128-pps--GRO-enabled-">baseline(i40e): iptables-raw drop: 4,727,128 pps (GRO-enabled)</a></li>
+</ul>
+</li>
+<li><a href="#Baseline--RX-NAPI-CPU-handle--driver--mlx5-">Baseline: RX-NAPI CPU handle (driver: mlx5)</a>
+<ul>
+<li><a href="#baseline-mlx5---UdpNoPorts--3-548-400-pps">baseline(mlx5): UdpNoPorts: 3,548,400 pps</a></li>
+<li><a href="#baseline-mlx5---iptables-raw-drop--4-484-640-pps--GRO-enabled-">baseline(mlx5): iptables-raw drop: 4,484,640 pps (GRO-enabled)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#Testing-patchset-v9--on-driver-i40e">Testing patchset(v9) on driver i40e</a>
+<ul>
+<li><a href="#i40e-qsize-adjustment--64-">i40e qsize adjustment (64)</a></li>
+<li><a href="#CPU-redirect--i40e---UdpNoPorts--4-102-929-pps">CPU-redirect (i40e): UdpNoPorts: 4,102,929 pps</a></li>
+<li><a href="#CPU-redirect--i40e---iptables-raw-drop--7-004-219-pps">CPU-redirect (i40e): iptables-raw drop: 7,004,219 pps</a>
+<ul>
+<li><a href="#Touch-data-on-RX-CPU---iptables-raw-drop">Touch data on RX-CPU + iptables-raw drop</a></li>
+<li><a href="#RX-CPU-do-hashing-of-packets---iptables-raw-drop">RX-CPU do hashing of packets + iptables-raw drop</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#Baseline-for-patchset">Baseline for patchset</a>
+<ul>
+<li><a href="#What-to-watch-out-for">What to watch out for</a></li>
+<li><a href="#Baseline-kernel-git-info">Baseline kernel git info</a></li>
+<li><a href="#Baseline--CPU-redirect--i40e---UdpNoPorts--4-196-176-pps">Baseline: CPU-redirect (i40e): UdpNoPorts: 4,196,176 pps</a></li>
+<li><a href="#Baseline--CPU-redirect--i40e---iptables-raw-drop--7-012-141-pps">Baseline: CPU-redirect (i40e): iptables-raw drop: 7,012,141 pps</a></li>
+</ul>
+</li>
+<li><a href="#Testing-redirect---patchset-v10--on-driver-i40e">Testing redirect - patchset(v10) on driver i40e</a>
+<ul>
+<li><a href="#Normal-redirect--i40e---back-same-device--12-560-354-pps">Normal-redirect (i40e): back same device: 12,560,354 pps</a></li>
+<li><a href="#CPU-redirect--i40e---2nd-XDP_REDIRECT--8-799-342-pps">CPU-redirect (i40e): 2nd XDP_REDIRECT: 8,799,342 pps</a></li>
+</ul>
+</li>
+<li><a href="#Testing-XDP_DROP---patchset-v10--on-driver-i40e">Testing XDP_DROP - patchset(v10) on driver i40e</a>
+<ul>
+<li><a href="#XDP_DROP--i40e--on-RX-CPU--32-042-560-pps">XDP_DROP (i40e) on RX-CPU: 32,042,560 pps</a></li>
+<li><a href="#CPU-redirect--i40e---XDP_DROP-on-remote-CPU">CPU-redirect (i40e): XDP_DROP on remote CPU</a></li>
+<li><a href="#CPU-redirect--i40e---XDP_DROP-on-remote-CPU--Optimize-attempt-1-">CPU-redirect (i40e): XDP_DROP on remote CPU (Optimize attempt#1)</a></li>
+</ul>
+</li>
+<li><a href="#Observations">Observations</a>
+<ul>
+<li><a href="#Strange--kmem_cache_alloc_bulk-called-on-all-XDP_DROP">Strange: kmem_cache_alloc_bulk called on all XDP_DROP</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+Work-in-progress patches upstream by Lorenzo and Jesper, are adding ability
+to run another (2nd) XDP-prog on the remote CPU the XDP packets is getting
+redirected to.
+</p>
+
+<p>
+The 2nd XDP-program is installed via inserting its FD into the map.
+</p>
+
+<div id="outline-container-Testing-git-tree" class="outline-2">
+<h2 id="Testing-git-tree"><a href="#Testing-git-tree">Testing git tree</a></h2>
+<div class="outline-text-2" id="text-Testing-git-tree">
+<p>
+Kernel git tree under testing
+</p>
+<ul class="org-ul">
+<li><a href="https://github.com/LorenzoBianconi/bpf-next/">https://github.com/LorenzoBianconi/bpf-next/</a></li>
+</ul>
+</div>
+
+<div id="outline-container-V9-reference" class="outline-3">
+<h3 id="V9-reference"><a href="#V9-reference">V9 reference</a></h3>
+<div class="outline-text-3" id="text-V9-reference">
+<p>
+V9 branch: cpu_map_program_v9
+</p>
+<ul class="org-ul">
+<li><a href="https://github.com/LorenzoBianconi/bpf-next/tree/cpu_map_program_v9">https://github.com/LorenzoBianconi/bpf-next/tree/cpu_map_program_v9</a></li>
+</ul>
+
+<p>
+Local adjustments
+</p>
+<ul class="org-ul">
+<li>branch: cpu_map_program_v9.jesper_adjust02.stgit</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-V10-reference" class="outline-3">
+<h3 id="V10-reference"><a href="#V10-reference">V10 reference</a></h3>
+<div class="outline-text-3" id="text-V10-reference">
+<p>
+V10 branch: cpu_map_program_v10
+</p>
+<ul class="org-ul">
+<li><a href="https://github.com/LorenzoBianconi/bpf-next/tree/cpu_map_program_v10">https://github.com/LorenzoBianconi/bpf-next/tree/cpu_map_program_v10</a></li>
+</ul>
+
+<p>
+The V10 branch is identical to V9 as it just contains the local changes
+Jesper had in his local git tree.
+</p>
+
+<p>
+The V10 branch is rebased on commit:
+</p>
+<ul class="org-ul">
+<li>808e105a9c9c ("e1000e: fix unused-function warning") (Author: Arnd Bergmann)</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Testlab-machine" class="outline-2">
+<h2 id="Testlab-machine"><a href="#Testlab-machine">Testlab machine</a></h2>
+<div class="outline-text-2" id="text-Testlab-machine">
+<p>
+The testlab machine:
+</p>
+<ul class="org-ul">
+<li>Intel CPU E5-1650 v4 @ 3.60GHz</li>
+<li>Disabled HT (HyperThreading)</li>
+<li>Fedora 31</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-Baseline-benchmarks-RX-CPU" class="outline-2">
+<h2 id="Baseline-benchmarks-RX-CPU"><a href="#Baseline-benchmarks-RX-CPU">Baseline benchmarks RX-CPU</a></h2>
+<div class="outline-text-2" id="text-Baseline-benchmarks-RX-CPU">
+<p>
+The processing and (deliberate) packet drops happens on same CPU as packet
+was RX-ed on, which have many cache advantages.
+</p>
+
+<p>
+Two drivers: i40e and mlx5 because they have two memory models.
+</p>
+<ul class="org-ul">
+<li>i40e: refcnt pages, recycle depend on &lt; 512 outstanding pages</li>
+<li>mlx5: page_pool based, recycle works for XDP_DROP</li>
+</ul>
+
+<p>
+Kernel:
+</p>
+<ul class="org-ul">
+<li>Linux broadwell 5.8.0-rc1-bpf-next-lorenzo+ #9 SMP PREEMPT</li>
+<li>Contains cpumap changes, but okay as that code isn't active here</li>
+</ul>
+</div>
+
+<div id="outline-container-Baseline--RX-NAPI-CPU-handle--driver--i40e-" class="outline-3">
+<h3 id="Baseline--RX-NAPI-CPU-handle--driver--i40e-"><a href="#Baseline--RX-NAPI-CPU-handle--driver--i40e-">Baseline: RX-NAPI CPU handle (driver: i40e)</a></h3>
+<div class="outline-text-3" id="text-Baseline--RX-NAPI-CPU-handle--driver--i40e-">
+</div>
+<div id="outline-container-baseline-i40e---UdpNoPorts--3-649-402-pps" class="outline-4">
+<h4 id="baseline-i40e---UdpNoPorts--3-649-402-pps"><a href="#baseline-i40e---UdpNoPorts--3-649-402-pps">baseline(i40e): UdpNoPorts: 3,649,402 pps</a></h4>
+<div class="outline-text-4" id="text-baseline-i40e---UdpNoPorts--3-649-402-pps">
+<p>
+No listen-ing UDP service.
+No iptables.
+</p>
+
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    3649400            0.0
+IpInDelivers                    3649397            0.0
+IpOutRequests                   1                  0.0
+IcmpOutMsgs                     1                  0.0
+IcmpOutDestUnreachs             1                  0.0
+IcmpMsgOutType3                 1                  0.0
+UdpNoPorts                      3649402            0.0
+IpExtInOctets                   167868398          0.0
+IpExtOutOctets                  74                 0.0
+IpExtInNoECTPkts                3649314            0.0
+</pre>
+</div>
+</div>
+
+<div id="outline-container-baseline-i40e---iptables-raw-drop--4-727-128-pps--GRO-enabled-" class="outline-4">
+<h4 id="baseline-i40e---iptables-raw-drop--4-727-128-pps--GRO-enabled-"><a href="#baseline-i40e---iptables-raw-drop--4-727-128-pps--GRO-enabled-">baseline(i40e): iptables-raw drop: 4,727,128 pps (GRO-enabled)</a></h4>
+<div class="outline-text-4" id="text-baseline-i40e---iptables-raw-drop--4-727-128-pps--GRO-enabled-">
+<p>
+Command used to drop packets:
+</p>
+<ul class="org-ul">
+<li>iptables -t raw -I PREROUTING -p udp &#x2013;dport 9 -j DROP</li>
+</ul>
+
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    4727128            0.0
+IpExtInOctets                   217450096          0.0
+IpExtInNoECTPkts                4727176            0.0
+</pre>
+
+<p>
+Command to disable GRO:
+</p>
+<ul class="org-ul">
+<li>ethtool -K i40e2 gro off tso off</li>
+</ul>
+
+<pre class="example">
+$ ethtool -K i40e2 gro off tso off
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    5596808            0.0
+IpExtInOctets                   257453030          0.0
+IpExtInNoECTPkts                5596800            0.0
+</pre>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-Baseline--RX-NAPI-CPU-handle--driver--mlx5-" class="outline-3">
+<h3 id="Baseline--RX-NAPI-CPU-handle--driver--mlx5-"><a href="#Baseline--RX-NAPI-CPU-handle--driver--mlx5-">Baseline: RX-NAPI CPU handle (driver: mlx5)</a></h3>
+<div class="outline-text-3" id="text-Baseline--RX-NAPI-CPU-handle--driver--mlx5-">
+<p>
+The mlx5 drivers memory model is special and combines refcnt and page_pool
+system for recycling. It have a 128 (per queue) page recycle cache, before
+the page_pool. When XDP is NOT loaded, it still allocate via page_pool, but
+the pages use a split-model with two packets per page with refcnt to
+determine recycle-ability. When XDP gets loaded it uses one packet per page,
+but still tries to do refcnt recycling towards network stack.
+</p>
+</div>
+
+<div id="outline-container-baseline-mlx5---UdpNoPorts--3-548-400-pps" class="outline-4">
+<h4 id="baseline-mlx5---UdpNoPorts--3-548-400-pps"><a href="#baseline-mlx5---UdpNoPorts--3-548-400-pps">baseline(mlx5): UdpNoPorts: 3,548,400 pps</a></h4>
+<div class="outline-text-4" id="text-baseline-mlx5---UdpNoPorts--3-548-400-pps">
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    3548400            0.0
+IpInDelivers                    3548403            0.0
+IpOutRequests                   1                  0.0
+IcmpOutMsgs                     1                  0.0
+IcmpOutDestUnreachs             1                  0.0
+IcmpMsgOutType3                 1                  0.0
+UdpNoPorts                      3548400            0.0
+IpExtInOctets                   163227826          0.0
+IpExtOutOctets                  74                 0.0
+IpExtInNoECTPkts                3548432            0.0
+</pre>
+</div>
+</div>
+
+<div id="outline-container-baseline-mlx5---iptables-raw-drop--4-484-640-pps--GRO-enabled-" class="outline-4">
+<h4 id="baseline-mlx5---iptables-raw-drop--4-484-640-pps--GRO-enabled-"><a href="#baseline-mlx5---iptables-raw-drop--4-484-640-pps--GRO-enabled-">baseline(mlx5): iptables-raw drop: 4,484,640 pps (GRO-enabled)</a></h4>
+<div class="outline-text-4" id="text-baseline-mlx5---iptables-raw-drop--4-484-640-pps--GRO-enabled-">
+<p>
+Command used to drop packets:
+</p>
+<ul class="org-ul">
+<li>iptables -t raw -I PREROUTING -p udp &#x2013;dport 9 -j DROP</li>
+</ul>
+
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    4484640            0.0
+IpExtInOctets                   206293440          0.0
+IpExtInNoECTPkts                4484640            0.0
+</pre>
+
+<p>
+ethtool_stats showing cache_reuse counters:
+</p>
+<pre class="example">
+$ ethtool_stats.pl --dev mlx5p1 --sec 2
+
+Show adapter(s) (mlx5p1) statistics (ONLY that changed!)
+Ethtool(mlx5p1  ) stat:        69667 (         69,667) &lt;= ch2_poll /sec
+Ethtool(mlx5p1  ) stat:        69667 (         69,667) &lt;= ch_poll /sec
+Ethtool(mlx5p1  ) stat:    267522383 (    267,522,383) &lt;= rx2_bytes /sec
+Ethtool(mlx5p1  ) stat:      2229360 (      2,229,360) &lt;= rx2_cache_reuse /sec
+Ethtool(mlx5p1  ) stat:      4458706 (      4,458,706) &lt;= rx2_csum_unnecessary /sec
+Ethtool(mlx5p1  ) stat:      4458706 (      4,458,706) &lt;= rx2_packets /sec
+Ethtool(mlx5p1  ) stat:     44978045 (     44,978,045) &lt;= rx_64_bytes_phy /sec
+Ethtool(mlx5p1  ) stat:    267522236 (    267,522,236) &lt;= rx_bytes /sec
+Ethtool(mlx5p1  ) stat:   2878598428 (  2,878,598,428) &lt;= rx_bytes_phy /sec
+Ethtool(mlx5p1  ) stat:      2229360 (      2,229,360) &lt;= rx_cache_reuse /sec
+Ethtool(mlx5p1  ) stat:      4458704 (      4,458,704) &lt;= rx_csum_unnecessary /sec
+Ethtool(mlx5p1  ) stat:     40519382 (     40,519,382) &lt;= rx_out_of_buffer /sec
+Ethtool(mlx5p1  ) stat:      4458704 (      4,458,704) &lt;= rx_packets /sec
+Ethtool(mlx5p1  ) stat:     44978101 (     44,978,101) &lt;= rx_packets_phy /sec
+Ethtool(mlx5p1  ) stat:   2878595049 (  2,878,595,049) &lt;= rx_prio0_bytes /sec
+Ethtool(mlx5p1  ) stat:     44978045 (     44,978,045) &lt;= rx_prio0_packets /sec
+Ethtool(mlx5p1  ) stat:   2698685498 (  2,698,685,498) &lt;= rx_vport_unicast_bytes /sec
+Ethtool(mlx5p1  ) stat:     44978090 (     44,978,090) &lt;= rx_vport_unicast_packets /sec
+</pre>
+
+<p>
+Command to disable GRO:
+</p>
+<ul class="org-ul">
+<li>ethtool -K mlx5p1 gro off tso off</li>
+</ul>
+
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    5288656            0.0
+IpExtInOctets                   243278498          0.0
+IpExtInNoECTPkts                5288664            0.0
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Testing-patchset-v9--on-driver-i40e" class="outline-2">
+<h2 id="Testing-patchset-v9--on-driver-i40e"><a href="#Testing-patchset-v9--on-driver-i40e">Testing patchset(v9) on driver i40e</a></h2>
+<div class="outline-text-2" id="text-Testing-patchset-v9--on-driver-i40e">
+</div>
+<div id="outline-container-i40e-qsize-adjustment--64-" class="outline-3">
+<h3 id="i40e-qsize-adjustment--64-"><a href="#i40e-qsize-adjustment--64-">i40e qsize adjustment (64)</a></h3>
+<div class="outline-text-3" id="text-i40e-qsize-adjustment--64-">
+<p>
+The i40e driver (as mentioned) uses a refcnt based recycle scheme, that
+depend on depend on &lt; 512 outstanding pages. The default queue size (between
+the CPUs) in CPUMAP program <code>xdp_redirect_cpu</code> (from <code>samples/bpf/</code>) is 192
+packets, which cause the i40e drivers recycle scheme to fail. This cause
+pages to go-through the page-allocator, which causes a significant slowdown.
+</p>
+
+<p>
+Changing queue size to 64 (<code>--qsize=64</code>) seems to allow recycle to work.
+Thus, using this in below tests for i40e driver.
+</p>
+
+<p>
+Example with qsize=192:
+</p>
+<pre class="example">
+$ sudo ./xdp_redirect_cpu --dev i40e2 --qsize 192 --cpu 4 --prog xdp_cpu_map0
+
+unning XDP/eBPF prog_name:xdp_cpu_map0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          2       13,292,641     0           0          
+XDP-RX          total   13,292,641     0          
+cpumap-enqueue    2:4   13,292,647     9,838,519   8.00       bulk-average
+cpumap-enqueue  sum:4   13,292,647     9,838,519   8.00       bulk-average
+cpumap_kthread  4       3,454,127      0           0          
+cpumap_kthread  total   3,454,127      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+
+2nd remote XDP/eBPF prog_name: xdp_redirect_dummy
+XDP-cpumap      CPU:to  xdp-pass       xdp-drop    xdp-redir
+xdp-in-kthread  4       3,454,128      0           0         
+xdp-in-kthread  total   3,454,128      0           0         
+</pre>
+
+<p>
+Unfortunately ethtool stats does not show that recycling are failing:
+</p>
+<pre class="example">
+Show adapter(s) (i40e2) statistics (ONLY that changed!)
+Ethtool(i40e2   ) stat:   2920468143 (  2,920,468,143) &lt;= port.rx_bytes /sec
+Ethtool(i40e2   ) stat:     11907326 (     11,907,326) &lt;= port.rx_dropped /sec
+Ethtool(i40e2   ) stat:     45632337 (     45,632,337) &lt;= port.rx_size_64 /sec
+Ethtool(i40e2   ) stat:     45632326 (     45,632,326) &lt;= port.rx_unicast /sec
+Ethtool(i40e2   ) stat:           91 (             91) &lt;= port.tx_bytes /sec
+Ethtool(i40e2   ) stat:            1 (              1) &lt;= port.tx_size_127 /sec
+Ethtool(i40e2   ) stat:            1 (              1) &lt;= port.tx_unicast /sec
+Ethtool(i40e2   ) stat:    795753110 (    795,753,110) &lt;= rx-2.bytes /sec
+Ethtool(i40e2   ) stat:     13262552 (     13,262,552) &lt;= rx-2.packets /sec
+Ethtool(i40e2   ) stat:     20462471 (     20,462,471) &lt;= rx_dropped /sec
+Ethtool(i40e2   ) stat:     33725009 (     33,725,009) &lt;= rx_unicast /sec
+Ethtool(i40e2   ) stat:           87 (             87) &lt;= tx-4.bytes /sec
+Ethtool(i40e2   ) stat:            1 (              1) &lt;= tx-4.packets /sec
+Ethtool(i40e2   ) stat:           87 (             87) &lt;= tx_bytes /sec
+Ethtool(i40e2   ) stat:            1 (              1) &lt;= tx_packets /sec
+Ethtool(i40e2   ) stat:            1 (              1) &lt;= tx_unicast /sec
+</pre>
+
+<p>
+Example with qsize=64:
+</p>
+<pre class="example">
+ sudo ./xdp_redirect_cpu --dev i40e2 --qsize 64 --cpu 4 --prog xdp_cpu_map0
+Running XDP/eBPF prog_name:xdp_cpu_map0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          2       17,809,657     0           0          
+XDP-RX          total   17,809,657     0          
+cpumap-enqueue    2:4   17,809,652     13,713,438  8.00       bulk-average
+cpumap-enqueue  sum:4   17,809,652     13,713,438  8.00       bulk-average
+cpumap_kthread  4       4,096,217      0           0          
+cpumap_kthread  total   4,096,217      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+
+2nd remote XDP/eBPF prog_name: xdp_redirect_dummy
+XDP-cpumap      CPU:to  xdp-pass       xdp-drop    xdp-redir
+xdp-in-kthread  4       4,096,218      0           0         
+xdp-in-kthread  total   4,096,218      0           0       
+</pre>
+
+<p>
+Calculate slowdown:
+</p>
+<ul class="org-ul">
+<li>(1/3454128-1/4096217)*10^9 = 45.38 ns</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-CPU-redirect--i40e---UdpNoPorts--4-102-929-pps" class="outline-3">
+<h3 id="CPU-redirect--i40e---UdpNoPorts--4-102-929-pps"><a href="#CPU-redirect--i40e---UdpNoPorts--4-102-929-pps">CPU-redirect (i40e): UdpNoPorts: 4,102,929 pps</a></h3>
+<div class="outline-text-3" id="text-CPU-redirect--i40e---UdpNoPorts--4-102-929-pps">
+<p>
+BPF-prog command used:
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">sudo ./xdp_redirect_cpu --dev i40e2 --qsize 64 --cpu 4 --prog xdp_cpu_map0
+</pre>
+</div>
+
+<p>
+The xdp_redirect_dummy program running as 2nd XDP-prog in kthread does
+nothing and returns <code>XDP_PASS</code>.
+</p>
+
+<pre class="example">
+unning XDP/eBPF prog_name:xdp_cpu_map0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          2       17,767,786     0           0          
+kXDP-RX          total   17,767,787     0          
+cpumap-enqueue    2:4   17,767,785     13,664,852  8.00       bulk-average
+cpumap-enqueue  sum:4   17,767,786     13,664,853  8.00       bulk-average
+cpumap_kthread  4       4,102,929      0           0          
+cpumap_kthread  total   4,102,929      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+
+2nd remote XDP/eBPF prog_name: xdp_redirect_dummy
+XDP-cpumap      CPU:to  xdp-pass       xdp-drop    xdp-redir
+xdp-in-kthread  4       4,102,930      0           0         
+xdp-in-kthread  total   4,102,930      0           0         
+</pre>
+
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    4118695            0.0
+IpInDelivers                    4118696            0.0
+IpOutRequests                   1                  0.0
+IcmpOutMsgs                     1                  0.0
+IcmpOutDestUnreachs             1                  0.0
+IcmpMsgOutType3                 1                  0.0
+UdpNoPorts                      4118694            0.0
+IpExtInOctets                   189459786          0.0
+IpExtOutOctets                  74                 0.0
+IpExtInNoECTPkts                4118691            0.0
+</pre>
+
+<p>
+Disabling loading the "mprog" change the performance a bit
+</p>
+<ul class="org-ul">
+<li>From: 4,102,929 pps</li>
+<li>To  : 4,202,953 pps</li>
+<li>Diff:  +100,024 pps</li>
+<li>Diff: (1/4102929-1/4202953)*10^9 = 5.8 ns</li>
+</ul>
+
+<p>
+It is actually surprisingly little overhead, 5.8 nanosec, to run the
+XDP-prog on the remote/target CPU.
+</p>
+
+<pre class="example">
+sudo ./xdp_redirect_cpu --dev i40e2 --qsize 64 --cpu 4 --prog xdp_cpu_map0 --mprog-disable
+
+Running XDP/eBPF prog_name:xdp_cpu_map0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          2       17,730,736     0           0          
+XDP-RX          total   17,730,736     0          
+cpumap-enqueue    2:4   17,730,742     13,527,783  8.00       bulk-average
+cpumap-enqueue  sum:4   17,730,742     13,527,783  8.00       bulk-average
+cpumap_kthread  4       4,202,953      0           0          
+cpumap_kthread  total   4,202,953      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</div>
+
+
+
+
+<div id="outline-container-CPU-redirect--i40e---iptables-raw-drop--7-004-219-pps" class="outline-3">
+<h3 id="CPU-redirect--i40e---iptables-raw-drop--7-004-219-pps"><a href="#CPU-redirect--i40e---iptables-raw-drop--7-004-219-pps">CPU-redirect (i40e): iptables-raw drop: 7,004,219 pps</a></h3>
+<div class="outline-text-3" id="text-CPU-redirect--i40e---iptables-raw-drop--7-004-219-pps">
+<p>
+Command used to drop packets:
+</p>
+<ul class="org-ul">
+<li>iptables -t raw -I PREROUTING -p udp &#x2013;dport 9 -j DROP</li>
+</ul>
+
+<p>
+CPU-redirect command:
+</p>
+<pre class="example">
+sudo ./xdp_redirect_cpu --dev i40e2 --qsize 64 --cpu 4 --prog xdp_cpu_map0
+</pre>
+
+<p>
+Notice the result is very impressive compared to RX-CPU raw-drop:
+</p>
+<ul class="org-ul">
+<li>4,727,128 pps - baseline(i40e): iptables-raw drop</li>
+<li>7,004,219 pps - this test: iptables-raw drop on remote CPU</li>
+<li>Diff +2,277,092 pps</li>
+<li>Diff (1/4727128-1/7004220)*10^9 = 68.77 ns</li>
+</ul>
+
+<pre class="example">
+Running XDP/eBPF prog_name:xdp_cpu_map0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          2       17,717,224     0           0          
+XDP-RX          total   17,717,224     0          
+cpumap-enqueue    2:4   17,717,226     10,713,002  8.00       bulk-average
+cpumap-enqueue  sum:4   17,717,226     10,713,002  8.00       bulk-average
+cpumap_kthread  4       7,004,219      0           0          
+cpumap_kthread  total   7,004,219      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+
+2nd remote XDP/eBPF prog_name: xdp_redirect_dummy
+XDP-cpumap      CPU:to  xdp-pass       xdp-drop    xdp-redir
+xdp-in-kthread  4       7,004,220      0           0         
+xdp-in-kthread  total   7,004,220      0           0         
+</pre>
+
+<p>
+With disabled mprog:
+</p>
+<pre class="example">
+Running XDP/eBPF prog_name:xdp_cpu_map0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          2       17,861,630     0           0          
+XDP-RX          total   17,861,630     0          
+cpumap-enqueue    2:4   17,861,631     10,731,216  8.00       bulk-average
+cpumap-enqueue  sum:4   17,861,631     10,731,216  8.00       bulk-average
+cpumap_kthread  4       7,130,415      0           0          
+cpumap_kthread  total   7,130,415      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0     
+</pre>
+
+<p>
+Diff vs mprog:
+</p>
+<ul class="org-ul">
+<li>(7130415-7004220) = 126195 pps</li>
+<li>(1/7130415-1/7004220)*10^9 = -2.53 ns</li>
+</ul>
+</div>
+
+<div id="outline-container-Touch-data-on-RX-CPU---iptables-raw-drop" class="outline-4">
+<h4 id="Touch-data-on-RX-CPU---iptables-raw-drop"><a href="#Touch-data-on-RX-CPU---iptables-raw-drop">Touch data on RX-CPU + iptables-raw drop</a></h4>
+<div class="outline-text-4" id="text-Touch-data-on-RX-CPU---iptables-raw-drop">
+<p>
+Using prog <code>prog_name:xdp_cpu_map1_touch_data</code> we can force RX-CPU to touch
+payload, as this will show cost of moving these cache-lines across the CPUs.
+</p>
+
+<p>
+XDP-redirect command:
+</p>
+<pre class="example">
+sudo ./xdp_redirect_cpu --dev i40e2 --qsize 64 --cpu 4 --prog xdp_cpu_map1_touch_data
+</pre>
+
+<p>
+Output:
+</p>
+<pre class="example">
+Running XDP/eBPF prog_name:xdp_cpu_map1_touch_data
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          2       17,220,167     0           0          
+XDP-RX          total   17,220,167     0          
+cpumap-enqueue    2:4   17,220,165     10,748,391  8.00       bulk-average
+cpumap-enqueue  sum:4   17,220,165     10,748,391  8.00       bulk-average
+cpumap_kthread  4       6,471,781      0           0          
+cpumap_kthread  total   6,471,781      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+
+2nd remote XDP/eBPF prog_name: xdp_redirect_dummy
+XDP-cpumap      CPU:to  xdp-pass       xdp-drop    xdp-redir
+xdp-in-kthread  4       6,471,781      0           0         
+xdp-in-kthread  total   6,471,781      0           0         
+</pre>
+
+<p>
+Compared against: 7,004,220 pps
+</p>
+<ul class="org-ul">
+<li>(6471781-7004220) =  -532439 pps</li>
+<li>(1/6471781-1/7004220)*10^9 = 11.75 ns</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-RX-CPU-do-hashing-of-packets---iptables-raw-drop" class="outline-4">
+<h4 id="RX-CPU-do-hashing-of-packets---iptables-raw-drop"><a href="#RX-CPU-do-hashing-of-packets---iptables-raw-drop">RX-CPU do hashing of packets + iptables-raw drop</a></h4>
+<div class="outline-text-4" id="text-RX-CPU-do-hashing-of-packets---iptables-raw-drop">
+<p>
+Do a full parsing of the packet and calculate a hash in RX CPU.
+</p>
+
+<p>
+XDP-redirect command:
+</p>
+<pre class="example">
+sudo ./xdp_redirect_cpu --dev i40e2 --qsize 64 --cpu 4 \
+ --prog xdp_cpu_map5_lb_hash_ip_pairs
+</pre>
+
+<p>
+Output:
+</p>
+<pre class="example">
+Running XDP/eBPF prog_name:xdp_cpu_map5_lb_hash_ip_pairs
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          2       12,740,194     0           0          
+XDP-RX          total   12,740,194     0          
+cpumap-enqueue    2:4   12,740,190     6,274,416   8.00       bulk-average
+cpumap-enqueue  sum:4   12,740,190     6,274,416   8.00       bulk-average
+cpumap_kthread  4       6,465,781      0           0          
+cpumap_kthread  total   6,465,781      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+
+2nd remote XDP/eBPF prog_name: xdp_redirect_dummy
+XDP-cpumap      CPU:to  xdp-pass       xdp-drop    xdp-redir
+xdp-in-kthread  4       6,465,782      0           0         
+xdp-in-kthread  total   6,465,782      0           0         
+</pre>
+
+<p>
+There is almost no performance change on target-CPU running <code>cpumap_kthread</code>.
+</p>
+
+<p>
+The XDP-RX CPU performance is reduced significant:
+</p>
+<ul class="org-ul">
+<li>From: 17,220,167 pps</li>
+<li>To  : 12,740,190 pps</li>
+</ul>
+
+<p>
+But it doesn't really matter, as the processing capacity on target/remote
+CPU is the bottleneck anyhow.  Thus, we have cycles to spare on RX-CPU.
+</p>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Baseline-for-patchset" class="outline-2">
+<h2 id="Baseline-for-patchset"><a href="#Baseline-for-patchset">Baseline for patchset</a></h2>
+<div class="outline-text-2" id="text-Baseline-for-patchset">
+<p>
+Question: Does this patchset introduce any performance regressions?
+</p>
+
+<p>
+As can be seen in <a href="cpumap03-optimizations.html">cpumap03-optimizations.html</a> the cpumap.c code have
+been carefully optimized. We want to make sure, these changes doesn't revert
+part of those performance gains.
+</p>
+</div>
+
+<div id="outline-container-What-to-watch-out-for" class="outline-3">
+<h3 id="What-to-watch-out-for"><a href="#What-to-watch-out-for">What to watch out for</a></h3>
+<div class="outline-text-3" id="text-What-to-watch-out-for">
+<p>
+Jesper and Lorenzo have already adjusted (in different patchset versions)
+where the prefetchw of struct-page happens. It is important to understand
+that this is a cache-coherency protocol optimization (e.g. see <a href="https://en.wikipedia.org/wiki/MESIF_protocol">MESIF</a>). The
+memory backing struct-page is operated on with atomic refcnt operations.
+Thus, on RX-CPU it is in Modified (cache-coherency protocol) state, making
+it expensive to access on our target/remote CPU. The prefetchw is asking the
+CPU to start moving these cachelines into another cache-coherency state, in
+the background before we access them.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Baseline-kernel-git-info" class="outline-3">
+<h3 id="Baseline-kernel-git-info"><a href="#Baseline-kernel-git-info">Baseline kernel git info</a></h3>
+<div class="outline-text-3" id="text-Baseline-kernel-git-info">
+<p>
+Popped all patches, testing a baseline kernel at commit:
+</p>
+<ul class="org-ul">
+<li>69119673bd50 ("Merge git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net") (Author: Linus Torvalds)</li>
+</ul>
+
+<p>
+Kernel:
+</p>
+<ul class="org-ul">
+<li>Linux broadwell 5.8.0-rc1-bpf-next-lorenzo-baseline+ #10 SMP PREEMPT</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-Baseline--CPU-redirect--i40e---UdpNoPorts--4-196-176-pps" class="outline-3">
+<h3 id="Baseline--CPU-redirect--i40e---UdpNoPorts--4-196-176-pps"><a href="#Baseline--CPU-redirect--i40e---UdpNoPorts--4-196-176-pps">Baseline: CPU-redirect (i40e): UdpNoPorts: 4,196,176 pps</a></h3>
+<div class="outline-text-3" id="text-Baseline--CPU-redirect--i40e---UdpNoPorts--4-196-176-pps">
+<p>
+(Unloaded netfilter modules)
+</p>
+
+<p>
+XDP-redirect CPU command:
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">sudo ./xdp_redirect_cpu --dev i40e2 --qsize 64 --cpu 4 --prog xdp_cpu_map0
+</pre>
+</div>
+
+<p>
+Result: 4,196,176 pps
+</p>
+
+<p>
+This result is very close to the patchset 4,202,953 pps (i40e) without the
+"mprog" loaded (with "mprog" 4,102,929 pps). <b>Conclusion</b>: No regression
+observed.
+</p>
+
+<pre class="example">
+Running XDP/eBPF prog_name:xdp_cpu_map0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          2       18,683,297     0           0          
+XDP-RX          total   18,683,297     0          
+cpumap-enqueue    2:4   18,683,293     14,487,120  8.00       bulk-average
+cpumap-enqueue  sum:4   18,683,293     14,487,120  8.00       bulk-average
+cpumap_kthread  4       4,196,176      0           0          
+cpumap_kthread  total   4,196,176      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+
+<pre class="example">
+$ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
+#kernel
+IpInReceives                    4194101            0.0
+IpInDelivers                    4194101            0.0
+IpOutRequests                   1                  0.0
+IcmpOutMsgs                     1                  0.0
+IcmpOutDestUnreachs             1                  0.0
+IcmpMsgOutType3                 1                  0.0
+UdpNoPorts                      4194108            0.0
+IpExtInOctets                   192925058          0.0
+IpExtOutOctets                  74                 0.0
+IpExtInNoECTPkts                4194023            0.0
+</pre>
+</div>
+</div>
+<div id="outline-container-Baseline--CPU-redirect--i40e---iptables-raw-drop--7-012-141-pps" class="outline-3">
+<h3 id="Baseline--CPU-redirect--i40e---iptables-raw-drop--7-012-141-pps"><a href="#Baseline--CPU-redirect--i40e---iptables-raw-drop--7-012-141-pps">Baseline: CPU-redirect (i40e): iptables-raw drop: 7,012,141 pps</a></h3>
+<div class="outline-text-3" id="text-Baseline--CPU-redirect--i40e---iptables-raw-drop--7-012-141-pps">
+<p>
+Drop packets in iptables-raw. Note, this cause iptables modules to be loaded.
+</p>
+<pre class="example">
+iptables -t raw -I PREROUTING -p udp --dport 9 -j DROP
+</pre>
+
+<p>
+Result: 7,012,141
+</p>
+<ul class="org-ul">
+<li>Conclusion: No regression observed</li>
+</ul>
+
+<pre class="example">
+sudo ./xdp_redirect_cpu --dev i40e2 --qsize 64 --cpu 4 --prog xdp_cpu_map0
+Running XDP/eBPF prog_name:xdp_cpu_map0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          2       18,643,500     0           0          
+XDP-RX          total   18,643,500     0          
+cpumap-enqueue    2:4   18,643,503     11,631,361  8.00       bulk-average
+cpumap-enqueue  sum:4   18,643,503     11,631,361  8.00       bulk-average
+cpumap_kthread  4       7,012,141      0           0          
+cpumap_kthread  total   7,012,141      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-Testing-redirect---patchset-v10--on-driver-i40e" class="outline-2">
+<h2 id="Testing-redirect---patchset-v10--on-driver-i40e"><a href="#Testing-redirect---patchset-v10--on-driver-i40e">Testing redirect - patchset(v10) on driver i40e</a></h2>
+<div class="outline-text-2" id="text-Testing-redirect---patchset-v10--on-driver-i40e">
+<p>
+A new advanced feature that comes with this patchset is being able to
+XDP_REDIRECT again on the target/remote CPU. Remember first step was to
+XDP_REDIRECT the frame via cpumap to a remote/target CPU.  On this CPU we
+can now run a "2nd" XDP program, that can redirect again.
+</p>
+
+<p>
+This can be used for solving RSS-hashing issues, where the hardware chose to
+only deliver packets to a single CPU, in a multi-CPU system.  This issue
+have been observed on EspressoBin and with ixgbe with double-tagged VLANs.
+</p>
+</div>
+
+<div id="outline-container-Normal-redirect--i40e---back-same-device--12-560-354-pps" class="outline-3">
+<h3 id="Normal-redirect--i40e---back-same-device--12-560-354-pps"><a href="#Normal-redirect--i40e---back-same-device--12-560-354-pps">Normal-redirect (i40e): back same device: 12,560,354 pps</a></h3>
+<div class="outline-text-3" id="text-Normal-redirect--i40e---back-same-device--12-560-354-pps">
+<p>
+XDP-redirect back-same device command:
+</p>
+<pre class="example">
+sudo ./xdp_redirect_map i40e2 i40e2
+input: 9 output: 9
+libbpf: Kernel error message: XDP program already attached
+WARN: link set xdp fd failed on 9
+ifindex 9:    8501803 pkt/s
+ifindex 9:   12574709 pkt/s
+ifindex 9:   12573984 pkt/s
+ifindex 9:   12574664 pkt/s
+ifindex 9:   12572677 pkt/s
+ifindex 9:   12570511 pkt/s
+ifindex 9:   12576605 pkt/s
+ifindex 9:   12571091 pkt/s
+ifindex 9:   12568339 pkt/s
+ifindex 9:   12522768 pkt/s
+ifindex 9:   12556959 pkt/s
+</pre>
+
+<p>
+The numbers from <code>xdp_redirect_map</code> cannot be trusted as it counts RX
+packets, and don't know if there packets were successfully transmitted.
+</p>
+
+<p>
+Thus, results are taking from ethtool (<code>ethtool_stats.pl</code>) instead:
+</p>
+<ul class="org-ul">
+<li>12,560,354 &lt;= tx_unicast packets/sec</li>
+</ul>
+
+<pre class="example">
+Show adapter(s) (i40e2) statistics (ONLY that changed!)
+Ethtool(i40e2   ) stat:   2900616074 (  2,900,616,074) &lt;= port.rx_bytes /sec
+Ethtool(i40e2   ) stat:     13180998 (     13,180,998) &lt;= port.rx_dropped /sec
+Ethtool(i40e2   ) stat:     45322138 (     45,322,138) &lt;= port.rx_size_64 /sec
+Ethtool(i40e2   ) stat:     45322127 (     45,322,127) &lt;= port.rx_unicast /sec
+Ethtool(i40e2   ) stat:    803862264 (    803,862,264) &lt;= port.tx_bytes /sec
+Ethtool(i40e2   ) stat:     12560338 (     12,560,338) &lt;= port.tx_size_64 /sec
+Ethtool(i40e2   ) stat:     12560327 (     12,560,327) &lt;= port.tx_unicast /sec
+Ethtool(i40e2   ) stat:    753621258 (    753,621,258) &lt;= rx-3.bytes /sec
+Ethtool(i40e2   ) stat:     12560354 (     12,560,354) &lt;= rx-3.packets /sec
+Ethtool(i40e2   ) stat:    753619361 (    753,619,361) &lt;= rx_bytes /sec
+Ethtool(i40e2   ) stat:     19580801 (     19,580,801) &lt;= rx_dropped /sec
+Ethtool(i40e2   ) stat:     12560323 (     12,560,323) &lt;= rx_packets /sec
+Ethtool(i40e2   ) stat:     32141140 (     32,141,140) &lt;= rx_unicast /sec
+Ethtool(i40e2   ) stat:     12560354 (     12,560,354) &lt;= tx_unicast /sec
+</pre>
+</div>
+</div>
+
+<div id="outline-container-CPU-redirect--i40e---2nd-XDP_REDIRECT--8-799-342-pps" class="outline-3">
+<h3 id="CPU-redirect--i40e---2nd-XDP_REDIRECT--8-799-342-pps"><a href="#CPU-redirect--i40e---2nd-XDP_REDIRECT--8-799-342-pps">CPU-redirect (i40e): 2nd XDP_REDIRECT: 8,799,342 pps</a></h3>
+<div class="outline-text-3" id="text-CPU-redirect--i40e---2nd-XDP_REDIRECT--8-799-342-pps">
+<p>
+The command to double-redirect is a bit long:
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">sudo ./xdp_redirect_cpu --dev i40e2 --qsize 64 --cpu 4 --prog xdp_cpu_map0 <span style="font-style: italic;">\</span>
+  --mprog-name xdp_redirect <span style="font-style: italic;">\</span>
+  --redirect-map tx_port <span style="font-style: italic;">\</span>
+  --redirect-device i40e2
+</pre>
+</div>
+
+<pre class="example">
+Running XDP/eBPF prog_name:xdp_cpu_map0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          1       17,533,635     0           0          
+XDP-RX          total   17,533,635     0          
+cpumap-enqueue    1:4   17,533,609     8,732,956   8.00       bulk-average
+cpumap-enqueue  sum:4   17,533,609     8,732,956   8.00       bulk-average
+cpumap_kthread  4       8,800,644      0           0          
+cpumap_kthread  total   8,800,644      0           0          
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+
+2nd remote XDP/eBPF prog_name: xdp_redirect
+XDP-cpumap      CPU:to  xdp-pass       xdp-drop    xdp-redir
+xdp-in-kthread  4       0              0           8,800,645 
+xdp-in-kthread  total   0              0           8,800,645 
+</pre>
+
+<p>
+ethtool_stats.pl:
+</p>
+<pre class="example">
+Show adapter(s) (i40e2) statistics (ONLY that changed!)
+Ethtool(i40e2   ) stat:   2876960152 (  2,876,960,152) &lt;= port.rx_bytes /sec
+Ethtool(i40e2   ) stat:     12561014 (     12,561,014) &lt;= port.rx_dropped /sec
+Ethtool(i40e2   ) stat:     44952355 (     44,952,355) &lt;= port.rx_size_64 /sec
+Ethtool(i40e2   ) stat:     44952501 (     44,952,501) &lt;= port.rx_unicast /sec
+Ethtool(i40e2   ) stat:    563159066 (    563,159,066) &lt;= port.tx_bytes /sec
+Ethtool(i40e2   ) stat:      8799338 (      8,799,338) &lt;= port.tx_size_64 /sec
+Ethtool(i40e2   ) stat:      8799360 (      8,799,360) &lt;= port.tx_unicast /sec
+Ethtool(i40e2   ) stat:   1051485080 (  1,051,485,080) &lt;= rx-1.bytes /sec
+Ethtool(i40e2   ) stat:     17524751 (     17,524,751) &lt;= rx-1.packets /sec
+Ethtool(i40e2   ) stat:    527959995 (    527,959,995) &lt;= rx_bytes /sec
+Ethtool(i40e2   ) stat:     14866622 (     14,866,622) &lt;= rx_dropped /sec
+Ethtool(i40e2   ) stat:      8799333 (      8,799,333) &lt;= rx_packets /sec
+Ethtool(i40e2   ) stat:     32391369 (     32,391,369) &lt;= rx_unicast /sec
+Ethtool(i40e2   ) stat:      8799342 (      8,799,342) &lt;= tx_unicast /sec
+</pre>
+
+<p>
+Using result: 8,799,342 pps (tx_unicast)
+</p>
+
+<p>
+Compared to directly redirect:
+</p>
+<ul class="org-ul">
+<li>12560354-8799342 = 3761012 pps</li>
+<li>(1/12560354-1/8799342)*10^9 = -34.02 ns</li>
+</ul>
+
+<p>
+The pps performance difference looks big (3.76 Mpps), but the overhead in
+nano-seconds are only 34.02 ns. Loading iptables (only filter table) with an
+empty ruleset increase packet overhead with 26.76 ns.
+</p>
+
+<p>
+Thus, the results are actually quite good. Only having an overhead of
+34.02ns, from moving the packet to a remote CPU and redirecting it again is
+actually pretty low-overhead.
+</p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-Testing-XDP_DROP---patchset-v10--on-driver-i40e" class="outline-2">
+<h2 id="Testing-XDP_DROP---patchset-v10--on-driver-i40e"><a href="#Testing-XDP_DROP---patchset-v10--on-driver-i40e">Testing XDP_DROP - patchset(v10) on driver i40e</a></h2>
+<div class="outline-text-2" id="text-Testing-XDP_DROP---patchset-v10--on-driver-i40e">
+</div>
+<div id="outline-container-XDP_DROP--i40e--on-RX-CPU--32-042-560-pps" class="outline-3">
+<h3 id="XDP_DROP--i40e--on-RX-CPU--32-042-560-pps"><a href="#XDP_DROP--i40e--on-RX-CPU--32-042-560-pps">XDP_DROP (i40e) on RX-CPU: 32,042,560 pps</a></h3>
+<div class="outline-text-3" id="text-XDP_DROP--i40e--on-RX-CPU--32-042-560-pps">
+<p>
+Result: 32,042,560 (rx-1.packets) packets/sec
+</p>
+
+<p>
+Usign xdp1 to drop packets on RX-CPU:
+</p>
+<pre class="example">
+ sudo ./xdp1 i40e2
+proto 17:   18219056 pkt/s
+proto 17:   32095399 pkt/s
+proto 17:   32091899 pkt/s
+proto 17:   32095376 pkt/s
+proto 17:   32021001 pkt/s
+</pre>
+
+<pre class="example">
+Show adapter(s) (i40e2) statistics (ONLY that changed!)
+Ethtool(i40e2   ) stat:   2917377586 (  2,917,377,586) &lt;= port.rx_bytes /sec
+Ethtool(i40e2   ) stat:     11915658 (     11,915,658) &lt;= port.rx_dropped /sec
+Ethtool(i40e2   ) stat:     45584005 (     45,584,005) &lt;= port.rx_size_64 /sec
+Ethtool(i40e2   ) stat:     45584023 (     45,584,023) &lt;= port.rx_unicast /sec
+Ethtool(i40e2   ) stat:   1922553617 (  1,922,553,617) &lt;= rx-1.bytes /sec
+Ethtool(i40e2   ) stat:     32042560 (     32,042,560) &lt;= rx-1.packets /sec
+Ethtool(i40e2   ) stat:      1625810 (      1,625,810) &lt;= rx_dropped /sec
+Ethtool(i40e2   ) stat:     33668368 (     33,668,368) &lt;= rx_unicast /sec
+</pre>
+
+<p>
+Perf stats:
+</p>
+</div>
+</div>
+
+<div id="outline-container-CPU-redirect--i40e---XDP_DROP-on-remote-CPU" class="outline-3">
+<h3 id="CPU-redirect--i40e---XDP_DROP-on-remote-CPU"><a href="#CPU-redirect--i40e---XDP_DROP-on-remote-CPU">CPU-redirect (i40e): XDP_DROP on remote CPU</a></h3>
+<div class="outline-text-3" id="text-CPU-redirect--i40e---XDP_DROP-on-remote-CPU">
+<div class="org-src-container">
+<pre class="src src-sh">sudo ./xdp_redirect_cpu --dev i40e2 --qsize 64 --cpu 4 --prog xdp_cpu_map0 <span style="font-style: italic;">\</span>
+  --mprog-filename xdp1_kern.o <span style="font-style: italic;">\</span>
+  --mprog-name xdp1
+</pre>
+</div>
+
+<p>
+Output:
+</p>
+<pre class="example">
+Running XDP/eBPF prog_name:xdp_cpu_map0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          1       18,316,778     0           0          
+XDP-RX          total   18,316,778     0          
+cpumap-enqueue    1:4   18,316,774     35,383      8.00       bulk-average
+cpumap-enqueue  sum:4   18,316,774     35,383      8.00       bulk-average
+cpumap_kthread  4       18,281,394     0           2,683      sched
+cpumap_kthread  total   18,281,394     0           2,683      sched-sum
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+
+2nd remote XDP/eBPF prog_name: xdp1
+XDP-cpumap      CPU:to  xdp-pass       xdp-drop    xdp-redir
+xdp-in-kthread  4       0              18,281,395  0         
+xdp-in-kthread  total   0              18,281,395  0         
+</pre>
+
+<p>
+Result: 18,281,395 pps
+</p>
+<ul class="org-ul">
+<li>Cost per packet: 54.70 ns ((1/18281395)*10^9)</li>
+</ul>
+
+<p>
+Comparing to XDP_DROP directly on RX-CPU (32,042,560 pps) looks like a huge
+difference, but it is actually smaller than you think. The difference might
+be large in PPS, but at these high PPS speeds a small change in per packet
+overhead have a huge PPS effect. The difference in overhead in nano-seconds
+is only: 23.68ns ((1/18281395-1/32237558)*10^9).
+</p>
+
+<p>
+It is actually very impressive, that the overhead this low 23.68ns, to move
+a packet between CPUs. As a single cache-miss on this system cost around
+17.45 ns (measured with lmbench lat_mem_rd). (extra info L2 cache 5.36 ns)
+</p>
+
+<p>
+Output from perf stat:
+</p>
+<pre class="example">
+perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -e L1-icache-load-misses -r 4 sleep 1
+
+Performance counter stats for 'CPU(s) 4' (4 runs):
+
+ 3.751.072.860   cycles                                             ( +-  0,02% )
+ 4.939.611.693   instructions          # 1,32  insn per cycle       ( +-  0,02% )
+    94.731.692   cache-references                                   ( +-  0,18% )
+           916   cache-misses          # 0,001 % of all cache refs  ( +- 32,90% )
+   970.593.949   branches:k                                         ( +-  0,02% )
+     4.401.589   branch-misses:k       # 0,45% of all branches      ( +-  0,61% )
+       598.914   l2_rqsts.all_code_rd                               ( +-  0,58% )
+       524.829   l2_rqsts.code_rd_hit                               ( +-  0,50% )
+        73.897   l2_rqsts.code_rd_miss                              ( +-  1,29% )
+       175.548   L1-icache-load-misses                              ( +-  0,75% )
+
+    1,00127269 +- 0,00000840 seconds time elapsed  ( +-  0,00% )
+</pre>
+
+<p>
+The perf stat measurements also show that we don't have any real
+cache-misses.
+</p>
+
+<p>
+The 1,32 instructions per cycle is surprisingly low. There are indications
+that this caused by <code>page_frag_free()</code> call, as perf record of
+<code>instructions</code> show that 25% of all instructions are spend there (in
+arch_atomic_dec_and_test() <code>lock   decl   0x34(%rdi)</code>).
+</p>
+
+<p>
+The cache-references (94.731.692) divided by (18,281,395) packets per sec
+(94731692/18281395) show that we have 5.18 cache-references per packet.
+</p>
+
+<p>
+The (4.406.506) branch-misses:k is lower than the packets per sec. Thus, we
+don't have a miss per packet, which is good.
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-CPU-redirect--i40e---XDP_DROP-on-remote-CPU--Optimize-attempt-1-" class="outline-3">
+<h3 id="CPU-redirect--i40e---XDP_DROP-on-remote-CPU--Optimize-attempt-1-"><a href="#CPU-redirect--i40e---XDP_DROP-on-remote-CPU--Optimize-attempt-1-">CPU-redirect (i40e): XDP_DROP on remote CPU (Optimize attempt#1)</a></h3>
+<div class="outline-text-3" id="text-CPU-redirect--i40e---XDP_DROP-on-remote-CPU--Optimize-attempt-1-">
+<p>
+In <code>cpu_map_bpf_prog_run_xdp()</code> delay calling xdp_return_frame() until end
+of loop, as it is calling <code>page_frag_free()</code>, that looks like it affects
+insn per cycle numbers. This actually helped from 1,32 to 1,38 insn per cycle.
+</p>
+
+<pre class="example">
+perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -e L1-icache-load-misses -r 4 sleep 1
+
+Performance counter stats for 'CPU(s) 4' (4 runs):
+
+    3.701.857.577      cycles                                                        ( +-  0,09% )
+    5.111.116.087      instructions              #    1,38  insn per cycle           ( +-  0,07% )
+       94.174.479      cache-references                                              ( +-  0,28% )
+            1.520      cache-misses              #    0,002 % of all cache refs      ( +- 29,42% )
+    1.001.166.319      branches:k                                                    ( +-  0,11% )
+        2.436.848      branch-misses:k           #    0,24% of all branches          ( +-  0,53% )
+        3.278.129      l2_rqsts.all_code_rd                                          ( +-  2,67% )
+        2.592.240      l2_rqsts.code_rd_hit                                          ( +-  3,03% )
+          685.869      l2_rqsts.code_rd_miss                                         ( +- 10,03% )
+        1.030.323      L1-icache-load-misses                                         ( +-  6,02% )
+
+         1,001128 +- 0,000144 seconds time elapsed  ( +-  0,01% )
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Observations" class="outline-2">
+<h2 id="Observations"><a href="#Observations">Observations</a></h2>
+<div class="outline-text-2" id="text-Observations">
+</div>
+<div id="outline-container-Strange--kmem_cache_alloc_bulk-called-on-all-XDP_DROP" class="outline-3">
+<h3 id="Strange--kmem_cache_alloc_bulk-called-on-all-XDP_DROP"><a href="#Strange--kmem_cache_alloc_bulk-called-on-all-XDP_DROP">Strange: kmem_cache_alloc_bulk called on all XDP_DROP</a></h3>
+<div class="outline-text-3" id="text-Strange--kmem_cache_alloc_bulk-called-on-all-XDP_DROP">
+<p>
+Looking at perf reports, <code>kmem_cache_alloc_bulk()</code> is still getting called
+even for cases where all packets are dropped via XDP_DROP.
+</p>
+
+<pre class="example">
+sudo ./xdp_redirect_cpu --dev mlx5p1 --qsize 64 --cpu 4 --prog xdp_cpu_map0 \
+  --mprog-filename xdp1_kern.o   --mprog-name xdp1
+
+Running XDP/eBPF prog_name:xdp_cpu_map0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          2       13,052,901     0           0          
+XDP-RX          total   13,052,901     0          
+cpumap-enqueue    2:4   13,052,898     1,656,902   8.00       bulk-average
+cpumap-enqueue  sum:4   13,052,898     1,656,902   8.00       bulk-average
+cpumap_kthread  4       11,395,994     0           274        sched
+cpumap_kthread  total   11,395,994     0           274        sched-sum
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+
+2nd remote XDP/eBPF prog_name: xdp1
+XDP-cpumap      CPU:to  xdp-pass       xdp-drop    xdp-redir
+xdp-in-kthread  4       0              11,395,995  0         
+xdp-in-kthread  total   0              11,395,995  0         
+
+Interrupted: Removing XDP program on ifindex:6 device:mlx5p1
+</pre>
+
+<p>
+Simply do this code change:
+</p>
+<div class="org-src-container">
+<pre class="src src-diff">diff --git a/kernel/bpf/cpumap.c b/kernel/bpf/cpumap.c
+index 0cef6f43a4cc..d91d75365cde 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/kernel/bpf/cpumap.c</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/kernel/bpf/cpumap.c</span>
+<span style="font-weight: bold;">@@ -364,8 +364,9 @@</span><span style="font-weight: bold;"> static int cpu_map_kthread_run(void *data)</span>
+                /* Support running another XDP prog on this CPU */
+                nframes = cpu_map_bpf_prog_run_xdp(rcpu, xdp_frames, n, &amp;stats);
+
+-               m = kmem_cache_alloc_bulk(skbuff_head_cache, gfp,
+-                                         nframes, skbs);
++               if (nframes)
++                       m = kmem_cache_alloc_bulk(skbuff_head_cache, gfp,
++                                                 nframes, skbs);
+                if (unlikely(m == 0)) {
+                        for (i = 0; i &lt; nframes; i++)
+                                skbs[i] = NULL; /* effect: xdp_return_frame */
+</pre>
+</div>
+
+<p>
+Results after change, tested on mlx5:
+</p>
+<pre class="example">
+Running XDP/eBPF prog_name:xdp_cpu_map0
+XDP-cpumap      CPU:to  pps            drop-pps    extra-info
+XDP-RX          5       13,674,323     0           0          
+XDP-RX          total   13,674,323     0          
+cpumap-enqueue    5:4   13,674,323     193,984     8.00       bulk-average
+cpumap-enqueue  sum:4   13,674,323     193,984     8.00       bulk-average
+cpumap_kthread  4       13,480,346     0           12,016     sched
+cpumap_kthread  total   13,480,346     0           12,016     sched-sum
+redirect_err    total   0              0          
+xdp_exception   total   0              0          
+
+2nd remote XDP/eBPF prog_name: xdp1
+XDP-cpumap      CPU:to  xdp-pass       xdp-drop    xdp-redir
+xdp-in-kthread  4       0              13,480,347  0         
+xdp-in-kthread  total   0              13,480,347  0         
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Date: 2020-06-19 Fri 16:39</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
