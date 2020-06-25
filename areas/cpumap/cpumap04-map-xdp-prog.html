@@ -30,6 +30,7 @@
 <ul>
 <li><a href="#V9-reference">V9 reference</a></li>
 <li><a href="#V10-reference">V10 reference</a></li>
+<li><a href="#Corresponding-patchset">Corresponding patchset</a></li>
 </ul>
 </li>
 <li><a href="#Testlab-machine">Testlab machine</a></li>
@@ -85,6 +86,12 @@
 <li><a href="#Observations">Observations</a>
 <ul>
 <li><a href="#Strange--kmem_cache_alloc_bulk-called-on-all-XDP_DROP">Strange: kmem_cache_alloc_bulk called on all XDP_DROP</a></li>
+<li><a href="#Optimize-attempt--Move-xdp_rxq_info-outside-func-call">Optimize-attempt: Move xdp_rxq_info outside func call</a>
+<ul>
+<li><a href="#struct-xdp_rxq_info">struct xdp_rxq_info</a></li>
+<li><a href="#empty-map-prog-no-func-call">empty map-prog no func call</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -150,6 +157,19 @@ The V10 branch is rebased on commit:
 </p>
 <ul class="org-ul">
 <li>808e105a9c9c ("e1000e: fix unused-function warning") (Author: Arnd Bergmann)</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-Corresponding-patchset" class="outline-3">
+<h3 id="Corresponding-patchset"><a href="#Corresponding-patchset">Corresponding patchset</a></h3>
+<div class="outline-text-3" id="text-Corresponding-patchset">
+<p>
+This test report correspond to upstream patchset V3 emails:
+</p>
+<ul class="org-ul">
+<li>[PATCH v3 bpf-next 0/9] introduce support for XDP programs in CPUMAP</li>
+<li><a href="https://lore.kernel.org/bpf/cover.1592947694.git.lorenzo@kernel.org/">https://lore.kernel.org/bpf/cover.1592947694.git.lorenzo@kernel.org/</a></li>
 </ul>
 </div>
 </div>
@@ -1253,10 +1273,73 @@ xdp-in-kthread  total   0              13,480,347  0
 </pre>
 </div>
 </div>
+
+<div id="outline-container-Optimize-attempt--Move-xdp_rxq_info-outside-func-call" class="outline-3">
+<h3 id="Optimize-attempt--Move-xdp_rxq_info-outside-func-call"><a href="#Optimize-attempt--Move-xdp_rxq_info-outside-func-call">Optimize-attempt: Move xdp_rxq_info outside func call</a></h3>
+<div class="outline-text-3" id="text-Optimize-attempt--Move-xdp_rxq_info-outside-func-call">
+<p>
+The function call <code>cpu_map_bpf_prog_run_xdp()</code> doesn't get inlined by the
+compiler.
+</p>
+
+<p>
+This cause two potential issues:
+</p>
+<ol class="org-ol">
+<li>A struct xdp_rxq_info is "allocated" on call-stack</li>
+<li>If no map-prog is configured function is still invoked.</li>
+</ol>
+</div>
+
+<div id="outline-container-struct-xdp_rxq_info" class="outline-4">
+<h4 id="struct-xdp_rxq_info"><a href="#struct-xdp_rxq_info">struct xdp_rxq_info</a></h4>
+<div class="outline-text-4" id="text-struct-xdp_rxq_info">
+<p>
+The xdp_rxq_info have cache-line alignment restrictions, that cause it to be
+rather big (1-cacheline) to have on the callstack on each call. Attempt:
+Move xdp_rxq_info to <code>cpu_map_kthread_run()</code>. Result#1: Measurements doesn't
+show any performance difference.
+</p>
+</div>
+</div>
+
+<div id="outline-container-empty-map-prog-no-func-call" class="outline-4">
+<h4 id="empty-map-prog-no-func-call"><a href="#empty-map-prog-no-func-call">empty map-prog no func call</a></h4>
+<div class="outline-text-4" id="text-empty-map-prog-no-func-call">
+<p>
+Test via mprog-disable:
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">sudo ./xdp_redirect_cpu --dev DEVICE --qsize 64 <span style="font-style: italic;">\</span>
+ --cpu 4 --prog xdp_cpu_map0 --mprog-disable
+</pre>
+</div>
+
+<p>
+Before change:
+</p>
+<ul class="org-ul">
+<li>Mlx5: ipt-raw-drop: 4,578,109 pps</li>
+<li>i40e: ipt-raw-drop: 7,160,828 pps</li>
+</ul>
+
+<p>
+After:
+</p>
+<ul class="org-ul">
+<li>Mlx5: ipt-raw-drop: 4,524,810 pps</li>
+<li>i40e: ipt-raw-drop: 7,265,412 pps
+<ul class="org-ul">
+<li>(1/7160828-1/7265412)*10^9 = 2.01021152700000000000 ns</li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-06-19 Fri 16:39</p>
+<p class="date">Date: 2020-06-25 Thu 15:16</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
