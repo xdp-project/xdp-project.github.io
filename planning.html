@@ -29,9 +29,9 @@
 <li><a href="#Items-being-actively-worked-on">Items being actively worked on</a>
 <ul>
 <li><a href="#Multiple-XDP-program-on-a-single-NIC">Multiple-XDP program on a single NIC</a></li>
-<li><a href="#BPF-helper--Conntrack-lookup">BPF-helper: Conntrack lookup</a></li>
+<li><a href="#XDP-clone-multicast">XDP clone+multicast</a></li>
+<li><a href="#XDP-multi-frame-work">XDP multi-frame work</a></li>
 <li><a href="#XDP-egress-hook-programs">XDP egress hook/programs</a></li>
-<li><a href="#XDP-feature-bits">XDP-feature bits</a></li>
 <li><a href="#Consistency-for-statistics-with-XDP">Consistency for statistics with XDP</a></li>
 <li><a href="#BPF-helper--Bridge-lookup">BPF-helper: Bridge lookup</a></li>
 <li><a href="#Better--TX--ndo_xdp_xmit-resource-management">Better "TX" ndo_xdp_xmit resource management</a></li>
@@ -40,14 +40,18 @@
 <li><a href="#page_pool--measure-and-optimize-performance">page_pool: measure and optimize performance</a></li>
 <li><a href="#page_pool--use-in-SKB-free-return-path">page_pool: use in SKB free/return path</a></li>
 <li><a href="#page_pool--add-stats">page_pool: add stats</a></li>
-<li><a href="#XDP-multi-frame-work">XDP multi-frame work</a></li>
 </ul>
 </li>
 <li><a href="#Not-being-actively-worked-on">Not being actively worked on</a>
 <ul>
-<li><a href="#XDP-clone-multicast">XDP clone+multicast</a></li>
-<li><a href="#XDP-data-hard-end">XDP-data-hard-end</a></li>
 <li><a href="#BPF-helper--OvS-lookup">BPF-helper: OvS lookup</a></li>
+<li><a href="#BPF-helper--Conntrack-lookup">BPF-helper: Conntrack lookup</a></li>
+<li><a href="#XDP-feature-bits">XDP-feature bits</a></li>
+</ul>
+</li>
+<li><a href="#Finished-projects">Finished projects</a>
+<ul>
+<li><a href="#XDP-data-hard-end"><span class="done DONE">DONE</span> XDP-data-hard-end</a></li>
 </ul>
 </li>
 <li><a href="#Site-navigation">Site navigation</a></li>
@@ -71,11 +75,21 @@ This document tries to get an overview on who is working on what.
 </div>
 </div>
 
-<div id="outline-container-BPF-helper--Conntrack-lookup" class="outline-3">
-<h3 id="BPF-helper--Conntrack-lookup"><a href="#BPF-helper--Conntrack-lookup">BPF-helper: Conntrack lookup</a></h3>
-<div class="outline-text-3" id="text-BPF-helper--Conntrack-lookup">
+<div id="outline-container-XDP-clone-multicast" class="outline-3">
+<h3 id="XDP-clone-multicast"><a href="#XDP-clone-multicast">XDP clone+multicast</a></h3>
+<div class="outline-text-3" id="text-XDP-clone-multicast">
 <ul class="org-ul">
-<li>Assigned: Matt Cover &lt;werekraken@gmail.com&gt;</li>
+<li>Assigned: Hangbin</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-XDP-multi-frame-work" class="outline-3">
+<h3 id="XDP-multi-frame-work"><a href="#XDP-multi-frame-work">XDP multi-frame work</a></h3>
+<div class="outline-text-3" id="text-XDP-multi-frame-work">
+<ul class="org-ul">
+<li>Assigned: Amazon ("Jubran, Samih" &lt;sameehj@amazon.com&gt;)</li>
+<li>Reviewers/collaborators: Lorenzo and Eelco</li>
 </ul>
 </div>
 </div>
@@ -85,15 +99,6 @@ This document tries to get an overview on who is working on what.
 <div class="outline-text-3" id="text-XDP-egress-hook-programs">
 <ul class="org-ul">
 <li>Assigned: Ahern + jason Wang</li>
-</ul>
-</div>
-</div>
-
-<div id="outline-container-XDP-feature-bits" class="outline-3">
-<h3 id="XDP-feature-bits"><a href="#XDP-feature-bits">XDP-feature bits</a></h3>
-<div class="outline-text-3" id="text-XDP-feature-bits">
-<ul class="org-ul">
-<li>Assigned: Maybe Anton (Linode)</li>
 </ul>
 </div>
 </div>
@@ -173,46 +178,52 @@ This document tries to get an overview on who is working on what.
 </ul>
 </div>
 </div>
-
-<div id="outline-container-XDP-multi-frame-work" class="outline-3">
-<h3 id="XDP-multi-frame-work"><a href="#XDP-multi-frame-work">XDP multi-frame work</a></h3>
-<div class="outline-text-3" id="text-XDP-multi-frame-work">
-<ul class="org-ul">
-<li>Assigned: Amazon ("Jubran, Samih" &lt;sameehj@amazon.com&gt;)</li>
-</ul>
-</div>
-</div>
 </div>
 
 <div id="outline-container-Not-being-actively-worked-on" class="outline-2">
 <h2 id="Not-being-actively-worked-on"><a href="#Not-being-actively-worked-on">Not being actively worked on</a></h2>
 <div class="outline-text-2" id="text-Not-being-actively-worked-on">
 </div>
-<div id="outline-container-XDP-clone-multicast" class="outline-3">
-<h3 id="XDP-clone-multicast"><a href="#XDP-clone-multicast">XDP clone+multicast</a></h3>
-<div class="outline-text-3" id="text-XDP-clone-multicast">
-<ul class="org-ul">
-<li>Assigned: Nobody</li>
-</ul>
-</div>
-</div>
-
-<div id="outline-container-XDP-data-hard-end" class="outline-3">
-<h3 id="XDP-data-hard-end"><a href="#XDP-data-hard-end">XDP-data-hard-end</a></h3>
-<div class="outline-text-3" id="text-XDP-data-hard-end">
-<ul class="org-ul">
-<li>Assigned: nobody</li>
-<li>Needed for multi-frame</li>
-<li>Needed for SKB outside drivers</li>
-</ul>
-</div>
-</div>
-
 <div id="outline-container-BPF-helper--OvS-lookup" class="outline-3">
 <h3 id="BPF-helper--OvS-lookup"><a href="#BPF-helper--OvS-lookup">BPF-helper: OvS lookup</a></h3>
 <div class="outline-text-3" id="text-BPF-helper--OvS-lookup">
 <ul class="org-ul">
 <li>Assigned: Nobody</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-BPF-helper--Conntrack-lookup" class="outline-3">
+<h3 id="BPF-helper--Conntrack-lookup"><a href="#BPF-helper--Conntrack-lookup">BPF-helper: Conntrack lookup</a></h3>
+<div class="outline-text-3" id="text-BPF-helper--Conntrack-lookup">
+<ul class="org-ul">
+<li>Assigned: Matt Cover &lt;werekraken@gmail.com&gt;</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-XDP-feature-bits" class="outline-3">
+<h3 id="XDP-feature-bits"><a href="#XDP-feature-bits">XDP-feature bits</a></h3>
+<div class="outline-text-3" id="text-XDP-feature-bits">
+<ul class="org-ul">
+<li>Assigned: Maybe Anton (Linode)</li>
+<li>Note: Anton don't have time for this, find somebody else.</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Finished-projects" class="outline-2">
+<h2 id="Finished-projects"><a href="#Finished-projects">Finished projects</a></h2>
+<div class="outline-text-2" id="text-Finished-projects">
+</div>
+<div id="outline-container-XDP-data-hard-end" class="outline-3">
+<h3 id="XDP-data-hard-end"><a href="#XDP-data-hard-end"><span class="done DONE">DONE</span> XDP-data-hard-end</a></h3>
+<div class="outline-text-3" id="text-XDP-data-hard-end">
+<ul class="org-ul">
+<li>Assigned: Jesper</li>
+<li>Needed for multi-frame</li>
+<li>Needed for SKB outside drivers</li>
 </ul>
 </div>
 </div>
@@ -248,7 +259,7 @@ development. These are included in the following list:
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-04-08 Wed 13:29</p>
+<p class="date">Date: 2020-07-02 Thu 11:22</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
