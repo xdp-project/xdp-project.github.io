@@ -40,7 +40,14 @@
 <li><a href="#Storage-space-for-multi-buffer-references-segments">Storage space for multi-buffer references/segments</a></li>
 </ul>
 </li>
-<li><a href="#Proposal-1-for-XDP-multi-buffer-bpf-helpers">Proposal#1 for XDP multi-buffer bpf helpers</a></li>
+<li><a href="#Helper-proposal-1-for-XDP-multi-buffer-bpf-helpers">Helper-proposal#1 for XDP multi-buffer bpf helpers</a></li>
+<li><a href="#Helper-proposal-2-for-XDP-multi-buffer-bpf-helpers">Helper-proposal#2 for XDP multi-buffer bpf helpers</a></li>
+<li><a href="#Discuss--What-info-does-BPF-programmer-need-about-buffers-segments-">Discuss: What info does BPF-programmer need about buffers/segments?</a>
+<ul>
+<li><a href="#Info--multi-buffer-packet-">Info: multi-buffer packet?</a></li>
+<li><a href="#Info--Use-case-counting-bytes--accounting-">Info: Use-case counting bytes (accounting)</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -79,7 +86,10 @@ What are the use-cases for multi-buffer packets:
 </p>
 <ul class="org-ul">
 <li>Jumbo-frames</li>
-<li>Packet header split</li>
+<li>Packet header split
+<ul class="org-ul">
+<li>See: Google's <a href="https://netdevconf.info/0x14/session.html?talk-the-path-to-tcp-4k-mtu-and-rx-zerocopy">use-case at NetDevConf 0x14</a></li>
+</ul></li>
 <li>TSO/LRO</li>
 </ul>
 </div>
@@ -126,6 +136,11 @@ multi-buffer packets?
 The BPF XDP helper named: <code>bpf_xdp_adjust_tail</code> change length of the packet.
 Currently it can only shrink the packet (but we need to extended it to allow
 extending the tail, as e.g IPSEC and DNS-cache needs this).
+</p>
+
+<p>
+<b>UPDATE</b> helper can also <b>grow</b> packet size as of kernel v5.8 commit
+<a href="https://git.kernel.org/torvalds/c/c8741e2bfe87">c8741e2bfe87</a> ("xdp: Allow bpf_xdp_adjust_tail() to grow packet size").
 </p>
 
 <p>
@@ -293,15 +308,21 @@ Update: This unification has already been done (see <a href="https://lore.kernel
 </div>
 </div>
 
-<div id="outline-container-Proposal-1-for-XDP-multi-buffer-bpf-helpers" class="outline-2">
-<h2 id="Proposal-1-for-XDP-multi-buffer-bpf-helpers"><a href="#Proposal-1-for-XDP-multi-buffer-bpf-helpers">Proposal#1 for XDP multi-buffer bpf helpers</a></h2>
-<div class="outline-text-2" id="text-Proposal-1-for-XDP-multi-buffer-bpf-helpers">
+<div id="outline-container-Helper-proposal-1-for-XDP-multi-buffer-bpf-helpers" class="outline-2">
+<h2 id="Helper-proposal-1-for-XDP-multi-buffer-bpf-helpers"><a href="#Helper-proposal-1-for-XDP-multi-buffer-bpf-helpers">Helper-proposal#1 for XDP multi-buffer bpf helpers</a></h2>
+<div class="outline-text-2" id="text-Helper-proposal-1-for-XDP-multi-buffer-bpf-helpers">
 <p>
 Assuming the XDP multi-buffer layout relies on a skb_shared_info structure at
 the end of the first buffer to link all subsequent buffers, we can leverage
 on skb_frags* utilities in bpf helpers. Moreover, assuming each buffer length
 is one PAGE, it is possible to compute the headroom/tailroom available in
 the buffer to push/pop headers through bpf helpers.
+</p>
+
+<p>
+<b>Critique</b>: IMHO these helpers are too low level, as they UAPI expose
+manipulating offset and len of individual segments/fragments directly, this
+will limit flexibility of the internal kernel API.
 </p>
 
 <ul class="org-ul">
@@ -341,9 +362,101 @@ Return the total number of fragments for a given xdp multi-buffer.
 </ul>
 </div>
 </div>
+
+<div id="outline-container-Helper-proposal-2-for-XDP-multi-buffer-bpf-helpers" class="outline-2">
+<h2 id="Helper-proposal-2-for-XDP-multi-buffer-bpf-helpers"><a href="#Helper-proposal-2-for-XDP-multi-buffer-bpf-helpers">Helper-proposal#2 for XDP multi-buffer bpf helpers</a></h2>
+<div class="outline-text-2" id="text-Helper-proposal-2-for-XDP-multi-buffer-bpf-helpers">
+<p>
+Assuming "XDP only access first-buffer" (Proposal#1) is selected, then the
+BPF-program cannot access the remaining buffers/segments. The BPF-programmer
+still needs some knowledge about these remaining buffers/segments. The
+question is what is makes-sense to expose and why (the use-case).
+</p>
+
+<p>
+Technically this can be either exported/exposed via 1) the ctx object
+"xdp_md", or 2) via BPF-helper calls.
+</p>
+
+<p>
+<b>Helper proposal-A</b>: Allow moving data between first and second buffer. The
+use-case is for packet-header split (see Googles presentation). The NIC
+hardware might have split the packet wrong, either placed some packet
+headers in second buffer, or placed some payload-data in first buffer.
+Adding this helper, will allow the BPF-programmer to fix-up the
+packet-header split done by hardware. When the BPF-program parse packet
+headers, the program logic can detect the wrong header split, and use this
+helper to adjust.
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-Discuss--What-info-does-BPF-programmer-need-about-buffers-segments-" class="outline-2">
+<h2 id="Discuss--What-info-does-BPF-programmer-need-about-buffers-segments-"><a href="#Discuss--What-info-does-BPF-programmer-need-about-buffers-segments-">Discuss: What info does BPF-programmer need about buffers/segments?</a></h2>
+<div class="outline-text-2" id="text-Discuss--What-info-does-BPF-programmer-need-about-buffers-segments-">
+</div>
+<div id="outline-container-Info--multi-buffer-packet-" class="outline-3">
+<h3 id="Info--multi-buffer-packet-"><a href="#Info--multi-buffer-packet-">Info: multi-buffer packet?</a></h3>
+<div class="outline-text-3" id="text-Info--multi-buffer-packet-">
+<p>
+BPF-programmer should have a way to tell if an <code>xdp_buff</code> contains more
+segments/buffers. The current proposal (upstream) is to mark this via a
+single bit in <code>xdp_buff-&gt;mb</code> (and <code>xdp_frame-&gt;mb</code>), but this is an
+<b>internal</b> representation.
+</p>
+
+<p>
+How do we expose this to the BPF-program?
+</p>
+
+<p>
+Options:
+</p>
+<ul class="org-ul">
+<li>Give BPF-prog info via ctx <code>xdp_md</code>.</li>
+<li>Add BPF-helper to extract this information.</li>
+</ul>
+
+<p>
+Sameeh have proposed BPF-helper: <code>bpf_xdp_get_frag_count()</code>
+</p>
+<ul class="org-ul">
+<li><a href="https://lore.kernel.org/netdev/20200727125653.31238-2-sameehj@amazon.com/">https://lore.kernel.org/netdev/20200727125653.31238-2-sameehj@amazon.com/</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-Info--Use-case-counting-bytes--accounting-" class="outline-3">
+<h3 id="Info--Use-case-counting-bytes--accounting-"><a href="#Info--Use-case-counting-bytes--accounting-">Info: Use-case counting bytes (accounting)</a></h3>
+<div class="outline-text-3" id="text-Info--Use-case-counting-bytes--accounting-">
+<p>
+The XDP BPF-programmer will often need to do basic traffic accounting of
+packets and bytes (as XDP hooks doesn't provide this). Thus, we need to
+export/expose at least byte counters from buffers/segments.
+</p>
+
+<p>
+Sameeh have proposed :
+</p>
+<ul class="org-ul">
+<li><code>bpf_xdp_get_frag(*xdp_md, frag_index, *size, *offset)</code></li>
+<li>This design requires walking each buffer
+<ul class="org-ul">
+<li>Example of using:
+<a href="https://lore.kernel.org/netdev/20200727125653.31238-3-sameehj@amazon.com/">https://lore.kernel.org/netdev/20200727125653.31238-3-sameehj@amazon.com/</a></li>
+</ul></li>
+<li>Why should the BPF-prog do this walking? (if use-case is getting bytes)
+<ul class="org-ul">
+<li>Remember BPF-code don't handle loops well (loop-bound tricks needed)</li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-08-30 Sun 11:56</p>
+<p class="date">Date: 2020-09-01 Tue 13:39</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
