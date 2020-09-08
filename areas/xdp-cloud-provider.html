@@ -5,7 +5,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>&lrm;</title>
+<title>Project management for XDP Cloud-Provider use-case</title>
 <meta name="generator" content="Org mode" />
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
@@ -21,6 +21,7 @@
 </head>
 <body>
 <div id="content">
+<h1 class="title">Project management for XDP Cloud-Provider use-case</h1>
 <div id="table-of-contents">
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
@@ -29,6 +30,19 @@
 </ul>
 </div>
 </div>
+<p>
+A solid use-case for XDP is redirection into guest VMs. As this allows a
+packet destined for a VM to skip the entire overhead of the Host-OS network
+stack.  The Host-OS still sees the packet at the XDP layer which allow for
+implementing and enforcing per VM policies.
+</p>
+
+<p>
+For a Cloud Provider this could (1) save significant amount of CPU resources
+in the Host-OS, and (2) increase the throughput (pps) performance into a
+Guest VM.
+</p>
+
 <div id="outline-container-Site-navigation" class="outline-2">
 <h2 id="Site-navigation"><a href="#Site-navigation">Site navigation</a></h2>
 <div class="outline-text-2" id="text-Site-navigation">
@@ -37,28 +51,29 @@ The repository contains a number of files that track more specific areas of XDP
 development. These are included in the following list:
 </p>
 <ul class="org-ul">
-<li><a href="index.html">Top-level XDP project management</a></li>
+<li><a href="../index.html">Top-level XDP project management</a></li>
 
-<li><a href="brainstorm.html">Brainstorm notes</a></li>
-<li><a href="conference.html">Conference planning document</a></li>
-<li><a href="people.html">People involved in XDP development</a></li>
-<li><a href="planning.html">Project management: Planning who is working on what</a></li>
-<li><a href="student-projects.html">XDP-related project ideas for students</a></li>
+<li><a href="../brainstorm.html">Brainstorm notes</a></li>
+<li><a href="../conference.html">Conference planning document</a></li>
+<li><a href="../people.html">People involved in XDP development</a></li>
+<li><a href="../planning.html">Project management: Planning who is working on what</a></li>
+<li><a href="../student-projects.html">XDP-related project ideas for students</a></li>
 <li>areas
 <ul class="org-ul">
-<li><a href="areas/xdp_flowcache.html">Brainstorming around XDP-accelerated flowcache</a></li>
-<li><a href="areas/cpumap.html">Project management for CPUMAP</a></li>
-<li><a href="areas/xdp-cloud-provider.html">Project management for XDP Cloud-Provider use-case</a></li>
-<li><a href="areas/ovs.html">Project management for XDP and Open vSwitch integration</a></li>
-<li><a href="areas/drivers.html">Project management for XDP driver support</a></li>
-<li><a href="areas/xdp-tutorial.html">Project management for XDP-tutorial</a></li>
-<li><a href="areas/mem.html">Project management for areas/mem</a></li>
+<li><a href="xdp_flowcache.html">Brainstorming around XDP-accelerated flowcache</a></li>
+<li><a href="cpumap.html">Project management for CPUMAP</a></li>
+<li><a href="xdp-cloud-provider.html">Project management for XDP Cloud-Provider use-case</a></li>
+<li><a href="ovs.html">Project management for XDP and Open vSwitch integration</a></li>
+<li><a href="drivers.html">Project management for XDP driver support</a></li>
+<li><a href="xdp-tutorial.html">Project management for XDP-tutorial</a></li>
+<li><a href="mem.html">Project management for areas/mem</a></li>
 </ul></li>
 </ul>
 </div>
 </div>
 </div>
 <div id="postamble" class="status">
+<p class="date">Date: 2020-09-08 Tue 10:52</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
