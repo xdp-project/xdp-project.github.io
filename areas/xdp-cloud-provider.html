@@ -5,7 +5,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Project management for XDP Cloud-Provider use-case</title>
+<title>Project management for XDP Cloud-Provider</title>
 <meta name="generator" content="Org mode" />
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
@@ -21,19 +21,45 @@
 </head>
 <body>
 <div id="content">
-<h1 class="title">Project management for XDP Cloud-Provider use-case</h1>
+<h1 class="title">Project management for XDP Cloud-Provider</h1>
 <div id="table-of-contents">
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
+<li><a href="#Current-tasks">Current tasks&#xa0;&#xa0;&#xa0;<span class="tag"><span class="_short">@short</span></span></a>
+<ul>
+<li><a href="#Kickstart-the-project--xdp-cloud-provider-"><span class="todo TODO">TODO</span> Kickstart the project "xdp-cloud-provider"</a>
+<ul>
+<li><a href="#Find-project-stakeholders-and-participants"><span class="todo TODO">TODO</span> Find project stakeholders and participants</a></li>
+<li><a href="#Initial-video-meeting-to-settle-expectations"><span class="todo TODO">TODO</span> Initial video meeting to settle expectations</a></li>
+<li><a href="#Howto-keep-track-of-tasks"><span class="todo TODO">TODO</span> Howto keep track of tasks</a></li>
+</ul>
+</li>
+<li><a href="#Create-git-repo-for-xdp-cloud-provider"><span class="todo TODO">TODO</span> Create git repo for xdp-cloud-provider</a></li>
+</ul>
+</li>
+<li><a href="#Completed-tasks">Completed tasks</a>
+<ul>
+<li><a href="#Promoting-Aherns-work-on-xdp-newbies"><span class="done DONE">DONE</span> Promoting Aherns work on xdp-newbies</a></li>
+</ul>
+</li>
 <li><a href="#Site-navigation">Site navigation</a></li>
 </ul>
 </div>
 </div>
 <p>
+This <a href="xdp-cloud-provider.html">xdp-cloud-provider.html</a> contains tasks for XDP-Cloud-Provider project.
+This gets rendered on <a href="https://xdp-project.net/areas/xdp-cloud-provider.html">xdp-project.net</a>.
+</p>
+
+<p>
+<b>Intro</b> (that should be moved to project git-repo):
+</p>
+
+<p>
 A solid use-case for XDP is redirection into guest VMs. As this allows a
 packet destined for a VM to skip the entire overhead of the Host-OS network
-stack.  The Host-OS still sees the packet at the XDP layer which allow for
+stack. The Host-OS still sees the packet at the XDP layer which allow for
 implementing and enforcing per VM policies.
 </p>
 
@@ -42,6 +68,58 @@ For a Cloud Provider this could (1) save significant amount of CPU resources
 in the Host-OS, and (2) increase the throughput (pps) performance into a
 Guest VM.
 </p>
+
+<div id="outline-container-Current-tasks" class="outline-2">
+<h2 id="Current-tasks"><a href="#Current-tasks">Current tasks&#xa0;&#xa0;&#xa0;<span class="tag"><span class="_short">@short</span></span></a></h2>
+<div class="outline-text-2" id="text-Current-tasks">
+</div>
+<div id="outline-container-Kickstart-the-project--xdp-cloud-provider-" class="outline-3">
+<h3 id="Kickstart-the-project--xdp-cloud-provider-"><a href="#Kickstart-the-project--xdp-cloud-provider-"><span class="todo TODO">TODO</span> Kickstart the project "xdp-cloud-provider"</a></h3>
+<div class="outline-text-3" id="text-Kickstart-the-project--xdp-cloud-provider-">
+</div>
+<div id="outline-container-Find-project-stakeholders-and-participants" class="outline-4">
+<h4 id="Find-project-stakeholders-and-participants"><a href="#Find-project-stakeholders-and-participants"><span class="todo TODO">TODO</span> Find project stakeholders and participants</a></h4>
+</div>
+
+<div id="outline-container-Initial-video-meeting-to-settle-expectations" class="outline-4">
+<h4 id="Initial-video-meeting-to-settle-expectations"><a href="#Initial-video-meeting-to-settle-expectations"><span class="todo TODO">TODO</span> Initial video meeting to settle expectations</a></h4>
+</div>
+
+<div id="outline-container-Howto-keep-track-of-tasks" class="outline-4">
+<h4 id="Howto-keep-track-of-tasks"><a href="#Howto-keep-track-of-tasks"><span class="todo TODO">TODO</span> Howto keep track of tasks</a></h4>
+<div class="outline-text-4" id="text-Howto-keep-track-of-tasks">
+<p>
+This org-mode project TODO file is likely not optimal for peoples workflow.
+Have a meeting about this. Obvious question: Can we simply use GitHub's
+facilities, like issues to track assignments?
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Create-git-repo-for-xdp-cloud-provider" class="outline-3">
+<h3 id="Create-git-repo-for-xdp-cloud-provider"><a href="#Create-git-repo-for-xdp-cloud-provider"><span class="todo TODO">TODO</span> Create git repo for xdp-cloud-provider</a></h3>
+</div>
+</div>
+
+<div id="outline-container-Completed-tasks" class="outline-2">
+<h2 id="Completed-tasks"><a href="#Completed-tasks">Completed tasks</a></h2>
+<div class="outline-text-2" id="text-Completed-tasks">
+</div>
+<div id="outline-container-Promoting-Aherns-work-on-xdp-newbies" class="outline-3">
+<h3 id="Promoting-Aherns-work-on-xdp-newbies"><a href="#Promoting-Aherns-work-on-xdp-newbies"><span class="done DONE">DONE</span> Promoting Aherns work on xdp-newbies</a></h3>
+<div class="outline-text-3" id="text-Promoting-Aherns-work-on-xdp-newbies">
+<p>
+Subject: Using XDP for Cloud VMs by David Ahern
+</p>
+<ul class="org-ul">
+<li>Message-ID: &lt;<a href="https://lore.kernel.org/xdp-newbies/20200821115614.40fa7eb0@carbon/">20200821115614.40fa7eb0@carbon</a>&gt;</li>
+</ul>
+</div>
+</div>
+</div>
+
+
 
 <div id="outline-container-Site-navigation" class="outline-2">
 <h2 id="Site-navigation"><a href="#Site-navigation">Site navigation</a></h2>
@@ -62,7 +140,7 @@ development. These are included in the following list:
 <ul class="org-ul">
 <li><a href="xdp_flowcache.html">Brainstorming around XDP-accelerated flowcache</a></li>
 <li><a href="cpumap.html">Project management for CPUMAP</a></li>
-<li><a href="xdp-cloud-provider.html">Project management for XDP Cloud-Provider use-case</a></li>
+<li><a href="xdp-cloud-provider.html">Project management for XDP Cloud-Provider</a></li>
 <li><a href="ovs.html">Project management for XDP and Open vSwitch integration</a></li>
 <li><a href="drivers.html">Project management for XDP driver support</a></li>
 <li><a href="xdp-tutorial.html">Project management for XDP-tutorial</a></li>
@@ -73,7 +151,7 @@ development. These are included in the following list:
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-09-08 Tue 10:52</p>
+<p class="date">Date: 2020-09-08 Tue 11:23</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
