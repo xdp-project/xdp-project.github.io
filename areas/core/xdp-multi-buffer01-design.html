@@ -29,6 +29,7 @@
 <li><a href="#Why-XDP-don-t-have-multi-buffer-support">Why XDP don't have multi-buffer support</a></li>
 <li><a href="#Use-cases-for-multi-buffer">Use-cases for multi-buffer</a></li>
 <li><a href="#Proposal-1--XDP-only-access-first-buffer">Proposal#1: XDP only access first-buffer</a></li>
+<li><a href="#Proposal-2--Access-to-additional-fragments">Proposal#2: Access to additional fragments</a></li>
 <li><a href="#XDP-multi-buffer-extensions-and-complications">XDP multi-buffer extensions and complications</a>
 <ul>
 <li><a href="#XDP-tail-adjust">XDP tail adjust</a>
@@ -119,6 +120,52 @@ return XDP_PASS for these kind of frames).
 </p>
 </div>
 </div>
+
+<div id="outline-container-Proposal-2--Access-to-additional-fragments" class="outline-2">
+<h2 id="Proposal-2--Access-to-additional-fragments"><a href="#Proposal-2--Access-to-additional-fragments">Proposal#2: Access to additional fragments</a></h2>
+<div class="outline-text-2" id="text-Proposal-2--Access-to-additional-fragments">
+<p>
+Although by default you only have access to the first segment (fragment 0),
+it would make sense for an XDP application to access data further on in the
+packet.
+</p>
+
+<p>
+If this gets done by a helper similar to bpf_msg_pull_data(), the
+linearization of the data would make this a show stopper from a performance
+point of view. As an alternative, it would be nice if we could get a rolling
+window into the packet, by selecting the fragment (page) we would like to
+look at. The downside of this is that the XDP program needs to take into
+account that some data (let's say a specific network struct) might be split
+across multiple pages.
+</p>
+
+<p>
+There are several ways this could be implemented. The helper could simple be
+called something like bpf_xdp_fragment_select(struct xdp_buff *xdp_md, u8
+frag). The implementation details could be different.
+</p>
+
+<ul class="org-ul">
+<li>We would use the existing data* pointer fields to point to the current</li>
+</ul>
+<p>
+fragment to access and introduce a data_current_fragment (or alike variable)
+to indicate to which fragment the data* values point to (or leave this to
+the XDP application to track).
+</p>
+
+<ul class="org-ul">
+<li>Alternatively, we could keep the data* fields as is, and add some additional</li>
+</ul>
+<p>
+fragment_data* fields. However, this would add additional fields to the
+xdp_md/xdp_buff structure, and it would require additional helper functions
+(see below).
+</p>
+</div>
+</div>
+
 
 <div id="outline-container-XDP-multi-buffer-extensions-and-complications" class="outline-2">
 <h2 id="XDP-multi-buffer-extensions-and-complications"><a href="#XDP-multi-buffer-extensions-and-complications">XDP multi-buffer extensions and complications</a></h2>
@@ -388,9 +435,20 @@ packet-header split done by hardware. When the BPF-program parse packet
 headers, the program logic can detect the wrong header split, and use this
 helper to adjust.
 </p>
-</div>
-</div>
 
+<p>
+In the case where you need to add something to the first fragment (0) of a
+packet, let's say add a tunnel header, there might not be enough room as the
+hardware filled the entire first page. We need some additional helpers, some
+examples:
+</p>
+
+<p>
+bpf_xdp_fragment_split(struct xdp_buff *xdp_md, u8 fragment, u32 split_at);
+bpf_xdp_fragment_add(struct xdp_buff *xdp_md, u8 add_frag_after_frag);
+</p>
+</div>
+</div>
 
 <div id="outline-container-Discuss--What-info-does-BPF-programmer-need-about-buffers-segments-" class="outline-2">
 <h2 id="Discuss--What-info-does-BPF-programmer-need-about-buffers-segments-"><a href="#Discuss--What-info-does-BPF-programmer-need-about-buffers-segments-">Discuss: What info does BPF-programmer need about buffers/segments?</a></h2>
@@ -456,7 +514,7 @@ Sameeh have proposed :
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-09-01 Tue 13:39</p>
+<p class="date">Date: 2020-09-07 Mon 15:36</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
