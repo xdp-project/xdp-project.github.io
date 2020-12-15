@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Redesign drop handling in ndo_xdp_xmit</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Redesign drop handling in ndo_xdp_xmit</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#Issue--drop-semantics">Issue: drop semantics</a>
+<ul>
+<li><a href="#Current-central-code">Current central code</a></li>
+</ul>
+</li>
+<li><a href="#Why-change">Why change</a></li>
+<li><a href="#Proposal--1--for-new-drop-semantics">Proposal(#1) for new drop semantics</a></li>
+</ul>
+</div>
+</div>
+<p>
+When XDP redirecting packets (<code>xdp_frame</code>'s) out another NIC, the "remote"
+driver implement an NDO (Net Device Operation) called <code>ndo_xdp_xmit()</code>.
+(Hint this is called from <code>kernel/bpf/devmap.c</code> code, which implement a
+bulking layer for performance reasons).
+</p>
+
+<div id="outline-container-Issue--drop-semantics" class="outline-2">
+<h2 id="Issue--drop-semantics"><a href="#Issue--drop-semantics">Issue: drop semantics</a></h2>
+<div class="outline-text-2" id="text-Issue--drop-semantics">
+<p>
+The current drop handling when driver TX-queue is full is sub-optimal for
+implementing (TX) queue handling for XDP.
+</p>
+
+<p>
+Current requirement for driver implementing the API is that, the driver must
+free the xdp_frame's that it was not able to transmit, via the call
+xdp_return_frame (optimised via <code>xdp_return_frame_rx_napi</code>).
+</p>
+
+<p>
+The driver usually returns a positive number for how many packets that were
+<b>sent</b>, but if a negative value is returned it is interpreted as an error
+(-errno) and the caller is responsible for freeing the <code>xdp_frame</code>'s.
+</p>
+</div>
+
+<div id="outline-container-Current-central-code" class="outline-3">
+<h3 id="Current-central-code"><a href="#Current-central-code">Current central code</a></h3>
+<div class="outline-text-3" id="text-Current-central-code">
+<p>
+The current code of interest is <a href="https://elixir.bootlin.com/linux/v5.10/source/kernel/bpf/devmap.c#L344">bq_xmit_all</a>, which is located in kernel
+source file <code>kernel/bpf/devmap.c</code>.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">static</span> <span style="font-weight: bold; text-decoration: underline;">void</span> <span style="font-weight: bold;">bq_xmit_all</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">xdp_dev_bulk_queue</span> *<span style="font-weight: bold; font-style: italic;">bq</span>, <span style="font-weight: bold; text-decoration: underline;">u32</span> <span style="font-weight: bold; font-style: italic;">flags</span>)
+{
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">net_device</span> *<span style="font-weight: bold; font-style: italic;">dev</span> = bq-&gt;dev;
+        <span style="font-weight: bold; text-decoration: underline;">int</span> <span style="font-weight: bold; font-style: italic;">sent</span> = 0, <span style="font-weight: bold; font-style: italic;">drops</span> = 0, <span style="font-weight: bold; font-style: italic;">err</span> = 0;
+        <span style="font-weight: bold; text-decoration: underline;">int</span> <span style="font-weight: bold; font-style: italic;">i</span>;
+
+        <span style="font-weight: bold;">if</span> (unlikely(!bq-&gt;count))
+                <span style="font-weight: bold;">return</span>;
+
+        <span style="font-weight: bold;">for</span> (i = 0; i &lt; bq-&gt;count; i++) {
+                <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">xdp_frame</span> *<span style="font-weight: bold; font-style: italic;">xdpf</span> = bq-&gt;q[i];
+
+                prefetch(xdpf);
+        }
+
+        sent = dev-&gt;netdev_ops-&gt;ndo_xdp_xmit(dev, bq-&gt;count, bq-&gt;q, flags);
+        <span style="font-weight: bold;">if</span> (sent &lt; 0) {
+                err = sent;
+                sent = 0;
+                <span style="font-weight: bold;">goto</span> <span style="font-weight: bold; text-decoration: underline;">error</span>;
+        }
+        drops = bq-&gt;count - sent;
+<span style="font-weight: bold; text-decoration: underline;">out</span>:
+        bq-&gt;count = 0;
+
+        trace_xdp_devmap_xmit(bq-&gt;dev_rx, dev, sent, drops, err);
+        bq-&gt;dev_rx = <span style="font-weight: bold; text-decoration: underline;">NULL</span>;
+        __list_del_clearprev(&amp;bq-&gt;flush_node);
+        <span style="font-weight: bold;">return</span>;
+<span style="font-weight: bold; text-decoration: underline;">error</span>:
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">If ndo_xdp_xmit fails with an errno, no frames have been</span>
+<span style="font-weight: bold; font-style: italic;">         * xmit'ed and it's our responsibility to them free all.</span>
+<span style="font-weight: bold; font-style: italic;">         </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">for</span> (i = 0; i &lt; bq-&gt;count; i++) {
+                <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">xdp_frame</span> *<span style="font-weight: bold; font-style: italic;">xdpf</span> = bq-&gt;q[i];
+
+                xdp_return_frame_rx_napi(xdpf);
+                drops++;
+        }
+        <span style="font-weight: bold;">goto</span> <span style="font-weight: bold; text-decoration: underline;">out</span>;
+}
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+
+
+
+
+<div id="outline-container-Why-change" class="outline-2">
+<h2 id="Why-change"><a href="#Why-change">Why change</a></h2>
+<div class="outline-text-2" id="text-Why-change">
+<p>
+<b>Why change</b>: We want to change the current drop semantics, because it will
+allow us to implement better queue overflow handling. This is working
+towards the larger goal of a XDP TX queue-hook.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Proposal--1--for-new-drop-semantics" class="outline-2">
+<h2 id="Proposal--1--for-new-drop-semantics"><a href="#Proposal--1--for-new-drop-semantics">Proposal(#1) for new drop semantics</a></h2>
+<div class="outline-text-2" id="text-Proposal--1--for-new-drop-semantics">
+<p>
+The proposal is to make it the responsibility of the caller to free the
+xdp_frame's that were not transmitted.
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Date: 2020-12-15 Tue 13:19</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
