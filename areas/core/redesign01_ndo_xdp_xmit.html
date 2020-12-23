@@ -26,6 +26,13 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
+<li><a href="#Background-understanding-redirect">Background understanding redirect</a>
+<ul>
+<li><a href="#Explaining-BPF-redirect-API-stages">Explaining BPF redirect API stages</a></li>
+<li><a href="#Redirect-into-maps">Redirect into maps</a></li>
+<li><a href="#Driver-XDP-transmit-function">Driver XDP transmit function</a></li>
+</ul>
+</li>
 <li><a href="#Issue--drop-semantics">Issue: drop semantics</a>
 <ul>
 <li><a href="#Current-central-code">Current central code</a></li>
@@ -42,6 +49,171 @@ driver implement an NDO (Net Device Operation) called <code>ndo_xdp_xmit()</code
 (Hint this is called from <code>kernel/bpf/devmap.c</code> code, which implement a
 bulking layer for performance reasons).
 </p>
+
+<div id="outline-container-Background-understanding-redirect" class="outline-2">
+<h2 id="Background-understanding-redirect"><a href="#Background-understanding-redirect">Background understanding redirect</a></h2>
+<div class="outline-text-2" id="text-Background-understanding-redirect">
+<p>
+To help the readers, that don't understand the gory details on how
+BPF-redirect works inside the kernel, this section explains some of the
+details.  (<i>Skip section if you already know</i>)
+</p>
+</div>
+
+<div id="outline-container-Explaining-BPF-redirect-API-stages" class="outline-3">
+<h3 id="Explaining-BPF-redirect-API-stages"><a href="#Explaining-BPF-redirect-API-stages">Explaining BPF redirect API stages</a></h3>
+<div class="outline-text-3" id="text-Explaining-BPF-redirect-API-stages">
+<p>
+Redirecting a packet in BPF is a two-stage process. (This section explains
+both XDP and TC-BPF redirect in a generic fashion).
+</p>
+
+<p>
+Stage(1): In the BPF-prog the BPF-programmer calls a BPF-helper function
+(there are actually some variants) that specifies an index (often ifindex)
+to redirect the packet, but the packet or context-object is not provided to
+helper. The BPF-helper will store the index in a per-CPU data area (struct
+bpf_redirect_info).
+</p>
+
+<p>
+Helper API and some variants:
+</p>
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold; text-decoration: underline;">long</span> <span style="font-weight: bold;">bpf_redirect</span>(<span style="font-weight: bold; text-decoration: underline;">u32</span> <span style="font-weight: bold; font-style: italic;">ifindex</span>, <span style="font-weight: bold; text-decoration: underline;">u64</span> <span style="font-weight: bold; font-style: italic;">flags</span>);
+<span style="font-weight: bold; text-decoration: underline;">long</span> <span style="font-weight: bold;">bpf_redirect_map</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">bpf_map</span> *<span style="font-weight: bold; font-style: italic;">map</span>, <span style="font-weight: bold; text-decoration: underline;">u32</span> <span style="font-weight: bold; font-style: italic;">key</span>, <span style="font-weight: bold; text-decoration: underline;">u64</span> <span style="font-weight: bold; font-style: italic;">flags</span>);
+<span style="font-weight: bold; text-decoration: underline;">long</span> <span style="font-weight: bold;">bpf_redirect_peer</span>(<span style="font-weight: bold; text-decoration: underline;">u32</span> <span style="font-weight: bold; font-style: italic;">ifindex</span>, <span style="font-weight: bold; text-decoration: underline;">u64</span> <span style="font-weight: bold; font-style: italic;">flags</span>);
+<span style="font-weight: bold; text-decoration: underline;">long</span> <span style="font-weight: bold;">bpf_redirect_neigh</span>(<span style="font-weight: bold; text-decoration: underline;">u32</span> <span style="font-weight: bold; font-style: italic;">ifindex</span>, <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">bpf_redir_neigh</span> *<span style="font-weight: bold; font-style: italic;">params</span>, <span style="font-weight: bold; text-decoration: underline;">int</span> <span style="font-weight: bold; font-style: italic;">plen</span>, <span style="font-weight: bold; text-decoration: underline;">u64</span> <span style="font-weight: bold; font-style: italic;">flags</span>);
+</pre>
+</div>
+
+<p>
+Stage(2): After the BPF-prog is done, the kernel gets a return value from
+the BPF-prog that asked for a "redirect" operation (TC_ACT_REDIRECT or
+XDP_REDIRECT). The kernel then calls xxx_do_redirect() that gets only the
+packet as input. The remaining info needed is retrieved via the per-CPU data
+area (struct bpf_redirect_info).
+</p>
+
+<p>
+The drawback of this design is that the BPF-prog cannot know the fate of the
+packet, if the 2nd stage fails for some reason the BPF-prog doesn't know.
+</p>
+
+<p>
+The advantage is flexibility, as e.g. the per-CPU data area (struct
+bpf_redirect_info) can be extended without affecting the UAPI. Decoupling
+the stages also allow us to create a "hidden" bulking mechanism.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Redirect-into-maps" class="outline-3">
+<h3 id="Redirect-into-maps"><a href="#Redirect-into-maps">Redirect into maps</a></h3>
+<div class="outline-text-3" id="text-Redirect-into-maps">
+<p>
+The "hidden" redirect bulking layer via maps. The BPF-maps concept is a
+generic key-value store with different types. The concept seems simple, but
+also very flexible as it is up-to each individual BPF map-type to define the
+meaning of the key and value.
+</p>
+
+<p>
+A redirect BPF-helper variant allows to redirect packets into a map:
+</p>
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold; text-decoration: underline;">long</span> <span style="font-weight: bold;">bpf_redirect_map</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">bpf_map</span> *<span style="font-weight: bold; font-style: italic;">map</span>, <span style="font-weight: bold; text-decoration: underline;">u32</span> <span style="font-weight: bold; font-style: italic;">key</span>, <span style="font-weight: bold; text-decoration: underline;">u64</span> <span style="font-weight: bold; font-style: italic;">flags</span>);
+</pre>
+</div>
+
+<p>
+From XDP there are (currently) four map types that can be used in this
+BPF-helper as the target <code>map</code>:
+</p>
+<ul class="org-ul">
+<li><code>BPF_MAP_TYPE_DEVMAP</code></li>
+<li><code>BPF_MAP_TYPE_CPUMAP</code></li>
+<li><code>BPF_MAP_TYPE_XSKMAP</code></li>
+<li><code>BPF_MAP_TYPE_DEVMAP_HASH</code></li>
+</ul>
+
+<p>
+For the purpose of this document, we are interested in the "devmap" variant
+map types. This code is located in kernel git source file:
+<a href="https://elixir.bootlin.com/linux/latest/source/kernel/bpf/devmap.c">kernel/bpf/devmap.c</a>.
+</p>
+
+<p>
+<b>Stage(3)</b>: When <code>xdp_do_redirect()</code> have a map target, then it is fair to
+say that a 3rd stage of redirect happens. The packet is enqueued into the
+map (see code <code>__bpf_tx_xdp_map()</code>). For devmap the function
+<code>dev_map_enqueue()</code> is called, which ends in <code>bq_enqueue()</code>. The packet data
+structure <code>xdp_buff</code> is converted to <code>xdp_frame</code>, and is stored in a per-CPU
+temporary store (<code>struct xdp_dev_bulk_queue</code>) which used for bulking later.
+Thus, <code>xdp_do_redirect()</code> don't call the target device transmit operation
+<code>ndo_xdp_xmit()</code> immediately, there is a small intermediate bulking queue.
+</p>
+
+<p>
+Hint: the devmap.c code is the only caller of <code>ndo_xdp_xmit()</code>.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Driver-XDP-transmit-function" class="outline-3">
+<h3 id="Driver-XDP-transmit-function"><a href="#Driver-XDP-transmit-function">Driver XDP transmit function</a></h3>
+<div class="outline-text-3" id="text-Driver-XDP-transmit-function">
+<p>
+A driver that supports transmitting XDP redirected packets must implement
+the NDO (Net Device Operation) called <code>ndo_xdp_xmit()</code>.
+</p>
+
+<p>
+The function pointer prototype is defined in <code>include/linux/netdevice.h</code> and
+looks like this:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">net_device_ops</span> {
+ [...]
+        <span style="font-weight: bold; text-decoration: underline;">int</span>     (*ndo_xdp_xmit)(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">net_device</span> *<span style="font-weight: bold; font-style: italic;">dev</span>, <span style="font-weight: bold; text-decoration: underline;">int</span> <span style="font-weight: bold; font-style: italic;">n</span>,
+                                <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">xdp_frame</span> **<span style="font-weight: bold; font-style: italic;">xdp</span>,
+                                <span style="font-weight: bold; text-decoration: underline;">u32</span> <span style="font-weight: bold; font-style: italic;">flags</span>);
+ [...]
+};
+</pre>
+</div>
+
+<p>
+There are currently 20 drivers that implement this is:
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">$ git grep --files-with-matches  <span style="font-style: italic;">'\.ndo_xdp_xmit\s*='</span>
+drivers/net/ethernet/amazon/ena/ena_netdev.c
+drivers/net/ethernet/broadcom/bnxt/bnxt.c
+drivers/net/ethernet/freescale/dpaa/dpaa_eth.c
+drivers/net/ethernet/freescale/dpaa2/dpaa2-eth.c
+drivers/net/ethernet/intel/i40e/i40e_main.c
+drivers/net/ethernet/intel/ice/ice_main.c
+drivers/net/ethernet/intel/igb/igb_main.c
+drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
+drivers/net/ethernet/marvell/mvneta.c
+drivers/net/ethernet/marvell/mvpp2/mvpp2_main.c
+drivers/net/ethernet/mellanox/mlx5/core/en_main.c
+drivers/net/ethernet/qlogic/qede/qede_main.c
+drivers/net/ethernet/sfc/efx.c
+drivers/net/ethernet/socionext/netsec.c
+drivers/net/ethernet/ti/cpsw.c
+drivers/net/ethernet/ti/cpsw_new.c
+drivers/net/tun.c
+drivers/net/veth.c
+drivers/net/virtio_net.c
+drivers/net/xen-netfront.c
+</pre>
+</div>
+</div>
+</div>
+</div>
 
 <div id="outline-container-Issue--drop-semantics" class="outline-2">
 <h2 id="Issue--drop-semantics"><a href="#Issue--drop-semantics">Issue: drop semantics</a></h2>
@@ -120,10 +292,6 @@ source file <code>kernel/bpf/devmap.c</code>.
 </div>
 </div>
 
-
-
-
-
 <div id="outline-container-Why-change" class="outline-2">
 <h2 id="Why-change"><a href="#Why-change">Why change</a></h2>
 <div class="outline-text-2" id="text-Why-change">
@@ -146,7 +314,7 @@ xdp_frame's that were not transmitted.
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-12-15 Tue 13:19</p>
+<p class="date">Date: 2020-12-23 Wed 15:30</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
