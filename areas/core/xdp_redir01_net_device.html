@@ -1,0 +1,709 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Optimize XDP redirect via changing net_device layout</title>
+<meta name="generator" content="Org mode" />
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="/styles/bigblow/js/hideshow.js"></script>
+<script type="text/javascript" src="/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Optimize XDP redirect via changing net_device layout</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#Patch-desc">Patch desc</a>
+<ul>
+<li><a href="#Notes-on-netdev_features_t-members">Notes on netdev_features_t members</a></li>
+<li><a href="#Pahole-layout">Pahole layout</a></li>
+<li><a href="#send-patch">send patch</a></li>
+</ul>
+</li>
+<li><a href="#Baseline-">Baseline:</a></li>
+<li><a href="#Quick-reorder">Quick reorder</a>
+<ul>
+<li><a href="#Quick-reorder--Code-change">Quick reorder: Code change</a></li>
+<li><a href="#Quick-reorder--pahole-layout">Quick reorder: pahole layout</a></li>
+</ul>
+</li>
+<li><a href="#Ask-Ahern">Ask Ahern</a></li>
+<li><a href="#Another-patch">Another patch</a>
+<ul>
+<li><a href="#The-patch">The patch</a></li>
+<li><a href="#Struct-pahole-layout">Struct pahole layout</a></li>
+</ul>
+</li>
+<li><a href="#Linux-netstack-forwarding">Linux netstack forwarding</a>
+<ul>
+<li><a href="#patched-kernel">patched kernel</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+Reorganise struct <code>net_device</code> to reduce cache-line access for XDP redirect.
+</p>
+
+<div id="outline-container-Patch-desc" class="outline-2">
+<h2 id="Patch-desc"><a href="#Patch-desc">Patch desc</a></h2>
+<div class="outline-text-2" id="text-Patch-desc">
+<blockquote>
+<p>
+net: adjust net_device layout for cacheline usage
+</p>
+
+<p>
+The current layout of net_device is not optimal for cacheline usage.
+</p>
+
+<p>
+The member adj_list.lower linked list is split between cacheline 2 and 3.
+The ifindex is placed together with stats (struct net_device_stats),
+although most modern drivers don't update this stats member.
+</p>
+
+<p>
+The members netdev_ops, mtu and hard_header_len are placed on three
+different cachelines. These members are accessed for XDP redirect into
+devmap, which were noticeably with perf tool. When not using the map
+redirect variant (like TC-BPF does), then ifindex is also used, which is
+placed on a separate fourth cacheline. These members are also accessed
+during forwarding with regular network stack. The members priv_flags and
+flags are on fast-path for network stack transmit path in __dev_queue_xmit
+(currently located together with mtu cacheline).
+</p>
+
+<p>
+This patch creates a read mostly cacheline, with the purpose of keeping the
+above mentioned members on the same cacheline.
+</p>
+
+<p>
+Some netdev_features_t members also becomes part of this cacheline, which is
+on purpose, as function netif_skb_features() is on fast-path via
+validate_xmit_skb().
+</p>
+</blockquote>
+</div>
+
+<div id="outline-container-Notes-on-netdev_features_t-members" class="outline-3">
+<h3 id="Notes-on-netdev_features_t-members"><a href="#Notes-on-netdev_features_t-members">Notes on netdev_features_t members</a></h3>
+<div class="outline-text-3" id="text-Notes-on-netdev_features_t-members">
+<p>
+Is call netif_skb_features() used on fast-path?
+</p>
+<ul class="org-ul">
+<li>A: Yes, via validate_xmit_skb</li>
+</ul>
+
+<p>
+Function netif_skb_features() access:
+</p>
+<ul class="org-ul">
+<li><code>dev-&gt;features</code></li>
+<li><code>dev-&gt;vlan_features</code> (if (skb_vlan_tagged(skb))</li>
+<li><code>dev-&gt;hw_enc_features</code> (if (skb-&gt;encapsulation))</li>
+<li><code>dev-&gt;netdev_ops-&gt;ndo_features_check</code></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-Pahole-layout" class="outline-3">
+<h3 id="Pahole-layout"><a href="#Pahole-layout">Pahole layout</a></h3>
+<div class="outline-text-3" id="text-Pahole-layout">
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">net_device</span> {
+        <span style="font-weight: bold; text-decoration: underline;">char</span>                       <span style="font-weight: bold; font-style: italic;">name</span>[16];             <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">0    16 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">netdev_name_node</span> *  <span style="font-weight: bold; font-style: italic;">name_node</span>;            <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">16     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">dev_ifalias</span> *       <span style="font-weight: bold; font-style: italic;">ifalias</span>;              <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">24     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">long</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>          <span style="font-weight: bold; font-style: italic;">mem_end</span>;              <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">32     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">long</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>          <span style="font-weight: bold; font-style: italic;">mem_start</span>;            <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">40     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">long</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>          <span style="font-weight: bold; font-style: italic;">base_addr</span>;            <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">48     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">long</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>          <span style="font-weight: bold; font-style: italic;">state</span>;                <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">56     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">--- cacheline 1 boundary (64 bytes) --- </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">list_head</span>           <span style="font-weight: bold; font-style: italic;">dev_list</span>;             <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">64    16 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">list_head</span>           <span style="font-weight: bold; font-style: italic;">napi_list</span>;            <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">80    16 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">list_head</span>           <span style="font-weight: bold; font-style: italic;">unreg_list</span>;           <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">96    16 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">list_head</span>           <span style="font-weight: bold; font-style: italic;">close_list</span>;           <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">112    16 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">--- cacheline 2 boundary (128 bytes) --- </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">list_head</span>           <span style="font-weight: bold; font-style: italic;">ptype_all</span>;            <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">128    16 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">list_head</span>           <span style="font-weight: bold; font-style: italic;">ptype_specific</span>;       <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">144    16 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> {
+                <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">list_head</span>   <span style="font-weight: bold; font-style: italic;">upper</span>;                <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">160    16 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+                <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">list_head</span>   <span style="font-weight: bold; font-style: italic;">lower</span>;                <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">176    16 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        } <span style="font-weight: bold; font-style: italic;">adj_list</span>;                                      <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">160    32 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">--- cacheline 3 boundary (192 bytes) --- </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>               <span style="font-weight: bold; font-style: italic;">flags</span>;                <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">192     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>               <span style="font-weight: bold; font-style: italic;">priv_flags</span>;           <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">196     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">const</span> <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">net_device_ops</span>  * <span style="font-weight: bold; font-style: italic;">netdev_ops</span>;       <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">200     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">int</span>                        <span style="font-weight: bold; font-style: italic;">ifindex</span>;              <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">208     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">short</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>         <span style="font-weight: bold; font-style: italic;">gflags</span>;               <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">212     2 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">short</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>         <span style="font-weight: bold; font-style: italic;">hard_header_len</span>;      <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">214     2 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>               <span style="font-weight: bold; font-style: italic;">mtu</span>;                  <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">216     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">short</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>         <span style="font-weight: bold; font-style: italic;">needed_headroom</span>;      <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">220     2 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">short</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>         <span style="font-weight: bold; font-style: italic;">needed_tailroom</span>;      <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">222     2 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">netdev_features_t</span>          <span style="font-weight: bold; font-style: italic;">features</span>;             <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">224     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">netdev_features_t</span>          <span style="font-weight: bold; font-style: italic;">hw_features</span>;          <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">232     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">netdev_features_t</span>          <span style="font-weight: bold; font-style: italic;">wanted_features</span>;      <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">240     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">netdev_features_t</span>          <span style="font-weight: bold; font-style: italic;">vlan_features</span>;        <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">248     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">--- cacheline 4 boundary (256 bytes) --- </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">netdev_features_t</span>          <span style="font-weight: bold; font-style: italic;">hw_enc_features</span>;      <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">256     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">netdev_features_t</span>          <span style="font-weight: bold; font-style: italic;">mpls_features</span>;        <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">264     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">netdev_features_t</span>          <span style="font-weight: bold; font-style: italic;">gso_partial_features</span>; <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">272     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>               <span style="font-weight: bold; font-style: italic;">min_mtu</span>;              <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">280     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>               <span style="font-weight: bold; font-style: italic;">max_mtu</span>;              <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">284     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">short</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>         <span style="font-weight: bold; font-style: italic;">type</span>;                 <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">288     2 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">char</span>              <span style="font-weight: bold; font-style: italic;">min_header_len</span>;       <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">290     1 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">char</span>              <span style="font-weight: bold; font-style: italic;">name_assign_type</span>;     <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">291     1 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">int</span>                        <span style="font-weight: bold; font-style: italic;">group</span>;                <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">292     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">net_device_stats</span>    <span style="font-weight: bold; font-style: italic;">stats</span>;                <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">296   184 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">--- cacheline 7 boundary (448 bytes) was 32 bytes ago --- </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">atomic_long_t</span>              <span style="font-weight: bold; font-style: italic;">rx_dropped</span>;           <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">480     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">atomic_long_t</span>              <span style="font-weight: bold; font-style: italic;">tx_dropped</span>;           <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">488     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">atomic_long_t</span>              <span style="font-weight: bold; font-style: italic;">rx_nohandler</span>;         <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">496     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">atomic_t</span>                   <span style="font-weight: bold; font-style: italic;">carrier_up_count</span>;     <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">504     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">atomic_t</span>                   <span style="font-weight: bold; font-style: italic;">carrier_down_count</span>;   <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">508     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">--- cacheline 8 boundary (512 bytes) --- </span><span style="font-weight: bold; font-style: italic;">*/</span>
+[...]
+</pre>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-send-patch" class="outline-3">
+<h3 id="send-patch"><a href="#send-patch">send patch</a></h3>
+<div class="outline-text-3" id="text-send-patch">
+<pre class="example">
+stg mail --version='net-next V1' --cc meup \
+ --to ahern --cc bpf --to netdev \
+ --to jakub --to davem --cc dumazet \
+ --cc daniel --cc alexei \
+ reord-netdev
+</pre>
+
+<p>
+Message-ID: &lt;161168277983.410784.12401225493601624417.stgit@firesoul&gt;
+</p>
+<ul class="org-ul">
+<li><a href="https://lore.kernel.org/netdev/161168277983.410784.12401225493601624417.stgit@firesoul/">https://lore.kernel.org/netdev/161168277983.410784.12401225493601624417.stgit@firesoul/</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Baseline-" class="outline-2">
+<h2 id="Baseline-"><a href="#Baseline-">Baseline:</a></h2>
+<div class="outline-text-2" id="text-Baseline-">
+<p>
+Uname:
+</p>
+<ul class="org-ul">
+<li>5.11.0-rc3-bpf-next-calico08-mtu+ #37 SMP PREEMPT</li>
+</ul>
+
+<pre class="example">
+[jbrouer@broadwell kernel-bpf-samples]$ sudo ./xdp_redirect_map i40e2 i40e2
+
+ifindex 6:   12118961 pkt/s
+ifindex 6:   12118385 pkt/s
+...
+ifindex 6:   12077358 pkt/s
+...
+ifindex 6:   12115792 pkt/s
+ifindex 6:   12115872 pkt/s
+ifindex 6:   12115061 pkt/s
+</pre>
+
+<pre class="example">
+$ perf stat -C2 -e cycles -e  instructions -e cache-references -e cache-misses \
+ -e L1-dcache-loads:k -e L1-dcache-load-misses:k  -e LLC-loads:k -r 4 sleep 1
+
+ Performance counter stats for 'CPU(s) 2' (4 runs):
+
+     3.803.145.773      cycles                                                        ( +-  0,00% )
+     9.118.350.569      instructions              #    2,40  insn per cycle           ( +-  0,01% )
+        58.992.779      cache-references                                              ( +-  0,01% )
+               297      cache-misses              #    0,001 % of all cache refs      ( +- 71,72% )
+     2.725.528.060      L1-dcache-loads                                               ( +-  0,01% )
+       122.191.999      L1-dcache-load-misses     #    4,48% of all L1-dcache hits    ( +-  0,01% )
+        27.644.974      LLC-loads                                                     ( +-  0,01% )
+
+         1,0008481 +- 0,0000164 seconds time elapsed  ( +-  0,00% )
+</pre>
+</div>
+</div>
+
+<div id="outline-container-Quick-reorder" class="outline-2">
+<h2 id="Quick-reorder"><a href="#Quick-reorder">Quick reorder</a></h2>
+<div class="outline-text-2" id="text-Quick-reorder">
+<pre class="example">
+ifindex 6:   12729273 pkt/s
+ifindex 6:   12723535 pkt/s
+ifindex 6:   12724046 pkt/s
+...
+ifindex 6:   12732861 pkt/s
+ifindex 6:   12732828 pkt/s
+ifindex 6:   12733740 pkt/s
+</pre>
+
+<p>
+Calc improvements:
+</p>
+<ul class="org-ul">
+<li>(1/12115061-1/12733740)*10^9 = 4.01036398642000000000 ns</li>
+<li>((12733740/12115061)-1)*100  = 5.11%</li>
+</ul>
+
+
+<pre class="example">
+$ perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-misses -e L1-dcache-loads:k -e L1-dcache-load-misses:k  -e LLC-loads:k -r 4 sleep 1
+
+ Performance counter stats for 'CPU(s) 4' (4 runs):
+
+     3.803.004.798      cycles                                                        ( +-  0,00% )
+     9.579.675.974      instructions              #    2,52  insn per cycle           ( +-  0,02% )
+        62.255.331      cache-references                                              ( +-  0,02% )
+               977      cache-misses              #    0,002 % of all cache refs      ( +- 72,82% )
+     2.879.085.964      L1-dcache-loads                                               ( +-  0,02% )
+       124.281.700      L1-dcache-load-misses     #    4,32% of all L1-dcache hits    ( +-  0,00% )
+        27.509.255      LLC-loads                                                     ( +-  0,02% )
+
+         1,0008129 +- 0,0000146 seconds time elapsed  ( +-  0,00% )
+</pre>
+
+<p>
+I expected cache-accesses to be lower, but of-cause they increase as the packets
+per sec are increasing.
+</p>
+
+<p>
+The big-change shown in instructions (per cycle).
+</p>
+<ul class="org-ul">
+<li>2,40  insn per cycle - BEFORE</li>
+<li>2,52  insn per cycle - AFTER</li>
+</ul>
+</div>
+
+<div id="outline-container-Quick-reorder--Code-change" class="outline-3">
+<h3 id="Quick-reorder--Code-change"><a href="#Quick-reorder--Code-change">Quick reorder: Code change</a></h3>
+<div class="outline-text-3" id="text-Quick-reorder--Code-change">
+<div class="org-src-container">
+<pre class="src src-diff">diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index b7915484369c..f4afc05b0c9e 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/include/linux/netdevice.h</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/include/linux/netdevice.h</span>
+<span style="font-weight: bold;">@@ -1902,7 +1902,6 @@</span><span style="font-weight: bold;"> struct net_device {</span>
+        const struct iw_handler_def *wireless_handlers;
+        struct iw_public_data   *wireless_data;
+ #endif
+-       const struct net_device_ops *netdev_ops;
+        const struct ethtool_ops *ethtool_ops;
+ #ifdef CONFIG_NET_L3_MASTER_DEV
+        const struct l3mdev_ops *l3mdev_ops;
+<span style="font-weight: bold;">@@ -1921,11 +1920,17 @@</span><span style="font-weight: bold;"> struct net_device {</span>
+
+        const struct header_ops *header_ops;
+
++       /* dev_map_enqueue -&gt; __xdp_enqueue -&gt; xdp_ok_fwd_dev
++        * Want cache-lines better packed
++        */
++       const struct net_device_ops *netdev_ops;
++
+        unsigned int            flags;
+        unsigned int            priv_flags;
+
+        unsigned short          gflags;
+-       unsigned short          padded;
++       //
++       unsigned short          hard_header_len;
+
+        unsigned char           operstate;
+        unsigned char           link_mode;
+<span style="font-weight: bold;">@@ -1942,7 +1947,6 @@</span><span style="font-weight: bold;"> struct net_device {</span>
+        unsigned int            min_mtu;
+        unsigned int            max_mtu;
+        unsigned short          type;
+-       unsigned short          hard_header_len;
+        unsigned char           min_header_len;
+        unsigned char           name_assign_type;
+
+<span style="font-weight: bold;">@@ -1959,6 +1963,8 @@</span><span style="font-weight: bold;"> struct net_device {</span>
+        unsigned short          neigh_priv_len;
+        unsigned short          dev_id;
+        unsigned short          dev_port;
++       unsigned short          padded;
++
+        spinlock_t              addr_list_lock;
+
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Quick-reorder--pahole-layout" class="outline-3">
+<h3 id="Quick-reorder--pahole-layout"><a href="#Quick-reorder--pahole-layout">Quick reorder: pahole layout</a></h3>
+<div class="outline-text-3" id="text-Quick-reorder--pahole-layout">
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">net_device</span> {
+        <span style="font-weight: bold; text-decoration: underline;">char</span>                       <span style="font-weight: bold; font-style: italic;">name</span>[16];             <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">0    16 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">netdev_name_node</span> *  <span style="font-weight: bold; font-style: italic;">name_node</span>;            <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">16     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">dev_ifalias</span> *       <span style="font-weight: bold; font-style: italic;">ifalias</span>;              <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">24     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">long</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>          <span style="font-weight: bold; font-style: italic;">mem_end</span>;              <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">32     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">long</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>          <span style="font-weight: bold; font-style: italic;">mem_start</span>;            <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">40     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">long</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>          <span style="font-weight: bold; font-style: italic;">base_addr</span>;            <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">48     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">int</span>                        <span style="font-weight: bold; font-style: italic;">irq</span>;                  <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">56     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">XXX 4 bytes hole, try to pack </span><span style="font-weight: bold; font-style: italic;">*/</span>
+[...]
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">--- cacheline 8 boundary (512 bytes) --- </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">const</span> <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">net_device_ops</span>  * netdev_ops;       <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">512     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>               <span style="font-weight: bold; font-style: italic;">flags</span>;                <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">520     4 </span><span style="font-weight: bold; font-style: italic;">*/</span> <span style="font-weight: bold; font-style: italic;">//</span><span style="font-weight: bold; font-style: italic;">touch</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>               <span style="font-weight: bold; font-style: italic;">priv_flags</span>;           <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">524     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">short</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>         <span style="font-weight: bold; font-style: italic;">gflags</span>;               <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">528     2 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">short</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>         <span style="font-weight: bold; font-style: italic;">hard_header_len</span>;      <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">530     2 </span><span style="font-weight: bold; font-style: italic;">*/</span> <span style="font-weight: bold; font-style: italic;">//</span><span style="font-weight: bold; font-style: italic;">touch</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">char</span>              <span style="font-weight: bold; font-style: italic;">operstate</span>;            <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">532     1 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">char</span>              <span style="font-weight: bold; font-style: italic;">link_mode</span>;            <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">533     1 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">char</span>              <span style="font-weight: bold; font-style: italic;">if_port</span>;              <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">534     1 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">char</span>              <span style="font-weight: bold; font-style: italic;">dma</span>;                  <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">535     1 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>               <span style="font-weight: bold; font-style: italic;">mtu</span>;                  <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">536     4 </span><span style="font-weight: bold; font-style: italic;">*/</span> <span style="font-weight: bold; font-style: italic;">//</span><span style="font-weight: bold; font-style: italic;">touch</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>               <span style="font-weight: bold; font-style: italic;">min_mtu</span>;              <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">540     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>               <span style="font-weight: bold; font-style: italic;">max_mtu</span>;              <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">544     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">short</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>         <span style="font-weight: bold; font-style: italic;">type</span>;                 <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">548     2 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">char</span>              <span style="font-weight: bold; font-style: italic;">min_header_len</span>;       <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">550     1 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">char</span>              <span style="font-weight: bold; font-style: italic;">name_assign_type</span>;     <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">551     1 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">short</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>         <span style="font-weight: bold; font-style: italic;">needed_headroom</span>;      <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">552     2 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">short</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>         <span style="font-weight: bold; font-style: italic;">needed_tailroom</span>;      <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">554     2 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">char</span>              <span style="font-weight: bold; font-style: italic;">perm_addr</span>[32];        <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">556    32 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">--- cacheline 9 boundary (576 bytes) was 12 bytes ago --- </span><span style="font-weight: bold; font-style: italic;">*/</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-Ask-Ahern" class="outline-2">
+<h2 id="Ask-Ahern"><a href="#Ask-Ahern">Ask Ahern</a></h2>
+<div class="outline-text-2" id="text-Ask-Ahern">
+<p>
+David Ahern have tried to trim size of net_device:
+</p>
+<ul class="org-ul">
+<li><a href="https://github.com/dsahern/linux/commit/cc30ef93c3a1074c2ac8ae9219278042f4baaa8c">https://github.com/dsahern/linux/commit/cc30ef93c3a1074c2ac8ae9219278042f4baaa8c</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-Another-patch" class="outline-2">
+<h2 id="Another-patch"><a href="#Another-patch">Another patch</a></h2>
+<div class="outline-text-2" id="text-Another-patch">
+<p>
+More structured patch.
+</p>
+
+<p>
+Slightly better results:
+</p>
+<pre class="example">
+ifindex 6:   12852408 pkt/s
+ifindex 6:   12906785 pkt/s
+ifindex 6:   12875935 pkt/s
+</pre>
+
+<p>
+Calc improvements:
+</p>
+<ul class="org-ul">
+<li>(1/12115061-1/12906785)*10^9 = 5.06325883639000000000 ns</li>
+<li>((12906785/12115061)-1)*100  = 6.54%</li>
+</ul>
+
+
+<p>
+Somehow turbo-state kicked in:
+</p>
+<pre class="example">
+ifindex 6:   13518833 pkt/s
+ifindex 6:   13502071 pkt/s
+ifindex 6:   13521122 pkt/s
+</pre>
+
+<p>
+The turbo-state can be seen by 3.969 M-cycles.
+</p>
+<pre class="example">
+$ perf stat -C3 -e cycles -e  instructions -e cache-references -e cache-misses \
+  -e L1-dcache-loads:k -e L1-dcache-load-misses:k  -e LLC-loads:k -r 4 sleep 1
+
+ Performance counter stats for 'CPU(s) 3' (4 runs):
+
+     3.969.671.698      cycles                                                        ( +-  0,36% )
+     9.952.693.254      instructions              #    2,51  insn per cycle           ( +-  0,32% )
+        66.327.170      cache-references                                              ( +-  0,32% )
+             1.742      cache-misses              #    0,003 % of all cache refs      ( +- 75,99% )
+     2.936.696.806      L1-dcache-loads                                               ( +-  0,32% )
+       131.274.760      L1-dcache-load-misses     #    4,47% of all L1-dcache hits    ( +-  0,32% )
+        29.340.353      LLC-loads                                                     ( +-  0,32% )
+
+         1,0009117 +- 0,0000462 seconds time elapsed  ( +-  0,00% )
+</pre>
+</div>
+
+<div id="outline-container-The-patch" class="outline-3">
+<h3 id="The-patch"><a href="#The-patch">The patch</a></h3>
+<div class="outline-text-3" id="text-The-patch">
+<div class="org-src-container">
+<pre class="src src-diff">diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index b7915484369c..71ba72e68414 100644
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/include/linux/netdevice.h</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/include/linux/netdevice.h</span>
+<span style="font-weight: bold;">@@ -1855,7 +1855,6 @@</span><span style="font-weight: bold;"> struct net_device {</span>
+        unsigned long           mem_end;
+        unsigned long           mem_start;
+        unsigned long           base_addr;
+-       int                     irq;
+
+        /*
+         *      Some hardware also needs these fields (state,dev_list,
+<span style="font-weight: bold;">@@ -1866,7 +1865,7 @@</span><span style="font-weight: bold;"> struct net_device {</span>
+        unsigned long           state;
+
+        struct list_head        dev_list;
+-       struct list_head        napi_list;
++       struct list_head        napi_list; // Written per-NAPI
+        struct list_head        unreg_list;
+        struct list_head        close_list;
+        struct list_head        ptype_all;
+<span style="font-weight: bold;">@@ -1877,6 +1876,31 @@</span><span style="font-weight: bold;"> struct net_device {</span>
+                struct list_head lower;
+        } adj_list;
+
++       /* Read-mostly cache-line for fast-path access */
++       unsigned int            flags;
++       unsigned int            priv_flags;
++       const struct net_device_ops *netdev_ops;
++       int                     ifindex;
++
++       unsigned short          gflags;
++       unsigned short          hard_header_len;
++
++       /* Note : dev-&gt;mtu is often read without holding a lock.
++        * Writers usually hold RTNL.
++        * It is recommended to use READ_ONCE() to annotate the reads,
++        * and to use WRITE_ONCE() to annotate the writes.
++        */
++       unsigned int            mtu;
++       unsigned int            min_mtu;
++       unsigned int            max_mtu;
++       unsigned short          type;
++       unsigned char           min_header_len;
++       unsigned char           name_assign_type;
++
++       unsigned short          needed_headroom;
++       unsigned short          needed_tailroom;
++       int                     group;
++
+        netdev_features_t       features;
+        netdev_features_t       hw_features;
+        netdev_features_t       wanted_features;
+<span style="font-weight: bold;">@@ -1885,10 +1909,7 @@</span><span style="font-weight: bold;"> struct net_device {</span>
+        const struct iw_handler_def *wireless_handlers;
+        struct iw_public_data   *wireless_data;
+ #endif
+-       const struct net_device_ops *netdev_ops;
+        const struct ethtool_ops *ethtool_ops;
+ #ifdef CONFIG_NET_L3_MASTER_DEV
+        const struct l3mdev_ops *l3mdev_ops;
+<span style="font-weight: bold;">@@ -1921,34 +1941,12 @@</span><span style="font-weight: bold;"> struct net_device {</span>
+
+        const struct header_ops *header_ops;
+
+-       unsigned int            flags;
+-       unsigned int            priv_flags;
+-
+-       unsigned short          gflags;
+-       unsigned short          padded;
+-
+        unsigned char           operstate;
+        unsigned char           link_mode;
+
+        unsigned char           if_port;
+        unsigned char           dma;
+
+-       /* Note : dev-&gt;mtu is often read without holding a lock.
+-        * Writers usually hold RTNL.
+-        * It is recommended to use READ_ONCE() to annotate the reads,
+-        * and to use WRITE_ONCE() to annotate the writes.
+-        */
+-       unsigned int            mtu;
+-       unsigned int            min_mtu;
+-       unsigned int            max_mtu;
+-       unsigned short          type;
+-       unsigned short          hard_header_len;
+-       unsigned char           min_header_len;
+-       unsigned char           name_assign_type;
+-
+-       unsigned short          needed_headroom;
+-       unsigned short          needed_tailroom;
+-
+        /* Interface address info. */
+        unsigned char           perm_addr[MAX_ADDR_LEN];
+        unsigned char           addr_assign_type;
+<span style="font-weight: bold;">@@ -1959,7 +1957,10 @@</span><span style="font-weight: bold;"> struct net_device {</span>
+        unsigned short          neigh_priv_len;
+        unsigned short          dev_id;
+        unsigned short          dev_port;
++       unsigned short          padded;
++
+        spinlock_t              addr_list_lock;
++       int                     irq;
+
+        struct netdev_hw_addr_list      uc;
+        struct netdev_hw_addr_list      mc;
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Struct-pahole-layout" class="outline-3">
+<h3 id="Struct-pahole-layout"><a href="#Struct-pahole-layout">Struct pahole layout</a></h3>
+<div class="outline-text-3" id="text-Struct-pahole-layout">
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">net_device</span> {
+        <span style="font-weight: bold; text-decoration: underline;">char</span>                       <span style="font-weight: bold; font-style: italic;">name</span>[16];             <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">0    16 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">netdev_name_node</span> *  <span style="font-weight: bold; font-style: italic;">name_node</span>;            <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">16     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">dev_ifalias</span> *       <span style="font-weight: bold; font-style: italic;">ifalias</span>;              <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">24     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">long</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>          <span style="font-weight: bold; font-style: italic;">mem_end</span>;              <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">32     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">long</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>          <span style="font-weight: bold; font-style: italic;">mem_start</span>;            <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">40     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">long</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>          <span style="font-weight: bold; font-style: italic;">base_addr</span>;            <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">48     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">long</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>          <span style="font-weight: bold; font-style: italic;">state</span>;                <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">56     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">--- cacheline 1 boundary (64 bytes) --- </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">list_head</span>           <span style="font-weight: bold; font-style: italic;">dev_list</span>;             <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">64    16 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">list_head</span>           <span style="font-weight: bold; font-style: italic;">napi_list</span>;            <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">80    16 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">list_head</span>           <span style="font-weight: bold; font-style: italic;">unreg_list</span>;           <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">96    16 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">list_head</span>           <span style="font-weight: bold; font-style: italic;">close_list</span>;           <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">112    16 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">--- cacheline 2 boundary (128 bytes) --- </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">list_head</span>           <span style="font-weight: bold; font-style: italic;">ptype_all</span>;            <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">128    16 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">list_head</span>           <span style="font-weight: bold; font-style: italic;">ptype_specific</span>;       <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">144    16 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> {
+                <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">list_head</span>   <span style="font-weight: bold; font-style: italic;">upper</span>;                <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">160    16 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+                <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">list_head</span>   <span style="font-weight: bold; font-style: italic;">lower</span>;                <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">176    16 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        } <span style="font-weight: bold; font-style: italic;">adj_list</span>;                                      <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">160    32 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">--- cacheline 3 boundary (192 bytes) --- </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>               <span style="font-weight: bold; font-style: italic;">flags</span>;                <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">192     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>               <span style="font-weight: bold; font-style: italic;">priv_flags</span>;           <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">196     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">const</span> <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">net_device_ops</span>  * <span style="font-weight: bold; font-style: italic;">netdev_ops</span>;       <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">200     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">int</span>                        <span style="font-weight: bold; font-style: italic;">ifindex</span>;              <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">208     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">short</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>         <span style="font-weight: bold; font-style: italic;">gflags</span>;               <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">212     2 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">short</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>         <span style="font-weight: bold; font-style: italic;">hard_header_len</span>;      <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">214     2 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>               <span style="font-weight: bold; font-style: italic;">mtu</span>;                  <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">216     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>               <span style="font-weight: bold; font-style: italic;">min_mtu</span>;              <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">220     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>               <span style="font-weight: bold; font-style: italic;">max_mtu</span>;              <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">224     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">short</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>         <span style="font-weight: bold; font-style: italic;">type</span>;                 <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">228     2 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">char</span>              <span style="font-weight: bold; font-style: italic;">min_header_len</span>;       <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">230     1 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">char</span>              <span style="font-weight: bold; font-style: italic;">name_assign_type</span>;     <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">231     1 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">short</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>         <span style="font-weight: bold; font-style: italic;">needed_headroom</span>;      <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">232     2 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">short</span> <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>         <span style="font-weight: bold; font-style: italic;">needed_tailroom</span>;      <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">234     2 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">int</span>                        <span style="font-weight: bold; font-style: italic;">group</span>;                <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">236     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">netdev_features_t</span>          <span style="font-weight: bold; font-style: italic;">features</span>;             <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">240     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">netdev_features_t</span>          <span style="font-weight: bold; font-style: italic;">hw_features</span>;          <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">248     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">--- cacheline 4 boundary (256 bytes) --- </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">netdev_features_t</span>          <span style="font-weight: bold; font-style: italic;">wanted_features</span>;      <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">256     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">netdev_features_t</span>          <span style="font-weight: bold; font-style: italic;">vlan_features</span>;        <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">264     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">netdev_features_t</span>          <span style="font-weight: bold; font-style: italic;">hw_enc_features</span>;      <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">272     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">netdev_features_t</span>          <span style="font-weight: bold; font-style: italic;">mpls_features</span>;        <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">280     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">netdev_features_t</span>          <span style="font-weight: bold; font-style: italic;">gso_partial_features</span>; <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">288     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">net_device_stats</span>    <span style="font-weight: bold; font-style: italic;">stats</span>;                <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">296   184 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">--- cacheline 7 boundary (448 bytes) was 32 bytes ago --- </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">atomic_long_t</span>              <span style="font-weight: bold; font-style: italic;">rx_dropped</span>;           <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">480     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">atomic_long_t</span>              <span style="font-weight: bold; font-style: italic;">tx_dropped</span>;           <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">488     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">atomic_long_t</span>              <span style="font-weight: bold; font-style: italic;">rx_nohandler</span>;         <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">496     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">atomic_t</span>                   <span style="font-weight: bold; font-style: italic;">carrier_up_count</span>;     <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">504     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; text-decoration: underline;">atomic_t</span>                   <span style="font-weight: bold; font-style: italic;">carrier_down_count</span>;   <span style="font-weight: bold; font-style: italic;">/*   </span><span style="font-weight: bold; font-style: italic;">508     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">--- cacheline 8 boundary (512 bytes) --- </span><span style="font-weight: bold; font-style: italic;">*/</span>
+[...]
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Linux-netstack-forwarding" class="outline-2">
+<h2 id="Linux-netstack-forwarding"><a href="#Linux-netstack-forwarding">Linux netstack forwarding</a></h2>
+<div class="outline-text-2" id="text-Linux-netstack-forwarding">
+</div>
+<div id="outline-container-patched-kernel" class="outline-3">
+<h3 id="patched-kernel"><a href="#patched-kernel">patched kernel</a></h3>
+<div class="outline-text-3" id="text-patched-kernel">
+<pre class="example">
+[firesoul pktgen]$ ./pktgen_sample03_burst_single_flow.sh -vi mlx5p2 \
+ -d 198.18.1.3 -m 3c:fd:fe:b3:31:49 -t 12
+</pre>
+
+<pre class="example">
+ip ne add 198.18.1.3 dev mlx5p1 lladdr 00:11:22:33:44:55
+ip ne add 10.40.40.66 dev i40e2  lladdr 00:11:22:33:44:66
+</pre>
+
+<pre class="example">
+Average:        IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s   rxcmp/s   txcmp/s  rxmcst/s   %ifutil
+Average:           lo      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00
+Average:        eth42     11,88     23,50      0,77      3,21      0,00      0,00      0,00      0,00
+Average:         igb1      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00
+Average:       ixgbe1      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00
+Average:        i40e1      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00
+Average:        i40e2 2090320,00      0,00 122479,69      0,00      0,00      0,00      0,00      2,51
+Average:       mlx5p1      0,00 2090319,37      0,00 122479,65      0,00      0,00      0,00      1,00
+Average:       mlx5p2      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00
+Average:       ixgbe2      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00
+Average:       virbr0      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00
+Average:    virbr0-nic      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00
+
+Average:        IFACE   rxerr/s   txerr/s    coll/s  rxdrop/s  txdrop/s  txcarr/s  rxfram/s  rxfifo/s  txfifo/s
+Average:           lo      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00
+Average:        eth42      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00
+Average:         igb1      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00
+Average:       ixgbe1      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00
+Average:        i40e1      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00
+Average:        i40e2      0,00      0,00      0,00 31578706,25      0,00      0,00      0,00      0,00      0,00
+Average:       mlx5p1      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00
+Average:       mlx5p2      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00
+Average:       ixgbe2      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00
+Average:       virbr0      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00
+Average:    virbr0-nic      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00
+</pre>
+
+
+<p>
+Other direction:
+</p>
+<pre class="example">
+./pktgen_sample03_burst_single_flow.sh -vi mlx5p1 -d 10.40.40.66 -m ec:0d:9a:db:11:c4 -t 12
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Date: 2021-01-26 Tue 18:24</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
