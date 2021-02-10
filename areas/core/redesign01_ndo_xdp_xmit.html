@@ -309,12 +309,80 @@ towards the larger goal of a XDP TX queue-hook.
 <p>
 The proposal is to make it the responsibility of the caller to free the
 xdp_frame's that were not transmitted.
+According to the new APIs, the driver running ndo_xdp_xmit pointer
+will break tx loop whenever the hw reports a tx error and it will just return
+to devmap caller the number of successfully transmitted frames. It will be
+devmap responsability to free dropped frames.
 </p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">static</span> <span style="font-weight: bold; text-decoration: underline;">void</span> <span style="font-weight: bold;">bq_xmit_all</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">xdp_dev_bulk_queue</span> *<span style="font-weight: bold; font-style: italic;">bq</span>, <span style="font-weight: bold; text-decoration: underline;">u32</span> <span style="font-weight: bold; font-style: italic;">flags</span>)
+{
+        <span style="font-weight: bold; text-decoration: underline;">int</span> <span style="font-weight: bold; font-style: italic;">sent</span> = 0, <span style="font-weight: bold; font-style: italic;">drops</span> = 0, <span style="font-weight: bold; font-style: italic;">err</span> = 0;
+      ...
+
+        sent = dev-&gt;netdev_ops-&gt;ndo_xdp_xmit(dev, bq-&gt;count, bq-&gt;q, flags);
+        <span style="font-weight: bold;">if</span> (sent &lt; 0) {
+                <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">If ndo_xdp_xmit fails with an errno, no frames have</span>
+<span style="font-weight: bold; font-style: italic;">                 * been xmit'ed.</span>
+<span style="font-weight: bold; font-style: italic;">                 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+                err = sent;
+                sent = 0;
+        }
+
+        drops = bq-&gt;count - sent;
+        <span style="font-weight: bold;">if</span> (unlikely(drops &gt; 0)) {
+                <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">If not all frames have been transmitted, it is our</span>
+<span style="font-weight: bold; font-style: italic;">                 * responsibility to free them</span>
+<span style="font-weight: bold; font-style: italic;">                 </span><span style="font-weight: bold; font-style: italic;">*/</span>
+                <span style="font-weight: bold;">for</span> (i = sent; i &lt; bq-&gt;count; i++)
+                        xdp_return_frame_rx_napi(bq-&gt;q[i]);
+        }
+
+      ...
+}
+</pre>
+</div>
+
+<p>
+considering mvneta driver:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">static</span> <span style="font-weight: bold; text-decoration: underline;">int</span>
+<span style="font-weight: bold;">mvneta_xdp_xmit</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">net_device</span> *<span style="font-weight: bold; font-style: italic;">dev</span>, <span style="font-weight: bold; text-decoration: underline;">int</span> <span style="font-weight: bold; font-style: italic;">num_frame</span>,
+                <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">xdp_frame</span> **<span style="font-weight: bold; font-style: italic;">frames</span>, <span style="font-weight: bold; text-decoration: underline;">u32</span> <span style="font-weight: bold; font-style: italic;">flags</span>)
+{
+      ...
+
+        <span style="font-weight: bold;">for</span> (i = 0; i &lt; num_frame; i++) {
+                ret = mvneta_xdp_submit_frame(pp, txq, frames[i], <span style="font-weight: bold; text-decoration: underline;">true</span>);
+                <span style="font-weight: bold;">if</span> (ret != MVNETA_XDP_TX)
+                        <span style="font-weight: bold;">break</span>;
+
+                nxmit_byte += frames[i]-&gt;len;
+                nxmit++;
+        }
+
+      ...
+
+        <span style="font-weight: bold;">return</span> nxmit;
+}
+</pre>
+</div>
+
+
+<p>
+code available here:
+</p>
+<ul class="org-ul">
+<li><a href="https://github.com/LorenzoBianconi/bpf-next/tree/ndo_xdp_xmit_return_code_proposal">https://github.com/LorenzoBianconi/bpf-next/tree/ndo_xdp_xmit_return_code_proposal</a></li>
+</ul>
 </div>
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-12-23 Wed 15:30</p>
+<p class="date">Date: 2021-02-05 Fri 18:01</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
