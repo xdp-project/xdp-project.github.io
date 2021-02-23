@@ -38,7 +38,8 @@
 </li>
 <li><a href="#Using-alloc_pages_bulk">Using alloc_pages_bulk</a>
 <ul>
-<li><a href="#test01--veth-redirect">test01: veth redirect</a></li>
+<li><a href="#test01--veth-redirect--page_pool-bulk-16-">test01: veth redirect (page_pool bulk 16)</a></li>
+<li><a href="#test02--veth-redirect--page_pool-bulk-64-">test02: veth redirect (page_pool bulk 64)</a></li>
 </ul>
 </li>
 </ul>
@@ -212,11 +213,15 @@ Kernel: Linux broadwell 5.11.0-net-next-alloc_pages_bulk+
 </ul>
 </div>
 
-<div id="outline-container-test01--veth-redirect" class="outline-3">
-<h3 id="test01--veth-redirect"><a href="#test01--veth-redirect">test01: veth redirect</a></h3>
-<div class="outline-text-3" id="text-test01--veth-redirect">
+<div id="outline-container-test01--veth-redirect--page_pool-bulk-16-" class="outline-3">
+<h3 id="test01--veth-redirect--page_pool-bulk-16-"><a href="#test01--veth-redirect--page_pool-bulk-16-">test01: veth redirect (page_pool bulk 16)</a></h3>
+<div class="outline-text-3" id="text-test01--veth-redirect--page_pool-bulk-16-">
 <p>
 Same veth setup as above: 
+</p>
+
+<p>
+Results below with page_pool using bulk=16 for alloc_pages_bulk().
 </p>
 
 <pre class="example">
@@ -279,10 +284,34 @@ Samples: 51K of event 'cycles', Event count (approx.): 46934149161
 </pre>
 </div>
 </div>
+
+<div id="outline-container-test02--veth-redirect--page_pool-bulk-64-" class="outline-3">
+<h3 id="test02--veth-redirect--page_pool-bulk-64-"><a href="#test02--veth-redirect--page_pool-bulk-64-">test02: veth redirect (page_pool bulk 64)</a></h3>
+<div class="outline-text-3" id="text-test02--veth-redirect--page_pool-bulk-64-">
+<p>
+Same veth setup as above: 
+</p>
+
+<p>
+Results below with page_pool using bulk=64 for alloc_pages_bulk().
+</p>
+
+<pre class="example">
+Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
+XDP stats       CPU     pps         issue-pps  
+XDP-RX CPU      1       4,297,656   0          
+XDP-RX CPU      total   4,297,656  
+
+RXQ stats       RXQ:CPU pps         issue-pps  
+rx_queue_index    0:1   4,297,649   0          
+rx_queue_index    0:sum 4,297,649  
+</pre>
+</div>
+</div>
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2021-02-22 Mon 21:34</p>
+<p class="date">Date: 2021-02-23 Tue 17:08</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
