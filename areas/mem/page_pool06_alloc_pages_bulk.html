@@ -42,6 +42,25 @@
 <li><a href="#test02--veth-redirect--page_pool-bulk-64-">test02: veth redirect (page_pool bulk 64)</a></li>
 </ul>
 </li>
+<li><a href="#Test-with-RFC-patchset">Test with RFC patchset</a>
+<ul>
+<li><a href="#initial-test">initial test</a></li>
+</ul>
+</li>
+<li><a href="#patch-notes">patch notes</a>
+<ul>
+<li><a href="#Follow-up-to-Mel-s-patchset">Follow up to Mel's patchset</a></li>
+<li><a href="#bench-test-veth">bench test veth</a></li>
+<li><a href="#desc--net--page_pool--use-alloc_pages_bulk-in-refill-code-path">desc: net: page_pool: use alloc_pages_bulk in refill code path</a></li>
+</ul>
+</li>
+<li><a href="#Micro-optimisations">Micro optimisations</a>
+<ul>
+<li><a href="#Observations">Observations</a></li>
+<li><a href="#Why-happening">Why happening</a></li>
+<li><a href="#Explaining-patch-with-fix">Explaining patch with fix</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -102,7 +121,7 @@ ip link set veth2 up
 <p>
 Disable GRO/GSO/TSO on the veth devices
 </p>
-<pre class="example" id="org9a50be8">
+<pre class="example" id="orged0e7bd">
 ethtool -K veth1 gso off gro off tso off
 ethtool -K veth2 gso off gro off tso off
 </pre>
@@ -145,7 +164,7 @@ suites our micro-benchmark test case.
 Kernel: Linux broadwell 5.11.0-net-next
 </p>
 
-<pre class="example" id="org0aef302">
+<pre class="example" id="org997de8f">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      0       3,677,958   0          
@@ -157,7 +176,7 @@ rx_queue_index    0:sum 3,677,966
 
 </pre>
 
-<pre class="example" id="org9693c96">
+<pre class="example" id="orgb663e56">
 Samples: 81K of event 'cycles', Event count (approx.): 73929158590
   Overhead  Symbol                                               IPC   [IPC Coverage]
 +    4,87%  [k] __netif_receive_skb_core                         -      -
@@ -232,7 +251,7 @@ Same veth setup as above:
 Results below with page_pool using bulk=16 for alloc_pages_bulk().
 </p>
 
-<pre class="example" id="orgbfb3001">
+<pre class="example" id="orgf1b2ab3">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      5       4,066,028   0          
@@ -243,7 +262,7 @@ rx_queue_index    0:5   4,066,023   0
 rx_queue_index    0:sum 4,066,023  
 </pre>
 
-<pre class="example" id="org13fdd63">
+<pre class="example" id="org589653e">
 Samples: 51K of event 'cycles', Event count (approx.): 46934149161
   Overhead  Symbol                                               IPC   [IPC Coverage]
 +    4,94%  [k] __netif_receive_skb_core                         -      -
@@ -304,7 +323,7 @@ Same veth setup as above:
 Results below with page_pool using bulk=64 for alloc_pages_bulk().
 </p>
 
-<pre class="example" id="orgbd1d886">
+<pre class="example" id="orga1c9d2b">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      1       4,297,656   0          
@@ -317,9 +336,376 @@ rx_queue_index    0:sum 4,297,649
 </div>
 </div>
 </div>
+
+<div id="outline-container-Test-with-RFC-patchset" class="outline-2">
+<h2 id="Test-with-RFC-patchset"><a href="#Test-with-RFC-patchset">Test with RFC patchset</a></h2>
+<div class="outline-text-2" id="text-Test-with-RFC-patchset">
+<p>
+Test with new patchset from Mel:
+</p>
+<ul class="org-ul">
+<li>Message-Id: &lt;20210224102603.19524-1-mgorman@techsingularity.net&gt;</li>
+<li><a href="https://lore.kernel.org/netdev/20210224102603.19524-1-mgorman@techsingularity.net/">https://lore.kernel.org/netdev/20210224102603.19524-1-mgorman@techsingularity.net/</a></li>
+</ul>
+</div>
+
+<div id="outline-container-initial-test" class="outline-3">
+<h3 id="initial-test"><a href="#initial-test">initial test</a></h3>
+<div class="outline-text-3" id="text-initial-test">
+<p>
+bulk=64
+</p>
+
+<pre class="example" id="org1f80a20">
+Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
+XDP stats       CPU     pps         issue-pps  
+XDP-RX CPU      3       4,368,926   0          
+XDP-RX CPU      total   4,368,926  
+
+RXQ stats       RXQ:CPU pps         issue-pps  
+rx_queue_index    0:3   4,368,917   0          
+rx_queue_index    0:sum 4,368,917  
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-patch-notes" class="outline-2">
+<h2 id="patch-notes"><a href="#patch-notes">patch notes</a></h2>
+<div class="outline-text-2" id="text-patch-notes">
+</div>
+<div id="outline-container-Follow-up-to-Mel-s-patchset" class="outline-3">
+<h3 id="Follow-up-to-Mel-s-patchset"><a href="#Follow-up-to-Mel-s-patchset">Follow up to Mel's patchset</a></h3>
+<div class="outline-text-3" id="text-Follow-up-to-Mel-s-patchset">
+<pre class="example" id="orgfa7a9dd">
+stg mail --version='RFC net-next' --edit-cover --cc meup \
+ --to mel --cc chuck.lever@oracle.com \
+ --to mm --cc netdev --cc linux-nfs@vger.kernel.org --cc lkml \
+ --in-reply-to='20210224102603.19524-1-mgorman@techsingularity.net' \
+ 03-reorder-add-page_pool_dma_map..mm-make-zone-free_area-order
+</pre>
+<p>
+Message-ID: &lt;161419296941.2718959.12575257358107256094.stgit@firesoul&gt;
+</p>
+
+<blockquote>
+<p>
+Use bulk order-0 page allocator API for page_pool
+</p>
+
+<p>
+This is a followup to Mel Gorman's patchset:
+</p>
+<ul class="org-ul">
+<li>Message-Id: &lt;20210224102603.19524-1-mgorman@techsingularity.net&gt;</li>
+<li><a href="https://lore.kernel.org/netdev/20210224102603.19524-1-mgorman@techsingularity.net/">https://lore.kernel.org/netdev/20210224102603.19524-1-mgorman@techsingularity.net/</a></li>
+</ul>
+
+<p>
+Showing page_pool usage of the API for alloc_pages_bulk().
+</p>
+</blockquote>
+</div>
+</div>
+
+<div id="outline-container-bench-test-veth" class="outline-3">
+<h3 id="bench-test-veth"><a href="#bench-test-veth">bench test veth</a></h3>
+<div class="outline-text-3" id="text-bench-test-veth">
+<p>
+Test again:
+</p>
+<pre class="example" id="orga4873e4">
+Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
+XDP stats       CPU     pps         issue-pps  
+XDP-RX CPU      0       4,302,291   0          
+XDP-RX CPU      total   4,302,291  
+
+RXQ stats       RXQ:CPU pps         issue-pps  
+rx_queue_index    0:0   4,302,285   0          
+rx_queue_index    0:sum 4,302,285  
+</pre>
+</div>
+</div>
+
+<div id="outline-container-desc--net--page_pool--use-alloc_pages_bulk-in-refill-code-path" class="outline-3">
+<h3 id="desc--net--page_pool--use-alloc_pages_bulk-in-refill-code-path"><a href="#desc--net--page_pool--use-alloc_pages_bulk-in-refill-code-path">desc: net: page_pool: use alloc_pages_bulk in refill code path</a></h3>
+<div class="outline-text-3" id="text-desc--net--page_pool--use-alloc_pages_bulk-in-refill-code-path">
+<blockquote>
+<p>
+There are cases where the page_pool need to refill with pages from the
+page allocator. Some workloads cause the page_pool to release pages
+instead of recycling these pages.
+</p>
+
+<p>
+For these workload it can improve performance to bulk alloc pages from
+the page-allocator to refill the alloc cache.
+</p>
+
+<p>
+For XDP-redirect workload with 100G mlx5 driver (that use page_pool)
+redirecting xdp_frame packets into a veth, that does XDP_PASS to create
+an SKB from the xdp_frame, which then cannot return the page to the
+page_pool. In this case, we saw[1] an improvement of 18.8% from using
+the alloc_pages_bulk API (3,677,958 pps -&gt; 4,368,926 pps).
+</p>
+
+<p>
+[1] <a href="https://github.com/xdp-project/xdp-project/blob/master/areas/mem/page_pool06_alloc_pages_bulk.org">https://github.com/xdp-project/xdp-project/blob/master/areas/mem/page_pool06_alloc_pages_bulk.org</a>
+</p>
+</blockquote>
+</div>
+</div>
+</div>
+
+<div id="outline-container-Micro-optimisations" class="outline-2">
+<h2 id="Micro-optimisations"><a href="#Micro-optimisations">Micro optimisations</a></h2>
+<div class="outline-text-2" id="text-Micro-optimisations">
+<p>
+Document steps in micro optimizing page-alloactor code:
+</p>
+<ul class="org-ul">
+<li>make zone-&gt;free_area[order] access faster</li>
+</ul>
+</div>
+
+<div id="outline-container-Observations" class="outline-3">
+<h3 id="Observations"><a href="#Observations">Observations</a></h3>
+<div class="outline-text-3" id="text-Observations">
+<p>
+The code del_page_from_free_list() generate a strange imul operation:
+</p>
+<pre class="example" id="orga610800">
+imul   $0x58,%rax,%rax
+</pre>
+
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">static</span> <span style="font-weight: bold;">inline</span> <span style="font-weight: bold; text-decoration: underline;">void</span> <span style="font-weight: bold;">del_page_from_free_list</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">page</span> *<span style="font-weight: bold; font-style: italic;">page</span>, <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">zone</span> *<span style="font-weight: bold; font-style: italic;">zone</span>,
+                                           <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span> <span style="font-weight: bold; font-style: italic;">order</span>)
+{
+        <span style="font-weight: bold; font-style: italic;">/* </span><span style="font-weight: bold; font-style: italic;">clear reported state and update reported page count </span><span style="font-weight: bold; font-style: italic;">*/</span>
+        <span style="font-weight: bold;">if</span> (page_reported(page))
+                __ClearPageReported(page);
+
+        list_del(&amp;page-&gt;lru);
+        __ClearPageBuddy(page);
+        set_page_private(page, 0);
+        zone-&gt;free_area[order].nr_free--;
+</pre>
+</div>
+
+<p>
+Tracked this down to:
+</p>
+<div class="org-src-container">
+<pre class="src src-C"><span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">zone</span> {
+    [...]
+        <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">free_area</span>        free_area[MAX_ORDER];
+</pre>
+</div>
+
+<p>
+This happens when accessing free_area like this:
+</p>
+<div class="org-src-container">
+<pre class="src src-C">zone-&gt;free_area[order].nr_free--;
+</pre>
+</div>
+
+<p>
+Perf show hot-spot in: rmqueue_bulk.constprop.0 / rmqueue_bulk()
+</p>
+<pre class="example" id="orgb21778c">
+      │         mov    0x8(%rbx),%rax                                                                                            ▒
+      │       __list_del():                                                                                                      ▒
+      │         mov    %rax,0x8(%rdx)                                                                                            ▒
+      │         mov    %rdx,(%rax)                                                                                               ▒
+      │       del_page_from_free_list():                                                                                         ▒
+44,54 │1  e2:   imul   $0x58,%rbp,%rbp                                                                                           ▒
+      │       expand():                                                                                                          ◆
+      │         mov    $0x1,%r9d                                                                                                 ▒
+      │         mov    %r13d,%ecx                                                                                                ▒
+      │       set_page_private():                                                                                                ▒
+      │         movq   $0x0,0x20(%rbx)                                                                                           ▒
+      │       __ClearPageBuddy():                                                                                                ▒
+      │         orl    $0x80,0x28(%rbx)                                                                                          ▒
+      │         lea    -0x1(%r13),%r11d                                                                                          ▒
+      │       expand():                                                                                                          ▒
+      │         shl    %cl,%r9d                                                                                                  ▒
+      │       list_del():                                                                                                        ▒
+      │         movabs $0xdead000000000100,%rax                                                                                  ▒
+      │         mov    %rax,(%rbx)                                                                                               ▒
+      │         add    $0x22,%rax                                                                                                ▒
+      │       expand():                                                                                                          ▒
+      │         movslq %r9d,%r14                                                                                                 ▒
+      │       list_del():                                                                                                        ▒
+      │         mov    %rax,0x8(%rbx)                                                                                            ▒
+      │       del_page_from_free_list():                                                                                         ▒
+      │         subq   $0x1,0x110(%r15,%rbp,1)                                                                                   ▒
+      │       expand():                                                                                                          ▒
+</pre>
+</div>
+</div>
+
+<div id="outline-container-Why-happening" class="outline-3">
+<h3 id="Why-happening"><a href="#Why-happening">Why happening</a></h3>
+<div class="outline-text-3" id="text-Why-happening">
+<p>
+The size of struct free_area is 88 bytes or 0x58 hex.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">$ pahole -C free_area mm/page_alloc.o
+struct free_area {
+        struct list_head           free_list[5];         /*     0    80 */
+        /* --- cacheline 1 boundary (64 bytes) was 16 bytes ago --- */
+        long unsigned int          nr_free;              /*    80     8 */
+
+        /* size: 88, cachelines: 2, members: 2 */
+        /* last cacheline: 24 bytes */
+};
+</pre>
+</div>
+
+<p>
+The reason for the code is to find the right struct free_area in struct
+zone.  The array of 11 comes from define MAX_ORDER.
+</p>
+
+<pre class="example" id="org03592b3">
+struct zone {
+        long unsigned int          _watermark[3];        /*     0    24 */
+ [...]
+        /* --- cacheline 3 boundary (192 bytes) --- */
+        struct zone_padding        _pad1_ __attribute__((__aligned__(64))); /*   192     0 */
+        struct free_area           free_area[11];        /*   192   968 */
+        /* --- cacheline 18 boundary (1152 bytes) was 8 bytes ago --- */
+        long unsigned int          flags;                /*  1160     8 */
+        spinlock_t                 lock;                 /*  1168     4 */
+
+        /* XXX 44 bytes hole, try to pack */
+
+        /* --- cacheline 19 boundary (1216 bytes) --- */
+        struct zone_padding        _pad2_ __attribute__((__aligned__(64))); /*  1216     0 */
+
+</pre>
+
+<p>
+The size 88 bytes or 0x58 hex. The compiler cannot find a shift
+operation to use and instead choose to use a imul to find the offset
+into the array free_area[].
+</p>
+
+<p>
+Asm code to lookout for:
+(objdump -Sr mm/page_alloc.o-use-imul)
+</p>
+<div class="org-src-container">
+<pre class="src src-asm">   <span style="font-weight: bold;">zone-&gt;free_area</span>[order].nr_free--<span style="font-weight: bold; font-style: italic;">;</span>
+<span style="font-weight: bold;">75ee</span>:       <span style="font-weight: bold;">44</span> 89 f0                mov    <span style="font-weight: bold; font-style: italic;">%r14d</span>,<span style="font-weight: bold; font-style: italic;">%eax</span>
+<span style="font-weight: bold;">75f1</span>:       <span style="font-weight: bold;">48</span> 6b c0 58             imul   $0x58,<span style="font-weight: bold; font-style: italic;">%rax</span>,<span style="font-weight: bold; font-style: italic;">%rax</span>
+<span style="font-weight: bold;">75f5</span>:       <span style="font-weight: bold;">48</span> 03 04 24             add    (<span style="font-weight: bold; font-style: italic;">%rsp</span>),<span style="font-weight: bold; font-style: italic;">%rax</span>
+<span style="font-weight: bold;">75f9</span>:       <span style="font-weight: bold;">49</span> 83 ac 04 10 01 00    subq   $0x1,0x110(<span style="font-weight: bold; font-style: italic;">%r12</span>,<span style="font-weight: bold; font-style: italic;">%rax</span>,1)
+</pre>
+</div>
+
+<p>
+It looks like it happens 45 times in <code>mm/page_alloc.o</code>:
+</p>
+<div class="org-src-container">
+<pre class="src src-C">$ objdump -Sr mm/page_alloc.o | grep imul | grep <span style="font-style: italic;">'0x58,'</span> |wc -l
+45
+</pre>
+</div>
+
+<p>
+Code notes for hot-path: The del_page_from_free_list() contains the
+zone-&gt;free_area[order].nr_free&#x2013; code, the __rmqueue_smallest was the
+hotspot that calls this. This is called by __rmqueue, which is called by
+rmqueue_bulk.
+</p>
+</div>
+</div>
+
+<div id="outline-container-Explaining-patch-with-fix" class="outline-3">
+<h3 id="Explaining-patch-with-fix"><a href="#Explaining-patch-with-fix">Explaining patch with fix</a></h3>
+<div class="outline-text-3" id="text-Explaining-patch-with-fix">
+<blockquote>
+<p>
+mm: make zone-&gt;free_area[order] access faster
+</p>
+
+<p>
+Avoid multiplication (imul) operations when accessing:
+ zone-&gt;free_area[order].nr_free
+</p>
+
+<p>
+This was really tricky to find. I was puzzled why perf reported that
+rmqueue_bulk was using 44% of the time in an imul operation:
+</p>
+
+<p>
+      │     del_page_from_free_list():
+44,54 │ e2:   imul   $0x58,%rax,%rax
+</p>
+
+<p>
+This operation was generated (by compiler) because the struct free_area
+have size 88 bytes or 0x58 hex. The compiler cannot find a shift
+operation to use and instead choose to use a imul to find the offset
+into the array free_area[].
+</p>
+
+<p>
+The patch align struct free_area to a cache-line, which cause the
+compiler avoid the imul operation. The imul operation is very fast on
+modern Intel CPUs. To help fast-path that decrement 'nr_free' move the
+member 'nr_free' to be first element, which saves one 'add' operation.
+</p>
+
+<p>
+Looking up instruction latency this exchange a 3-cycle 'imul' with a
+1-cycle 'shl', saving 2-cycles. It does trade some space to do this.
+</p>
+
+<p>
+Used: gcc (GCC) 9.3.1 20200408 (Red Hat 9.3.1-2)
+</p>
+</blockquote>
+
+<p>
+Notes about moving members around:
+</p>
+
+<p>
+Before: Move member 'nr_free':
+</p>
+<div class="org-src-container">
+<pre class="src src-asm"><span style="font-weight: bold;">760e</span>:       <span style="font-weight: bold;">44</span> 89 f0                mov    <span style="font-weight: bold; font-style: italic;">%r14d</span>,<span style="font-weight: bold; font-style: italic;">%eax</span>
+<span style="font-weight: bold;">7611</span>:       <span style="font-weight: bold;">48</span> 83 c0 02             add    $0x2,<span style="font-weight: bold; font-style: italic;">%rax</span>
+<span style="font-weight: bold;">7615</span>:       <span style="font-weight: bold;">48</span> c1 e0 07             shl    $0x7,<span style="font-weight: bold; font-style: italic;">%rax</span>
+<span style="font-weight: bold;">7619</span>:       <span style="font-weight: bold;">48</span> 03 04 24             add    (<span style="font-weight: bold; font-style: italic;">%rsp</span>),<span style="font-weight: bold; font-style: italic;">%rax</span>
+<span style="font-weight: bold;">761d</span>:       <span style="font-weight: bold;">49</span> 83 6c 04 10 01       subq   $0x1,0x10(<span style="font-weight: bold; font-style: italic;">%r12</span>,<span style="font-weight: bold; font-style: italic;">%rax</span>,1)
+</pre>
+</div>
+
+<p>
+Move member 'nr_free':
+</p>
+<div class="org-src-container">
+<pre class="src src-asm"><span style="font-weight: bold;">75be</span>:       <span style="font-weight: bold;">44</span> 89 f0                mov    <span style="font-weight: bold; font-style: italic;">%r14d</span>,<span style="font-weight: bold; font-style: italic;">%eax</span>
+<span style="font-weight: bold;">75c1</span>:       <span style="font-weight: bold;">48</span> c1 e0 07             shl    $0x7,<span style="font-weight: bold; font-style: italic;">%rax</span>
+<span style="font-weight: bold;">75c5</span>:       <span style="font-weight: bold;">48</span> 03 04 24             add    (<span style="font-weight: bold; font-style: italic;">%rsp</span>),<span style="font-weight: bold; font-style: italic;">%rax</span>
+<span style="font-weight: bold;">75c9</span>:       <span style="font-weight: bold;">49</span> 83 ac 04 c0 00 00    subq   $0x1,0xc0(<span style="font-weight: bold; font-style: italic;">%r12</span>,<span style="font-weight: bold; font-style: italic;">%rax</span>,1)
+</pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2021-02-24 Wed 12:06</p>
+<p class="date">Date: 2021-02-24 Wed 20:18</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

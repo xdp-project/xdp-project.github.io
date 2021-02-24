@@ -95,7 +95,7 @@ This kernel did have a DMA performance issue described in:
 Need to get their kernel-config, as basis for my upstream kernel compile.
 </p>
 
-<pre class="example" id="orgdb36e4e">
+<pre class="example" id="org653ad4b">
 git clone https://github.com/MarvellEmbeddedProcessors/linux-marvell
 git checkout linux-4.14.22-armada-18.09
 </pre>
@@ -108,7 +108,7 @@ Find 'mvebu_v8_lsp_defconfig'
 arch/arm64/configs/mvebu_v8_lsp_defconfig
 </p>
 
-<pre class="example" id="org6d7c4af">
+<pre class="example" id="org9e4167f">
 cp arch/arm64/configs/mvebu_v8_lsp_defconfig ~/git/kernel/bpf-next-arm/
 cd ~/git/kernel/bpf-next-arm/
 cp mvebu_v8_lsp_defconfig arch/arm64/configs
@@ -133,7 +133,7 @@ See error below, and next section for how I unbricked the box.
 Caused crash:
 </p>
 
-<pre class="example" id="orgaf0392d">
+<pre class="example" id="org849dc6c">
 Starting kernel ...
 [    0.000000] Booting Linux on physical CPU 0x0
 [    0.000000] Linux version 4.14.22-armada-18.09.3-ge5eb5621863c-dirty (jbrouer@firesoul) (gcc version 7.3.1 20180425 [lina8
@@ -450,7 +450,7 @@ Read: <a href="http://wiki.macchiatobin.net/tiki-index.php?page=Boot+from+remova
 Interrupt U-boot, and get console "Marvell&gt;&gt;".
 </p>
 
-<pre class="example" id="orgef42eff">
+<pre class="example" id="org0272161">
 Hit any key to stop autoboot:  0
 Marvell&gt;&gt;
 
@@ -463,7 +463,7 @@ mmc1 is current device
 The wiki differs here&#x2026; I needed to use "1:2" and not "1:1".
 </p>
 
-<pre class="example" id="org19118b3">
+<pre class="example" id="org3b3aa71">
 Marvell&gt;&gt; ext4ls mmc 1:2 /
 &lt;DIR&gt;       4096 .
 &lt;DIR&gt;       4096 ..
@@ -483,7 +483,7 @@ Marvell&gt;&gt; ext4ls mmc 1:2 /boot
 Original:
 </p>
 
-<pre class="example" id="orgc502487">
+<pre class="example" id="orgf6864ff">
 printenv bootmmc
 bootmmc=mmc dev 1; ext4load mmc 1:2 $kernel_addr $image_name;ext4load mmc 1:2 $fdt_addr $fdt_name;setenv bootargs $console root=/dev/mmcblk1p2 rw rootwait; booti $kernel_addr - $fdt_addr
 </pre>
@@ -492,7 +492,7 @@ bootmmc=mmc dev 1; ext4load mmc 1:2 $kernel_addr $image_name;ext4load mmc 1:2 $f
 Create special boot cmd for the .orig kernel and dtb file.
 </p>
 
-<pre class="example" id="orgdff0b5e">
+<pre class="example" id="orgeeeedfb">
 setenv image_name_orig boot/Image.orig
 setenv fdt_name_orig boot/armada-8040-mcbin.dtb.orig
 setenv bootorig 'mmc dev 1; ext4load mmc 1:2 $kernel_addr $image_name_orig;ext4load mmc 1:2 $fdt_addr $fdt_name_orig;setenv bootargs $console root=/dev/mmcblk1p2 rw rootwait; booti $kernel_addr - $fdt_addr'
@@ -509,14 +509,14 @@ Erasing SPI flash...Writing to SPI flash...done
 Start this new boot command:
 </p>
 
-<pre class="example" id="org25b54d6">
+<pre class="example" id="orgf0976a3">
 run bootorig
 </pre>
 </div>
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-08-10 Mon 15:47</p>
+<p class="date">Date: 2020-07-30 Thu 17:37</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
