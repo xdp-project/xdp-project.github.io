@@ -6,7 +6,7 @@
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Benchmarks for Espressobin driver mvneta</title>
-<meta name="generator" content="Org mode" />
+<meta name="generator" content="Org Mode" />
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
@@ -136,7 +136,7 @@ have an ethtool stats.
 <p>
 During XDP_DROP (via <code>xdp1</code>), this drivers ethtool stats look like:
 </p>
-<pre class="example">
+<pre class="example" id="org9f3899a">
 Show adapter(s) (eth0) statistics (ONLY that changed!)
 Ethtool(eth0    ) stat:       959198 (        959,198) &lt;= frames_65_to_127_octets /sec
 Ethtool(eth0    ) stat:       959199 (        959,199) &lt;= good_frames_received /sec
@@ -216,7 +216,7 @@ index 3e036642257c..ed4a0843cb05 100644
 <div id="outline-container-iptables-drop" class="outline-3">
 <h3 id="iptables-drop"><a href="#iptables-drop">iptables drop</a></h3>
 <div class="outline-text-3" id="text-iptables-drop">
-<pre class="example">
+<pre class="example" id="orga5ab062">
 espressobin:~# iptables -t raw -I PREROUTING -p udp --dport 9 -j DROP
 root@espressobin:~# nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
@@ -228,7 +228,7 @@ IpExtInNoECTPkts                151165             0.0
 <p>
 Perf report for iptables-raw drop:
 </p>
-<pre class="example">
+<pre class="example" id="orga9acf9f">
 #
 # Samples: 35K of event 'cycles:ppp'
 # Event count (approx.): 8632918197
@@ -290,7 +290,7 @@ Perf report for iptables-raw drop:
 <div id="outline-container-XDP_DROP-via-xdp1" class="outline-3">
 <h3 id="XDP_DROP-via-xdp1"><a href="#XDP_DROP-via-xdp1">XDP_DROP via xdp1</a></h3>
 <div class="outline-text-3" id="text-XDP_DROP-via-xdp1">
-<pre class="example">
+<pre class="example" id="org3db3f1c">
 root@espressobin:~/samples/bpf# ./xdp1 3
 proto 0:      27797 pkt/s
 proto 0:     421419 pkt/s
@@ -303,7 +303,7 @@ proto 0:     421184 pkt/s
 <p>
 Perf report during xdp1 dropping ALL packets:
 </p>
-<pre class="example">
+<pre class="example" id="orgd39e210">
 perf report --sort cpu,comm,symbol --no-children --stdio -g none
 # Samples: 16K of event 'cycles:ppp'
 # Event count (approx.): 3976182320
@@ -353,7 +353,7 @@ perf report --sort cpu,comm,symbol --no-children --stdio -g none
 <p>
 Doing redirect out same interface:
 </p>
-<pre class="example">
+<pre class="example" id="org4cecafd">
 root@espressobin:~/samples/bpf# ./xdp_redirect_map 3 3
 input: 3 output: 3
 Kernel error message: XDP program already attached
@@ -368,7 +368,7 @@ ifindex 3:     263334 pkt/s
 <p>
 Check if packets are getting transmitted, although only via stats:
 </p>
-<pre class="example">
+<pre class="example" id="org9a53af8">
 sar -n DEV 2 100
 Average:        IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s     %ifutil
 Average:           lo      0.00      0.00      0.00      0.00        0.00
@@ -382,7 +382,7 @@ Average:         lan1      0.00      0.00      0.00      0.00        0.00
 <p>
 Perf report:
 </p>
-<pre class="example">
+<pre class="example" id="org2b6e5f2">
 # Samples: 16K of event 'cycles:ppp'
 # Event count (approx.): 3971147150
 #
@@ -455,7 +455,7 @@ index ed4a0843cb05..75b206036511 100644
 </div>
 
 
-<pre class="example">
+<pre class="example" id="orgabb91fe">
 root@espressobin:~/samples/bpf# ./xdp1 3
 proto 0:     608377 pkt/s
 proto 0:     607360 pkt/s
@@ -485,7 +485,7 @@ The size of MVNETA_MAX_RX_BUF_SIZE = 3520 bytes
 <p>
 Perf result for No-DMA-sync: XDP_DROP
 </p>
-<pre class="example">
+<pre class="example" id="orgb011073">
 # Overhead  CPU  Command          Symbol
 # ........  ...  ...............  ...................................
 #
@@ -519,7 +519,7 @@ Drop via iptables:
 <li><code>iptables -t raw -I PREROUTING -p udp --dport 9 -j DROP</code></li>
 </ul>
 
-<pre class="example">
+<pre class="example" id="org800c1bf">
 root@espressobin:~/samples/bpf# nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
 IpInReceives                    175990             0.0
@@ -565,7 +565,7 @@ index ed4a0843cb05..7c5bfdf429c4 100644
 <div id="outline-container-XDP_DROP--with-1536-bytes-DMA-sync" class="outline-3">
 <h3 id="XDP_DROP--with-1536-bytes-DMA-sync"><a href="#XDP_DROP--with-1536-bytes-DMA-sync">XDP_DROP: with 1536 bytes DMA sync</a></h3>
 <div class="outline-text-3" id="text-XDP_DROP--with-1536-bytes-DMA-sync">
-<pre class="example">
+<pre class="example" id="org5f4c04a">
 root@espressobin:~/samples/bpf# ./xdp1 3 
 proto 0:     479068 pkt/s
 proto 0:     479874 pkt/s
@@ -610,7 +610,7 @@ Going from above zero-DMA sync to 1536 bytes
 <li>Hmm&#x2026; cannot conclude or correlate on this result</li>
 </ul>
 
-<pre class="example">
+<pre class="example" id="orgfbb8074">
 # Samples: 16K of event 'cycles:ppp'
 # Event count (approx.): 3992737701
 #
@@ -643,7 +643,7 @@ Going from above zero-DMA sync to 1536 bytes
 <div id="outline-container-XDP_REDIRECT--with-1536-bytes-DMA-sync" class="outline-3">
 <h3 id="XDP_REDIRECT--with-1536-bytes-DMA-sync"><a href="#XDP_REDIRECT--with-1536-bytes-DMA-sync">XDP_REDIRECT: with 1536 bytes DMA sync</a></h3>
 <div class="outline-text-3" id="text-XDP_REDIRECT--with-1536-bytes-DMA-sync">
-<pre class="example">
+<pre class="example" id="org84e80a8">
 # ./xdp_redirect_map 3 3 
 input: 3 output: 3
 Kernel error message: XDP program already attached
@@ -672,7 +672,7 @@ This correlate well with above XDP_DROP reduction diff which were 289 ns.
 <p>
 Perf report XDP_REDIRECT with 1536 bytes DMA sync
 </p>
-<pre class="example">
+<pre class="example" id="org7dbf83f">
 # Samples: 16K of event 'cycles:ppp'
 # Event count (approx.): 3968126744
 #
@@ -816,7 +816,7 @@ index ed4a0843cb05..4fb7b6eb22d9 100644
 <p>
 Result XDP_DROP via samples/bpf/xdp1
 </p>
-<pre class="example">
+<pre class="example" id="org338fe49">
 root@espressobin:~/samples/bpf# ./xdp1 3 
 proto 0:     698619 pkt/s
 proto 0:     695690 pkt/s
@@ -839,7 +839,7 @@ zero-sync performance.
 <p>
 The perf report symbols have decreased a lot:
 </p>
-<pre class="example">
+<pre class="example" id="org1a0d2d5">
 # Samples: 16K of event 'cycles:ppp'
 # Event count (approx.): 3931584629
 #
@@ -864,7 +864,7 @@ The perf report symbols have decreased a lot:
 <p>
 Perf stat, show low 0.27 insn per cycle, which is disappointing:
 </p>
-<pre class="example">
+<pre class="example" id="orgdb0f4e9">
 perf stat -C0 -r 3 sleep 1
 root@espressobin:~/samples/bpf# perf stat -C0 -r 3 sleep 1
 
@@ -901,7 +901,7 @@ can be seen in perf report above.  We hope/expect that the instruction cache
 can contain the workload.
 </p>
 
-<pre class="example">
+<pre class="example" id="org438497f">
 # perf stat -C0 -r 3 -e L1-icache-load -e L1-icache-load-misses -e L1-dcache-loads -e L1-dcache-load-misses sleep 1
 
  Performance counter stats for 'CPU(s) 0' (3 runs):
@@ -925,8 +925,8 @@ instruction cache does fit.
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-07-21 Tue 15:54</p>
-<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+<p class="date">Date: 2020-08-10 Mon 15:47</p>
+<p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
 </html>

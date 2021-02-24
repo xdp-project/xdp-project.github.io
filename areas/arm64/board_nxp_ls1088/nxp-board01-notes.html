@@ -6,7 +6,7 @@
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>NXP LS1088A - notes</title>
-<meta name="generator" content="Org mode" />
+<meta name="generator" content="Org Mode" />
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
@@ -62,14 +62,14 @@ Trick to temporarily boot another kernel.
 <p>
 Copy over kernel to SD-card (while Linux is running on board):
 </p>
-<pre class="example">
+<pre class="example" id="org23460c1">
 rsync -av arch/arm64/boot/Image root@192.168.42.10:/boot/Image2
 </pre>
 
 <p>
 During power up break into U-Boot:
 </p>
-<pre class="example">
+<pre class="example" id="orgb998922">
 setenv kernel_image Image2
 boot
 </pre>
@@ -116,7 +116,7 @@ have not caught up with. (Likely in this commit <a href="https://git.kernel.org/
 <p>
 Error messages in dmesg looks like this:
 </p>
-<pre class="example">
+<pre class="example" id="orgb92380c">
 arm-smmu 5000000.iommu: Unexpected global fault, this could be serious
 arm-smmu 5000000.iommu:  GFSR 0x80000002, GFSYNR0 0x00000002
 </pre>
@@ -151,7 +151,7 @@ default qdisc not getting assigned correctly, resulting in device driver
 dpaa2-eth getting assigned qdisc <code>noop</code>.
 </p>
 
-<pre class="example">
+<pre class="example" id="org1306a5f">
 root@LS1088ARDB-PB:~# ip link show dev eth0
 3: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noop state UP mode DEFAULT group default qlen 1000
     link/ether 00:04:9f:06:08:f0 brd ff:ff:ff:ff:ff:ff
@@ -199,8 +199,8 @@ Config adjustments:
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-07-21 Tue 15:54</p>
-<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+<p class="date">Date: 2020-08-10 Mon 15:47</p>
+<p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
 </html>

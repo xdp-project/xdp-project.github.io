@@ -6,7 +6,7 @@
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Testing page-allocator API proposal for alloc_pages_bulk</title>
-<meta name="generator" content="Org mode" />
+<meta name="generator" content="Org Mode" />
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/htmlize.css"/>
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/bigblow.css"/>
 <link rel="stylesheet" type="text/css" href="/styles/bigblow/css/hideshow.css"/>
@@ -102,7 +102,7 @@ ip link set veth2 up
 <p>
 Disable GRO/GSO/TSO on the veth devices
 </p>
-<pre class="example">
+<pre class="example" id="org9a50be8">
 ethtool -K veth1 gso off gro off tso off
 ethtool -K veth2 gso off gro off tso off
 </pre>
@@ -145,7 +145,7 @@ suites our micro-benchmark test case.
 Kernel: Linux broadwell 5.11.0-net-next
 </p>
 
-<pre class="example">
+<pre class="example" id="org0aef302">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      0       3,677,958   0          
@@ -157,7 +157,7 @@ rx_queue_index    0:sum 3,677,966
 
 </pre>
 
-<pre class="example">
+<pre class="example" id="org9693c96">
 Samples: 81K of event 'cycles', Event count (approx.): 73929158590
   Overhead  Symbol                                               IPC   [IPC Coverage]
 +    4,87%  [k] __netif_receive_skb_core                         -      -
@@ -232,7 +232,7 @@ Same veth setup as above:
 Results below with page_pool using bulk=16 for alloc_pages_bulk().
 </p>
 
-<pre class="example">
+<pre class="example" id="orgbfb3001">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      5       4,066,028   0          
@@ -243,7 +243,7 @@ rx_queue_index    0:5   4,066,023   0
 rx_queue_index    0:sum 4,066,023  
 </pre>
 
-<pre class="example">
+<pre class="example" id="org13fdd63">
 Samples: 51K of event 'cycles', Event count (approx.): 46934149161
   Overhead  Symbol                                               IPC   [IPC Coverage]
 +    4,94%  [k] __netif_receive_skb_core                         -      -
@@ -304,7 +304,7 @@ Same veth setup as above:
 Results below with page_pool using bulk=64 for alloc_pages_bulk().
 </p>
 
-<pre class="example">
+<pre class="example" id="orgbd1d886">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      1       4,297,656   0          
@@ -320,7 +320,7 @@ rx_queue_index    0:sum 4,297,649
 </div>
 <div id="postamble" class="status">
 <p class="date">Date: 2021-02-24 Wed 12:06</p>
-<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+<p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
 </html>
