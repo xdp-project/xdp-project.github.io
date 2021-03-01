@@ -121,7 +121,7 @@ ip link set veth2 up
 <p>
 Disable GRO/GSO/TSO on the veth devices
 </p>
-<pre class="example" id="orged0e7bd">
+<pre class="example" id="orgfa2a89c">
 ethtool -K veth1 gso off gro off tso off
 ethtool -K veth2 gso off gro off tso off
 </pre>
@@ -164,7 +164,7 @@ suites our micro-benchmark test case.
 Kernel: Linux broadwell 5.11.0-net-next
 </p>
 
-<pre class="example" id="org997de8f">
+<pre class="example" id="org574d08a">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      0       3,677,958   0          
@@ -176,7 +176,7 @@ rx_queue_index    0:sum 3,677,966
 
 </pre>
 
-<pre class="example" id="orgb663e56">
+<pre class="example" id="org58df69a">
 Samples: 81K of event 'cycles', Event count (approx.): 73929158590
   Overhead  Symbol                                               IPC   [IPC Coverage]
 +    4,87%  [k] __netif_receive_skb_core                         -      -
@@ -251,7 +251,7 @@ Same veth setup as above:
 Results below with page_pool using bulk=16 for alloc_pages_bulk().
 </p>
 
-<pre class="example" id="orgf1b2ab3">
+<pre class="example" id="org14208cd">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      5       4,066,028   0          
@@ -262,7 +262,7 @@ rx_queue_index    0:5   4,066,023   0
 rx_queue_index    0:sum 4,066,023  
 </pre>
 
-<pre class="example" id="org589653e">
+<pre class="example" id="org98409f6">
 Samples: 51K of event 'cycles', Event count (approx.): 46934149161
   Overhead  Symbol                                               IPC   [IPC Coverage]
 +    4,94%  [k] __netif_receive_skb_core                         -      -
@@ -323,7 +323,7 @@ Same veth setup as above:
 Results below with page_pool using bulk=64 for alloc_pages_bulk().
 </p>
 
-<pre class="example" id="orga1c9d2b">
+<pre class="example" id="org368a602">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      1       4,297,656   0          
@@ -356,7 +356,7 @@ Test with new patchset from Mel:
 bulk=64
 </p>
 
-<pre class="example" id="org1f80a20">
+<pre class="example" id="orga6b92a0">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      3       4,368,926   0          
@@ -377,7 +377,10 @@ rx_queue_index    0:sum 4,368,917
 <div id="outline-container-Follow-up-to-Mel-s-patchset" class="outline-3">
 <h3 id="Follow-up-to-Mel-s-patchset"><a href="#Follow-up-to-Mel-s-patchset">Follow up to Mel's patchset</a></h3>
 <div class="outline-text-3" id="text-Follow-up-to-Mel-s-patchset">
-<pre class="example" id="orgfa7a9dd">
+<p>
+Patchset V1:
+</p>
+<pre class="example" id="org585ffbe">
 stg mail --version='RFC net-next' --edit-cover --cc meup \
  --to mel --cc chuck.lever@oracle.com \
  --to mm --cc netdev --cc linux-nfs@vger.kernel.org --cc lkml \
@@ -386,6 +389,20 @@ stg mail --version='RFC net-next' --edit-cover --cc meup \
 </pre>
 <p>
 Message-ID: &lt;161419296941.2718959.12575257358107256094.stgit@firesoul&gt;
+</p>
+
+<p>
+V2 with minor changes and dropping micro-optimisation:
+</p>
+<pre class="example" id="orgc917e09">
+stg mail --version='RFC V2 net-next' --edit-cover --cc meup \
+ --to mel --cc chuck.lever@oracle.com \
+ --to mm --cc netdev --cc linux-nfs@vger.kernel.org --cc lkml \
+ --in-reply-to='20210224102603.19524-1-mgorman@techsingularity.net' \
+ 05-03-reorder-add-page_pool_dma_map..06-04-page_pool-use-alloc_pages_bulk
+</pre>
+<p>
+Message-ID: &lt;161460522573.3031322.15721946341157092594.stgit@firesoul&gt;
 </p>
 
 <blockquote>
@@ -404,6 +421,11 @@ This is a followup to Mel Gorman's patchset:
 <p>
 Showing page_pool usage of the API for alloc_pages_bulk().
 </p>
+
+<p>
+Maybe Mel Gorman will/can carry these patches?
+(to keep it together with the alloc_pages_bulk API)
+</p>
 </blockquote>
 </div>
 </div>
@@ -414,7 +436,7 @@ Showing page_pool usage of the API for alloc_pages_bulk().
 <p>
 Test again:
 </p>
-<pre class="example" id="orga4873e4">
+<pre class="example" id="orgea0e9eb">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      0       4,302,291   0          
@@ -462,6 +484,11 @@ the alloc_pages_bulk API (3,677,958 pps -&gt; 4,368,926 pps).
 <h2 id="Micro-optimisations"><a href="#Micro-optimisations">Micro optimisations</a></h2>
 <div class="outline-text-2" id="text-Micro-optimisations">
 <p>
+<b>UPDATE</b>: Choosing to drop this patch, it is waste too much memory and
+it too fragile as it depends on compiler behaviour.
+</p>
+
+<p>
 Document steps in micro optimizing page-alloactor code:
 </p>
 <ul class="org-ul">
@@ -475,7 +502,7 @@ Document steps in micro optimizing page-alloactor code:
 <p>
 The code del_page_from_free_list() generate a strange imul operation:
 </p>
-<pre class="example" id="orga610800">
+<pre class="example" id="orga536425">
 imul   $0x58,%rax,%rax
 </pre>
 
@@ -515,7 +542,7 @@ This happens when accessing free_area like this:
 <p>
 Perf show hot-spot in: rmqueue_bulk.constprop.0 / rmqueue_bulk()
 </p>
-<pre class="example" id="orgb21778c">
+<pre class="example" id="org406e4ac">
       │         mov    0x8(%rbx),%rax                                                                                            ▒
       │       __list_del():                                                                                                      ▒
       │         mov    %rax,0x8(%rdx)                                                                                            ▒
@@ -572,7 +599,7 @@ The reason for the code is to find the right struct free_area in struct
 zone.  The array of 11 comes from define MAX_ORDER.
 </p>
 
-<pre class="example" id="org03592b3">
+<pre class="example" id="org1615f5d">
 struct zone {
         long unsigned int          _watermark[3];        /*     0    24 */
  [...]
@@ -705,7 +732,7 @@ Move member 'nr_free':
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2021-02-24 Wed 20:18</p>
+<p class="date">Date: 2021-03-01 Mon 14:29</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

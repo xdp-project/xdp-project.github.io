@@ -264,7 +264,7 @@ modifying kernel. This caused libbpf to fail with these error/warning
 message:
 </p>
 
-<pre class="example" id="orga4015c5">
+<pre class="example" id="org2972f52">
 libbpf: Error in bpf_create_map_xattr(cpu_map):ERROR: strerror_r(-524)=22(-524). Retrying without BTF.
 
 libbpf: Error in bpf_create_map_xattr(cpu_map):Invalid argument(-22). Retrying without BTF.
@@ -324,7 +324,7 @@ Using <code>strace</code> it is easy trace all BPF syscalls (<code>-e trace=bpf<
 filter to the ones that fails (<code>--failed-only or -Z</code>):
 </p>
 
-<pre class="example" id="org25aceca">
+<pre class="example" id="org45f0d08">
 sudo strace -e trace=bpf --failed-only ./xdp_redirect_cpu -F --dev mlx5p1 --q 1024 --cpu 4 --prog xdp_cpu_map0 
 bpf(BPF_MAP_CREATE, {map_type=BPF_MAP_TYPE_CPUMAP, key_size=4, value_size=4, max_entries=8192, map_flags=0, inner_map_fd=0, map_name="cpu_map", map_ifindex=0, btf_fd=3, btf_key_type_id=7, btf_value_type_id=27, btf_vmlinux_value_type_id=0}, 120) = -1 ENOTSUPP (Unknown error 524)
 libbpf: Error in bpf_create_map_xattr(cpu_map):ERROR: strerror_r(-524)=22(-524). Retrying without BTF.
@@ -337,7 +337,7 @@ internal errno in file <a href="https://github.com/torvalds/linux/blob/master/in
 these "should never be seen by user programs."
 </p>
 
-<pre class="example" id="orged974b1">
+<pre class="example" id="orgf71b328">
 #define ENOTSUPP        524     /* Operation is not supported */
 </pre>
 
@@ -359,7 +359,7 @@ harder debug and isolate 'map_create' function call (as it get inlined).
 <p>
 Finding BPF syscall to ftrace:
 </p>
-<pre class="example" id="org34f247c">
+<pre class="example" id="orgdb263c2">
 $ sudo trace-cmd list -f SyS_bpf
 __x64_sys_bpf
 __ia32_sys_bpf
@@ -368,14 +368,14 @@ __ia32_sys_bpf
 <p>
 In another terminal record via trace-cmd:
 </p>
-<pre class="example" id="org4d74664">
+<pre class="example" id="orgdddf964">
 sudo trace-cmd record -p function_graph -g __x64_sys_bpf
 </pre>
 
 <p>
 Run the failing command:
 </p>
-<pre class="example" id="orga967346">
+<pre class="example" id="org99f9b26">
 sudo ./xdp_redirect_cpu -F --dev mlx5p1 --q 1024 --cpu 4 --prog xdp_cpu_map0
 libbpf: Error in bpf_create_map_xattr(cpu_map):ERROR: strerror_r(-524)=22(-524). Retrying without BTF.
 libbpf: map 'cpu_map': failed to create: ERROR: strerror_r(-524)=22(-524)
@@ -385,7 +385,7 @@ libbpf: failed to load object './xdp_redirect_cpu_kern.o'
 <p>
 Viewing the result via:
 </p>
-<pre class="example" id="orga715f45">
+<pre class="example" id="org69c2161">
 trace-cmd report | less
 </pre>
 
@@ -457,7 +457,7 @@ Signed-off-by: Jesper Dangaard Brouer &lt;brouer@redhat.com&gt;
 Andrii suggests: to use EOPNOTSUPP (instead of errno ENOTSUPP)
 </p>
 
-<pre class="example" id="orgab12d32">
+<pre class="example" id="org9c80eaa">
 libbpf: Error in bpf_create_map_xattr(cpu_map):Operation not supported(-95). Retrying without BTF.
 </pre>
 
@@ -554,7 +554,7 @@ Q: What existing function exist that compared two BTF layouts?
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-07-30 Thu 17:37</p>
+<p class="date">Date: 2020-08-04 Tue 10:54</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
