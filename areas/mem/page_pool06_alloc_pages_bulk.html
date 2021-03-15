@@ -54,6 +54,13 @@
 <li><a href="#desc--net--page_pool--use-alloc_pages_bulk-in-refill-code-path">desc: net: page_pool: use alloc_pages_bulk in refill code path</a></li>
 </ul>
 </li>
+<li><a href="#Test-on-Mel-git-tree">Test on Mel git-tree</a>
+<ul>
+<li><a href="#stg-mail">stg mail</a></li>
+<li><a href="#Updated-patch">Updated patch</a></li>
+<li><a href="#Pop-patch-using-__alloc_pages_bulk">Pop patch using __alloc_pages_bulk</a></li>
+</ul>
+</li>
 <li><a href="#Micro-optimisations">Micro optimisations</a>
 <ul>
 <li><a href="#Observations">Observations</a></li>
@@ -121,7 +128,7 @@ ip link set veth2 up
 <p>
 Disable GRO/GSO/TSO on the veth devices
 </p>
-<pre class="example" id="orgfa2a89c">
+<pre class="example" id="org8ba9895">
 ethtool -K veth1 gso off gro off tso off
 ethtool -K veth2 gso off gro off tso off
 </pre>
@@ -164,7 +171,7 @@ suites our micro-benchmark test case.
 Kernel: Linux broadwell 5.11.0-net-next
 </p>
 
-<pre class="example" id="org574d08a">
+<pre class="example" id="org5bae391">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      0       3,677,958   0          
@@ -176,7 +183,7 @@ rx_queue_index    0:sum 3,677,966
 
 </pre>
 
-<pre class="example" id="org58df69a">
+<pre class="example" id="org853c4f8">
 Samples: 81K of event 'cycles', Event count (approx.): 73929158590
   Overhead  Symbol                                               IPC   [IPC Coverage]
 +    4,87%  [k] __netif_receive_skb_core                         -      -
@@ -251,7 +258,7 @@ Same veth setup as above:
 Results below with page_pool using bulk=16 for alloc_pages_bulk().
 </p>
 
-<pre class="example" id="org14208cd">
+<pre class="example" id="orgba77e44">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      5       4,066,028   0          
@@ -262,7 +269,7 @@ rx_queue_index    0:5   4,066,023   0
 rx_queue_index    0:sum 4,066,023  
 </pre>
 
-<pre class="example" id="org98409f6">
+<pre class="example" id="org9dd55cd">
 Samples: 51K of event 'cycles', Event count (approx.): 46934149161
   Overhead  Symbol                                               IPC   [IPC Coverage]
 +    4,94%  [k] __netif_receive_skb_core                         -      -
@@ -323,7 +330,7 @@ Same veth setup as above:
 Results below with page_pool using bulk=64 for alloc_pages_bulk().
 </p>
 
-<pre class="example" id="org368a602">
+<pre class="example" id="org83ecaf6">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      1       4,297,656   0          
@@ -356,7 +363,7 @@ Test with new patchset from Mel:
 bulk=64
 </p>
 
-<pre class="example" id="orga6b92a0">
+<pre class="example" id="org3a4b8af">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      3       4,368,926   0          
@@ -380,7 +387,7 @@ rx_queue_index    0:sum 4,368,917
 <p>
 Patchset V1:
 </p>
-<pre class="example" id="org585ffbe">
+<pre class="example" id="orgc322a1c">
 stg mail --version='RFC net-next' --edit-cover --cc meup \
  --to mel --cc chuck.lever@oracle.com \
  --to mm --cc netdev --cc linux-nfs@vger.kernel.org --cc lkml \
@@ -394,7 +401,7 @@ Message-ID: &lt;161419296941.2718959.12575257358107256094.stgit@firesoul&gt;
 <p>
 V2 with minor changes and dropping micro-optimisation:
 </p>
-<pre class="example" id="orgc917e09">
+<pre class="example" id="org8200f6b">
 stg mail --version='RFC V2 net-next' --edit-cover --cc meup \
  --to mel --cc chuck.lever@oracle.com \
  --to mm --cc netdev --cc linux-nfs@vger.kernel.org --cc lkml \
@@ -436,7 +443,7 @@ Maybe Mel Gorman will/can carry these patches?
 <p>
 Test again:
 </p>
-<pre class="example" id="orgea0e9eb">
+<pre class="example" id="org3c8aeb6">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      0       4,302,291   0          
@@ -480,6 +487,137 @@ the alloc_pages_bulk API (3,677,958 pps -&gt; 4,368,926 pps).
 </div>
 </div>
 
+
+<div id="outline-container-Test-on-Mel-git-tree" class="outline-2">
+<h2 id="Test-on-Mel-git-tree"><a href="#Test-on-Mel-git-tree">Test on Mel git-tree</a></h2>
+<div class="outline-text-2" id="text-Test-on-Mel-git-tree">
+<p>
+Tests based on Mel Gorman's git tree:
+</p>
+<ul class="org-ul">
+<li>git://git.kernel.org/pub/scm/linux/kernel/git/mel/linux.git</li>
+</ul>
+
+<p>
+Branch: mm-bulk-rebase-v4r2
+</p>
+<ul class="org-ul">
+<li>Changed the last patch with page_pool changes</li>
+</ul>
+</div>
+
+<div id="outline-container-stg-mail" class="outline-3">
+<h3 id="stg-mail"><a href="#stg-mail">stg mail</a></h3>
+<div class="outline-text-3" id="text-stg-mail">
+<p>
+Promised to followup in Message-ID: &lt;20210315094038.22d6d79a@carbon&gt;
+</p>
+<ul class="org-ul">
+<li>Below stg <a href="https://lore.kernel.org/netdev/161583677541.3715498.6118778324185171839.stgit@firesoul/">Message-ID</a></li>
+</ul>
+
+<pre class="example" id="org093f295">
+stg mail --version='mel-git' --edit-cover --cc meup \
+ --to mel --cc chuck.lever@oracle.com --cc alex \
+ --to mm --cc netdev --cc linux-nfs@vger.kernel.org --cc lkml \
+ --in-reply-to='20210315094038.22d6d79a@carbon' \
+ net-page_pool-use
+</pre>
+
+<blockquote>
+<p>
+Subj: Followup: Update [PATCH 7/7] in Mel's series
+</p>
+
+<p>
+This patch is against Mel's git-tree:
+ git://git.kernel.org/pub/scm/linux/kernel/git/mel/linux.git
+</p>
+
+<p>
+Using branch: mm-bulk-rebase-v4r2 but replacing the last patch related to
+the page_pool using __alloc_pages_bulk().
+</p>
+
+<p>
+<a href="https://git.kernel.org/pub/scm/linux/kernel/git/mel/linux.git/log/?h=mm-bulk-rebase-v4r2">https://git.kernel.org/pub/scm/linux/kernel/git/mel/linux.git/log/?h=mm-bulk-rebase-v4r2</a>
+</p>
+
+<p>
+While implementing suggestions by Alexander Duyck, I realised that I could
+simplify the code further, and simply take the last page from the
+pool-&gt;alloc.cache given this avoids special casing the last page.
+</p>
+
+<p>
+I re-ran performance tests and the improvement have been reduced to 13% from
+18% before, but I don't think the rewrite of the specific patch have
+anything to do with this.
+</p>
+
+<p>
+Notes on tests:
+ <a href="https://github.com/xdp-project/xdp-project/blob/master/areas/mem/page_pool06_alloc_pages_bulk.org#test-on-mel-git-tree">https://github.com/xdp-project/xdp-project/blob/master/areas/mem/page_pool06_alloc_pages_bulk.org#test-on-mel-git-tree</a>
+</p>
+</blockquote>
+
+<p>
+Performance summary: +13% faster
+</p>
+<ul class="org-ul">
+<li>(3,810,013 pps -&gt; 4,308,208 pps)</li>
+<li>((4308208/3810013)-1)*100 = 13.07%</li>
+</ul>
+
+<p>
+Previous: 18.8% (3,677,958 pps -&gt; 4,368,926 pps).
+</p>
+<ul class="org-ul">
+<li>Thus, slower than before.</li>
+<li>Mostly look like better baseline</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-Updated-patch" class="outline-3">
+<h3 id="Updated-patch"><a href="#Updated-patch">Updated patch</a></h3>
+<div class="outline-text-3" id="text-Updated-patch">
+<p>
+Alexander Duyck point out there was a cleaner way to implement
+changes in function <code>__page_pool_alloc_pages_slow()</code>.
+</p>
+
+<pre class="example" id="org9214bb6">
+Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
+XDP stats       CPU     pps         issue-pps  
+XDP-RX CPU      3       4,308,208   0          
+XDP-RX CPU      total   4,308,208  
+
+RXQ stats       RXQ:CPU pps         issue-pps  
+rx_queue_index    0:3   4,308,208   0          
+rx_queue_index    0:sum 4,308,208  
+</pre>
+</div>
+</div>
+
+<div id="outline-container-Pop-patch-using-__alloc_pages_bulk" class="outline-3">
+<h3 id="Pop-patch-using-__alloc_pages_bulk"><a href="#Pop-patch-using-__alloc_pages_bulk">Pop patch using __alloc_pages_bulk</a></h3>
+<div class="outline-text-3" id="text-Pop-patch-using-__alloc_pages_bulk">
+<pre class="example" id="org5edf04d">
+Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
+XDP stats       CPU     pps         issue-pps  
+XDP-RX CPU      1       3,810,013   0          
+XDP-RX CPU      total   3,810,013  
+
+RXQ stats       RXQ:CPU pps         issue-pps  
+rx_queue_index    0:1   3,810,013   0          
+rx_queue_index    0:sum 3,810,013  
+</pre>
+</div>
+</div>
+</div>
+
+
 <div id="outline-container-Micro-optimisations" class="outline-2">
 <h2 id="Micro-optimisations"><a href="#Micro-optimisations">Micro optimisations</a></h2>
 <div class="outline-text-2" id="text-Micro-optimisations">
@@ -502,7 +640,7 @@ Document steps in micro optimizing page-alloactor code:
 <p>
 The code del_page_from_free_list() generate a strange imul operation:
 </p>
-<pre class="example" id="orga536425">
+<pre class="example" id="orgae4878a">
 imul   $0x58,%rax,%rax
 </pre>
 
@@ -542,7 +680,7 @@ This happens when accessing free_area like this:
 <p>
 Perf show hot-spot in: rmqueue_bulk.constprop.0 / rmqueue_bulk()
 </p>
-<pre class="example" id="org406e4ac">
+<pre class="example" id="org3c3d8b0">
       │         mov    0x8(%rbx),%rax                                                                                            ▒
       │       __list_del():                                                                                                      ▒
       │         mov    %rax,0x8(%rdx)                                                                                            ▒
@@ -599,7 +737,7 @@ The reason for the code is to find the right struct free_area in struct
 zone.  The array of 11 comes from define MAX_ORDER.
 </p>
 
-<pre class="example" id="org1615f5d">
+<pre class="example" id="org22c5b88">
 struct zone {
         long unsigned int          _watermark[3];        /*     0    24 */
  [...]
@@ -732,7 +870,7 @@ Move member 'nr_free':
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2021-03-01 Mon 14:29</p>
+<p class="date">Date: 2021-03-15 Mon 20:40</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

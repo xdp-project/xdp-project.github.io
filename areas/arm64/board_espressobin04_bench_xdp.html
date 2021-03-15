@@ -62,7 +62,7 @@ mvneta_04_page_pool_recycle_xdp located here:
 <div id="outline-container-XDP_DROP-bench-with-xdp1" class="outline-2">
 <h2 id="XDP_DROP-bench-with-xdp1"><a href="#XDP_DROP-bench-with-xdp1">XDP_DROP bench with xdp1</a></h2>
 <div class="outline-text-2" id="text-XDP_DROP-bench-with-xdp1">
-<pre class="example" id="org80aff0f">
+<pre class="example" id="org28a559d">
 root@espressobin:~/samples/bpf# ./xdp1 3 &amp;
 proto 0:     660053 pkt/s
 proto 0:     660147 pkt/s
@@ -138,7 +138,7 @@ Shows cache-misses reduced
 <li>Indication that prefetch tries to prefetch more than one cache-line</li>
 </ul>
 
-<pre class="example" id="org54f2cee">
+<pre class="example" id="org98243ba">
 root@espressobin:~/samples/bpf# ./xdp1 3 &amp;
 proto 0:     666439 pkt/s
 proto 0:     667531 pkt/s
@@ -178,7 +178,7 @@ Code size estimate:
 <li>Maybe always fetch two cache-lines: 306.79 * 64 * 2 = 39269 bytes ?</li>
 </ul>
 
-<pre class="example" id="org125ee11">
+<pre class="example" id="orgc8eefea">
 # /root/bin/perf stat -C0 -r 3 -e instructions -e cycles -e bus-cycles -e cache-misses -e cache-references -e branches -e branch-misses sleep 1
 
  Performance counter stats for 'CPU(s) 0' (3 runs):
@@ -223,7 +223,7 @@ basically removed the need for RCU-read-side code.
 CONFIG_PREEMPT_NONE: No Forced Preemption (Server):
 </p>
 
-<pre class="example" id="orgb439b5c">
+<pre class="example" id="org737d7b2">
 No Forced Preemption (Server)
 CONFIG_PREEMPT_NONE:                                                │
   │                                                                 │
@@ -247,7 +247,7 @@ CONFIG_PREEMPT_NONE:                                                │
 Up and running:
 </p>
 
-<pre class="example" id="org447df7f">
+<pre class="example" id="orgdf25fe7">
 # uname -a
 Linux espressobin 4.20.0-rc1-mvneta_04+ #25 SMP Mon Dec 3 11:33:18 CET 2018 aarch64 aarch64 aarch64 GNU/Linux
 </pre>
@@ -262,7 +262,7 @@ This does improve performance:
 <li>(1/668113-1/693440)*10^9 = 54.66 ns</li>
 </ul>
 
-<pre class="example" id="orgb10a9f4">
+<pre class="example" id="orgef6d293">
 # ./xdp1 3 &amp;
 proto 0:     466516 pkt/s
 proto 0:     693440 pkt/s
@@ -277,7 +277,7 @@ root@espressobin:~/samples/bpf#
 Perf stats performance for CONFIG_PREEMPT_NONE measurements, L1 cache:
 </p>
 
-<pre class="example" id="orgbb44d97">
+<pre class="example" id="org9893acd">
 Performance counter stats for 'CPU(s) 0' (3 runs):
 
  186193917  L1-icache-load                                      ( +-  0.02% )
@@ -309,7 +309,7 @@ The L1-icache-load-misses were also reduce a bit:
 Perf stats performance for CONFIG_PREEMPT_NONE measurements:
 </p>
 
-<pre class="example" id="org8d31b63">
+<pre class="example" id="orgbb10df9">
 Performance counter stats for 'CPU(s) 0' (3 runs):
 
   311683229  instructions     #    0.31  insn per cycle        ( +-  0.00% )
@@ -335,7 +335,7 @@ with CONFIG_PREEMPT_NONE, which compiles out the RCU-read-side locks:
 Below output from mpstat to verify general system performance.
 </p>
 
-<pre class="example" id="orgdc4cca1">
+<pre class="example" id="org00cee23">
 $ mpstat -P ALL -u -I SCPU -I SUM 2
   CPU    %usr   %nice    %sys %iowait    %irq   %soft    %idle
   all    0.00    0.00    0.00    0.00    0.75   49.25    50.00
@@ -375,7 +375,7 @@ which could cause I-cache issues.  Hack comment it out&#x2026; and test.
 <p>
 The code-size delta is 60 bytes in mvneta_poll:
 </p>
-<pre class="example" id="org6a9445b">
+<pre class="example" id="org31283d5">
 $ ./scripts/bloat-o-meter vmlinux2 vmlinux
 add/remove: 0/3 grow/shrink: 0/1 up/down: 0/-84 (-84)
 Function                                     old     new   delta
@@ -393,7 +393,7 @@ Testing with xdp1/XDP_DROP on eth0.
 <p>
 Before: 696194 pkt/s
 </p>
-<pre class="example" id="orgb130571">
+<pre class="example" id="org6af1fdb">
 perf stat -C0 -r 3 -e L1-icache-load -e L1-icache-load-misses -e L1-dcache-loads -e L1-dcache-load-misses -e L1-dcache-stores -e L1-dcache-store-misses sleep 1
 
  Performance counter stats for 'CPU(s) 0' (3 runs):
@@ -409,7 +409,7 @@ perf stat -C0 -r 3 -e L1-icache-load -e L1-icache-load-misses -e L1-dcache-loads
 <p>
 After: 692034 pkt/s
 </p>
-<pre class="example" id="orgdbbd35d">
+<pre class="example" id="org2c37b40">
 Performance counter stats for 'CPU(s) 0' (3 runs):
 
         186047636      L1-icache-load                                                ( +-  0.06% )
@@ -431,7 +431,7 @@ I-cache-misses).
 <div id="outline-container-Playing-with-other-perf-events" class="outline-3">
 <h3 id="Playing-with-other-perf-events"><a href="#Playing-with-other-perf-events">Playing with other perf events</a></h3>
 <div class="outline-text-3" id="text-Playing-with-other-perf-events">
-<pre class="example" id="org0b50f5e">
+<pre class="example" id="org648c018">
 pipeline:
   agu_dep_stall                                     
        [Cycles there is an interlock for a load/store instruction waiting for data to calculate the address in
@@ -458,7 +458,7 @@ pipeline:
        [Data Write operation that stalls the pipeline because the store buffer is full]
 </pre>
 
-<pre class="example" id="org7739530">
+<pre class="example" id="orgfa76087">
 perf stat -C0 -r 3 -e agu_dep_stall -e decode_dep_stall -e ic_dep_stall \
 -e ld_dep_stall -e st_dep_stall -e iutlb_dep_stall  sleep 1
 
@@ -472,7 +472,7 @@ perf stat -C0 -r 3 -e agu_dep_stall -e decode_dep_stall -e ic_dep_stall \
      684001      iutlb_dep_stall            ( +-  0.12% )
 </pre>
 
-<pre class="example" id="orgc371f86">
+<pre class="example" id="org40dd50f">
 perf stat -C0 -r 3 -e agu_dep_stall -e decode_dep_stall -e ic_dep_stall \
 -e ld_dep_stall -e iutlb_dep_stall -e other_interlock_stall \
 -e other_iq_dep_stall -e simd_dep_stall -e st_dep_stall -e stall_sb_full \
@@ -492,7 +492,7 @@ sleep 1
   1.00412169 +- 0.00000383 seconds time elapsed  ( +-  0.00% )
 </pre>
 
-<pre class="example" id="org0f9659d">
+<pre class="example" id="orgb82a111">
 perf stat -C0 -r 3 -e instructions -e cycles \
  -e ic_dep_stall -e ld_dep_stall -e st_dep_stall \
  -e agu_dep_stall -e stall_sb_full -e other_interlock_stall \
@@ -508,7 +508,7 @@ perf stat -C0 -r 3 -e instructions -e cycles \
      36577300      other_interlock_stall                 ( +-  0.01% )  (87.52%)
 </pre>
 
-<pre class="example" id="org0f474b7">
+<pre class="example" id="orgdcfc29a">
 perf stat -C0 -r 3 -e instructions -e cycles \
  -e ic_dep_stall -e ld_dep_stall -e st_dep_stall \
  -e agu_dep_stall -e other_interlock_stall \
@@ -621,7 +621,7 @@ Provoked crash with tcpdump + cpumap-redirect
 <p>
 Was running <code>xdp_redirect_cpu</code> to CPU-1:
 </p>
-<pre class="example" id="orgb0b7b06">
+<pre class="example" id="org546a90e">
 root@espressobin:~/samples/bpf# ./xdp_redirect_cpu --dev eth0 --cpu 1 --sec 2
 </pre>
 
@@ -633,7 +633,7 @@ traffic, without any crash.
 <p>
 Starting pktgen towards the box:
 </p>
-<pre class="example" id="org20dee14">
+<pre class="example" id="org91123e2">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          0       598701         0           0          
@@ -651,7 +651,7 @@ Starting tcpdump (<code>tcpdump -ni eth0 -c 10</code>) while pktgen was running
 caused the following crash:
 </p>
 
-<pre class="example" id="orgd5db7e3">
+<pre class="example" id="orgc059db9">
 root@espressobin:~/samples/bpf# tcpdump -ni eth0 -c 10
 
 [ 1051.131522] Unable to handle kernel paging request at virtual address ffff8000286460e2
@@ -713,7 +713,7 @@ root@espressobin:~/samples/bpf# tcpdump -ni eth0 -c 10
 Notice that function <code>packet_rcv</code> is the tcpdump/af_packet code.
 </p>
 
-<pre class="example" id="orgfe2e39b">
+<pre class="example" id="org2d6235a">
 $ ./scripts/faddr2line vmlinux packet_rcv+0xf4
 packet_rcv+0xf4/0x3c8:
 packet_rcv at net/packet/af_packet.c:2078
@@ -725,7 +725,7 @@ the kernel, while tcpdump that tries to show packet output on console
 does cause crash.
 </p>
 
-<pre class="example" id="org5421a77">
+<pre class="example" id="org570593d">
  # tcpdump -ni eth0 -w /dev/null  # &lt;-- Does NOT crash
 vs.
  # tcpdump -ni eth0 -c 10  # &lt;-- Does crash
@@ -735,7 +735,7 @@ vs.
 Got a new crash dump that contains the DSA calls:
 </p>
 
-<pre class="example" id="org47c5bea">
+<pre class="example" id="org2c1b255">
 [ 5650.971841] Unable to handle kernel paging request at virtual address ffff80002baa80e2
 [ 5650.977167] Mem abort info:
 [ 5650.980044]   ESR = 0x96000021
@@ -808,7 +808,7 @@ compile the kernel without DSA support and only get a <code>eth0</code> device.
 <p>
 Base performance with pktgen and UdpNoPorts listening:
 </p>
-<pre class="example" id="org596e64e">
+<pre class="example" id="orge6d97fc">
 # nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
 IpInReceives                    175528             0.0
@@ -826,7 +826,7 @@ IpExtInNoECTPkts                175543             0.0
 <p>
 Base iptables-raw drop performance:
 </p>
-<pre class="example" id="org825eb20">
+<pre class="example" id="org45d9f96">
 # iptables -t raw -I PREROUTING -p udp --dport 9 -j DROP
 # nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
@@ -838,7 +838,7 @@ IpExtInNoECTPkts                271888             0.0
 <p>
 Base XDP_DROP performance:
 </p>
-<pre class="example" id="orge9a8362">
+<pre class="example" id="org9b9d607">
 root@espressobin:~/samples/bpf# ./xdp1 3
 proto 17:     214293 pkt/s
 proto 17:     637069 pkt/s
@@ -862,7 +862,7 @@ XDP redirect to CPUMAP performance, still with iptables-raw DROP rule
 installed:
 </p>
 
-<pre class="example" id="org85d25b2">
+<pre class="example" id="org74e885d">
 ./xdp_redirect_cpu --dev eth0 --cpu 1 --prog 0
 
 Running XDP/eBPF prog_num:0
@@ -915,7 +915,7 @@ See if it crash with tcpdump&#x2026; it unfortunately did crash, with
 CONFIG_NET_DSA disabled:
 </p>
 
-<pre class="example" id="org7779e6e">
+<pre class="example" id="org2de1050">
 root@espressobin:~# tcpdump -ni eth0 -c 10
 
 [ 1090.840107] Unable to handle kernel paging request at virtual address ffff80002830b0a2
@@ -978,7 +978,7 @@ root@espressobin:~# tcpdump -ni eth0 -c 10
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-08-04 Tue 10:54</p>
+<p class="date">Date: 2020-08-10 Mon 14:50</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
