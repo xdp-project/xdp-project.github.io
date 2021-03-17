@@ -65,7 +65,7 @@ This project is heavily focused on the network driver of the board.
 <li>Code: drivers/net/ethernet/marvell/mvneta.c</li>
 </ul>
 
-<pre class="example" id="orgfa5f664">
+<pre class="example" id="org127987d">
 # ethtool -i eth0
 driver: mvneta
 </pre>
@@ -80,7 +80,7 @@ the CPU port.
 Info from: arch/arm64/boot/dts/marvell/armada-3720-espressobin.dts
 </p>
 
-<pre class="example" id="orga9f7fac">
+<pre class="example" id="orgf5f20e4">
 ports {
         #address-cells = &lt;1&gt;;
         #size-cells = &lt;0&gt;;
@@ -116,7 +116,7 @@ ports {
 The driver of these ports are listed using driver: dsa.
 </p>
 
-<pre class="example" id="org8df6a40">
+<pre class="example" id="orgb6a2ed5">
 # ethtool -i wan
 driver: dsa
 
@@ -147,7 +147,7 @@ cable.
 <p>
 Jesper's board:
 </p>
-<pre class="example" id="org6de55c4">
+<pre class="example" id="orgd0cbfa0">
 U-Boot 2017.03-armada-17.10.2-g14aeedc (Jun 01 2018 - 15:39:10 +0800)
 
 Model: Marvell Armada 3720 Community Board ESPRESSOBin
@@ -184,12 +184,12 @@ Changed command to: <code>ext4ls mmc 0:2</code>
 Check that the micro SD card has necessary files using the ext4ls command:
 </p>
 
-<pre class="example" id="org429d0ee">
+<pre class="example" id="org815b747">
 Marvell&gt;&gt; ext4ls mmc 0:2
 [...]
 </pre>
 
-<pre class="example" id="org5f2c54f">
+<pre class="example" id="orgd90385e">
 Marvell&gt;&gt; ext4ls mmc 0:2 boot
 &lt;DIR&gt;       4096 .
 &lt;DIR&gt;       4096 ..
@@ -202,7 +202,7 @@ Marvell&gt;&gt; ext4ls mmc 0:2 boot
 There are only a few variables required to boot from microSD card. First, set proper image and device tree path and name:
 </p>
 
-<pre class="example" id="org7c9acd4">
+<pre class="example" id="org605204d">
 setenv image_name boot/Image
 setenv fdt_name boot/armada-3720-espressobin.dtb
 </pre>
@@ -212,7 +212,7 @@ setenv fdt_name boot/armada-3720-espressobin.dtb
 List existing env via printenv:
 </p>
 
-<pre class="example" id="orgaec2589">
+<pre class="example" id="org3b09064">
 Marvell&gt;&gt; printenv
 baudrate=115200
 bootargs=console=ttyMV0,115200 earlycon=ar3700_uart,0xd0012000 root=/dev/mmcblk0p1 rw rootwait net.ifnames=0 biosdev0
@@ -267,7 +267,7 @@ the root/boot device, and in our case it is the second.
 <p>
 Original:
 </p>
-<pre class="example" id="orgb9397d0">
+<pre class="example" id="orgb0df6fc">
 setenv bootmmc 'mmc dev 0; ext4load mmc 0:1 $kernel_addr $image_name;ext4load mmc 0:1 $fdt_addr $fdt_name;setenv bootargs $console root=/dev/mmcblk0p1 rw rootwait; booti $kernel_addr - $fdt_addr'
 </pre>
 
@@ -275,7 +275,7 @@ setenv bootmmc 'mmc dev 0; ext4load mmc 0:1 $kernel_addr $image_name;ext4load mm
 Modified:
 </p>
 
-<pre class="example" id="org781d068">
+<pre class="example" id="org8cb3510">
 setenv bootmmc 'mmc dev 0; ext4load mmc 0:2 $kernel_addr $image_name;ext4load mmc 0:2 $fdt_addr $fdt_name;setenv bootargs $console root=/dev/mmcblk0p2 rw rootwait; booti $kernel_addr - $fdt_addr'
 </pre>
 
@@ -283,7 +283,7 @@ setenv bootmmc 'mmc dev 0; ext4load mmc 0:2 $kernel_addr $image_name;ext4load mm
 Change the default boot command:
 </p>
 
-<pre class="example" id="orgcc5b274">
+<pre class="example" id="org388a8f9">
 setenv bootcmd 'run bootmmc'
 </pre>
 
@@ -291,7 +291,7 @@ setenv bootcmd 'run bootmmc'
 You can preserve the set variables across reboots using the saveenv command.
 </p>
 
-<pre class="example" id="org87e8346">
+<pre class="example" id="org2875503">
 Marvell&gt;&gt; saveenv
 Saving Environment to SPI Flash...
 SF: Detected mx25u3235f with page size 256 Bytes, erase size 64 KiB, total 4 MiB
@@ -302,7 +302,7 @@ Erasing SPI flash...Writing to SPI flash...done
 Finally, boot the ESPRESSObin either with run bootmmc
 </p>
 
-<pre class="example" id="org95f3da3">
+<pre class="example" id="org2c4e343">
 run bootmmc
 </pre>
 </div>
@@ -314,7 +314,7 @@ run bootmmc
 Setup a U-Boot fallback option in case I upload a broken kernel:
 </p>
 
-<pre class="example" id="orgb8686ea">
+<pre class="example" id="orgba0e0eb">
 setenv bootmmc.works 'mmc dev 0; ext4load mmc 0:2 $kernel_addr boot/Image.works;ext4load mmc 0:2 $fdt_addr boot/armada-3720-espressobin.dtb.works;setenv bootargs $console root=/dev/mmcblk0p2 rw rootwait; booti $kernel_addr - $fdt_addr'
 run bootmmc.works
 </pre>
@@ -334,7 +334,7 @@ image and tar extracted into this&#x2026;
 Thus, when booting it have Ilias kernel:
 </p>
 
-<pre class="example" id="orgdc3924c">
+<pre class="example" id="org8a9cb41">
 # uname -a
 Linux localhost.localdomain 4.19.0-rc7-02549-g3ddeac6 #1 SMP PREEMPT Fri Oct 19 15:38:27 EEST 2018 aarch64 aarch64 aarch64 GNU/Linux
 </pre>
@@ -388,7 +388,7 @@ Not found: libslang-dev
 Should have removed: libgtk2.0-dev
 </p>
 
-<pre class="example" id="orgf0954fe">
+<pre class="example" id="orga29b209">
 Makefile.config:445: No sys/sdt.h found, no SDT events are defined, please install systemtap-sdt-devel or systemtap-sdt-dev
 Makefile.config:583: No libcrypto.h found, disables jitted code injection, please install libssl-devel or libssl-dev
 Makefile.config:814: No libbabeltrace found, disables 'perf data' CTF format support, please install libbabeltrace-dev[el]/libbabeltrace-ctf-dev
@@ -412,7 +412,7 @@ linux-tools package per kernel version.  And the perf program is a
 script that looks for the real perf binary in a strange place.
 </p>
 
-<pre class="example" id="orgff7d30f">
+<pre class="example" id="orgb9e6443">
 apt-get update
 apt-get install linux-tools-common linux-tools-generic
 
@@ -426,7 +426,7 @@ The following NEW packages will be installed:
 Finding an perf binary:
 </p>
 
-<pre class="example" id="org9524936">
+<pre class="example" id="org3f0eef3">
 # dpkg -S linux-tools- | grep perf
 linux-tools-4.15.0-38: /usr/lib/linux-tools-4.15.0-38/perf
 </pre>
@@ -493,7 +493,7 @@ netplan/networkd depend on link up.
 New network setup:
 </p>
 
-<pre class="example" id="org42687b4">
+<pre class="example" id="orge1514d3">
 cat &lt; /etc/netplan/50-network.yaml &lt;&lt; EOF
 network:
   version: 2
@@ -528,7 +528,7 @@ netplan generates files under <i>run/systemd/network</i>.
 New file: /etc/systemd/network/10-lan0.network
 </p>
 
-<pre class="example" id="org7938380">
+<pre class="example" id="org7020adb">
 cat &gt;  /etc/systemd/network/10-lan0.network &lt;&lt; EOF
 [Match]
 Name=lan0
@@ -548,7 +548,7 @@ EOF
 Make <code>wan</code> interface a test interface:
 </p>
 
-<pre class="example" id="orge2fe314">
+<pre class="example" id="org9f86519">
 cat &gt;  /etc/systemd/network/10-wan.network &lt;&lt; EOF
 [Match]
 Name=wan
@@ -593,7 +593,7 @@ many of the features.
 <p>
 So, this cmd produce limited perf-binary:
 </p>
-<pre class="example" id="org0b95c1d">
+<pre class="example" id="org07125e3">
 make ARCH=arm64 LDFLAGS=-static NO_LIBPERL=1
 </pre>
 
@@ -608,7 +608,7 @@ And then manually call e.g.: /usr/lib/linux-tools-4.15.0-38/perf
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-08-10 Mon 14:50</p>
+<p class="date">Date: 2020-08-10 Mon 15:47</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

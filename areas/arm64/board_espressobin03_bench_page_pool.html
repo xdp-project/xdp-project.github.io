@@ -112,7 +112,7 @@ Before (with wrong prefetch):
 <li>2195983      cache-misses #    0.854 % of all cache refs</li>
 </ul>
 
-<pre class="example" id="org74545b6">
+<pre class="example" id="org57eb463">
 Performance counter stats for 'CPU(s) 0' (3 runs):
 
  569786261  instructions    #    0.57  insn per cycle           ( +-  0.00% )
@@ -132,7 +132,7 @@ After removing prefetch:
 <li>841519 (2195983-1354464) less cache-misses</li>
 </ul>
 
-<pre class="example" id="orgcfafa84">
+<pre class="example" id="org6150237">
 Performance counter stats for 'CPU(s) 0' (3 runs):
 
  576645517  instructions    #    0.57  insn per cycle           ( +-  0.13% )
@@ -153,7 +153,7 @@ Adding prefetch after dma_sync, seem to be bad:
 <li>2122745      cache-misses              #    0.816 % of all cache refs</li>
 </ul>
 
-<pre class="example" id="org0b0cd00">
+<pre class="example" id="org94c5518">
 Performance counter stats for 'CPU(s) 0' (3 runs):
 
         575902276      instructions              #    0.57  insn per cycle           ( +-  0.01% )
@@ -176,7 +176,7 @@ Performance counter stats for 'CPU(s) 0' (3 runs):
 It is very alarming that the L1-icache-load-misses is so high!
 </p>
 
-<pre class="example" id="orga418151">
+<pre class="example" id="org4fcd1cc">
 perf stat -C0 -r 3 -e L1-icache-load -e L1-icache-load-misses \
                    -e L1-dcache-loads -e L1-dcache-load-misses \
 		   -e L1-dcache-stores -e L1-dcache-store-misses \
@@ -217,7 +217,7 @@ driver call to napi_gro_receive() with kfree_skb().
 This early drop test show 519Kpps.
 </p>
 
-<pre class="example" id="org5944b3e">
+<pre class="example" id="org1bf0863">
 $ sar -n DEV 2 100
 Average:        IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s    %ifutil
 Average:         eth0 519360.00      0.50  34488.75      0.02      28.25
@@ -232,7 +232,7 @@ Average:         lan1      0.00      0.00      0.00      0.00       0.00
 This also reduce I-cache usage significantly.
 </p>
 
-<pre class="example" id="org9d780c9">
+<pre class="example" id="org512b31d">
 Performance counter stats for 'CPU(s) 0' (3 runs):
 
         271648034      L1-icache-load                                                ( +-  0.00% )
@@ -260,7 +260,7 @@ As that is also an I-cache optimization.
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-08-10 Mon 14:50</p>
+<p class="date">Date: 2020-08-10 Mon 15:47</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
