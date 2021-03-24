@@ -91,7 +91,7 @@ Prerequisite: Docker
 <p>
 Use flexbuild to create docker image:
 </p>
-<pre class="example" id="org0af937d">
+<pre class="example" id="org396e65d">
 [~/flexbuild] $ source setup.env
 [~/flexbuild] $ flex-builder docker
 </pre>
@@ -99,7 +99,7 @@ Use flexbuild to create docker image:
 <p>
 When Docker "fbubuntu" is running, inside container run:
 </p>
-<pre class="example" id="org398d355">
+<pre class="example" id="org3def25f">
 flex-builder -i mkrfs -a arm64
 [...]
 (long-time)
@@ -110,7 +110,7 @@ flex-builder -i mkrfs -a arm64
 <p>
 Still inside docker container, create tar.gz rootfs:
 </p>
-<pre class="example" id="org5ec5fca">
+<pre class="example" id="org9788996">
 flex-builder -i packrfs -a arm64
 INSTRUCTION: packrfs
 DESTARCH: arm64
@@ -121,7 +121,7 @@ packing rootfs_lsdk_19.03_LS_arm64_201905031532.tgz, waiting ...
 <p>
 Create a bootpartition file:
 </p>
-<pre class="example" id="org90f6db6">
+<pre class="example" id="org8da9499">
 flex-builder -i mkbootpartition -a arm64
 INSTRUCTION: mkbootpartition
 DESTARCH: arm64
@@ -139,7 +139,7 @@ Cloning into 'linux'...
 <p>
 We can also download it:
 </p>
-<pre class="example" id="orgac6f84f">
+<pre class="example" id="org97be440">
 wget http://www.nxp.com/lgfiles/sdk/lsdk1903/bootpartition_LS_arm64_lts_4.19.tgz
 wget http://www.nxp.com/lgfiles/sdk/lsdk1903/lib_modules_LS_arm64_4.19.26.tgz
 </pre>
@@ -160,7 +160,7 @@ card (via flex-installer -f). (As described in guide: 4.1.7.3.2 Option 1 -
 Deploy LSDK images using removable storage device).
 </p>
 
-<pre class="example" id="orge6d8df5">
+<pre class="example" id="orgb4fad1f">
 wget http://www.nxp.com/lgfiles/sdk/lsdk1903/firmware_ls1088ardb_pb_uboot_sdboot.img
 flex-installer -f firmware_ls1088ardb_pb_uboot_sdboot.img
 </pre>
@@ -168,7 +168,7 @@ flex-installer -f firmware_ls1088ardb_pb_uboot_sdboot.img
 <p>
 Copy over to a machine that have an SD-card reader:
 </p>
-<pre class="example" id="org872a52e">
+<pre class="example" id="org9eeef83">
 cp build/images/bootpartition_LS_arm64_lts_4.19_201905031555.tgz upload/
 cp build/images/rootfs_lsdk_19.03_LS_arm64_201905031532.tgz upload/
 cp ../flexbuild_lsdk1903.tgz upload/
@@ -179,7 +179,7 @@ On machine with SD-card with device /dev/mmcblk0 , extract flexbuild tool
 and use it to install the images on the SD-card:
 </p>
 
-<pre class="example" id="org8a14ec2">
+<pre class="example" id="orgb0649ec">
 # source setup.env
 # flex-installer -b bootpartition_arm64_lts_&lt;version&gt;.tgz \
   -r rootfs_lsdk_19.03_LS_arm64_&lt;timestamp&gt;.tgz -d /dev/mmcblk0
@@ -195,7 +195,7 @@ From <a href="https://www.nxp.com/docs/en/user-guide/LSDKUG_Rev19.03.pdf">LSDK 1
 "4.1.7.3.2 Option 1 - Deploy LSDK images using removable storage device"
 </p>
 
-<pre class="example" id="orgd2b87af">
+<pre class="example" id="org6dbcf9b">
 Make sure the DIP switch settings on the board enable the desired boot
 option. (Refer to “On-board switch options” in the preceding section for
 switch settings.)
@@ -217,7 +217,7 @@ Changed DIP switch <code>SW1[1:8]</code> :
 <p>
 Upstream kernel also have DTS files for this board:
 </p>
-<pre class="example" id="orge9dea72">
+<pre class="example" id="org79290e1">
 $ ls -1 arch/arm64/boot/dts/freescale/*1088*
 arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi
 arch/arm64/boot/dts/freescale/fsl-ls1088a-qds.dts
@@ -227,7 +227,7 @@ arch/arm64/boot/dts/freescale/fsl-ls1088a-rdb.dts
 <p>
 Make command:
 </p>
-<pre class="example" id="org873dcd4">
+<pre class="example" id="orgd21a2d3">
 $ make freescale/fsl-ls1088a-rdb.dtb
   DTC     arch/arm64/boot/dts/freescale/fsl-ls1088a-rdb.dtb
 </pre>
@@ -235,7 +235,7 @@ $ make freescale/fsl-ls1088a-rdb.dtb
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-08-14 Fri 13:28</p>
+<p class="date">Date: 2020-09-07 Mon 19:47</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

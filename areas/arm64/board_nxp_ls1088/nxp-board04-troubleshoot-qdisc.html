@@ -69,7 +69,7 @@ default qdisc not getting assigned correctly, resulting in device driver
 dpaa2-eth getting assigned qdisc <code>noop</code>.
 </p>
 
-<pre class="example" id="orge63b1bb">
+<pre class="example" id="org9effac4">
 root@LS1088ARDB-PB:~# ip link show dev eth0
 3: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noop state UP mode DEFAULT group default qlen 1000
     link/ether 00:04:9f:06:08:f0 brd ff:ff:ff:ff:ff:ff
@@ -122,7 +122,7 @@ fine.
 One can workaround via changing the sysctl config, and compile kernel with
 config option:
 </p>
-<pre class="example" id="org7a7416a">
+<pre class="example" id="orgee5fb72">
 CONFIG_DEFAULT_NET_SCH="pfifo_fast"
 </pre>
 </div>
@@ -136,7 +136,7 @@ CONFIG_DEFAULT_NET_SCH="pfifo_fast"
 <p>
 Ideas: Is 'tc' (iproute2) version too old?
 </p>
-<pre class="example" id="org2d9ca27">
+<pre class="example" id="org8e68312">
 root@LS1088ARDB-PB:~# apt show iproute2
 Package: iproute2
 Version: 4.15.0-2ubuntu1
@@ -151,7 +151,7 @@ and compile newest version of tc.
 <p>
 Try old 'tc' and new 'tc' version:
 </p>
-<pre class="example" id="orgc129f45">
+<pre class="example" id="org4de14e8">
 root@LS1088ARDB-PB:~# tc qdisc add dev eth0 root fq_codel
 RTNETLINK answers: Invalid argument
 
@@ -228,7 +228,7 @@ tc qdisc add dev eth0 root mq
 <p>
 Partial output from <code>trace-cmd report</code>:
 </p>
-<pre class="example" id="org780db3f">
+<pre class="example" id="orga4844d6">
 |  mq_init() {
 |    __kmalloc() {
 |      kmalloc_slab();
@@ -300,7 +300,7 @@ tc qdisc add dev eth0 root fq_codel
 <p>
 trace-cmd report:
 </p>
-<pre class="example" id="org3f123dc">
+<pre class="example" id="org2b979d1">
  |  fq_codel_init() {
  |    fq_codel_change() {
  |      rtnl_is_locked() {
@@ -464,7 +464,7 @@ indication that the fix is to return <code>-EOPNOTSUPP</code>.
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-08-14 Fri 13:28</p>
+<p class="date">Date: 2020-09-07 Mon 19:47</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
