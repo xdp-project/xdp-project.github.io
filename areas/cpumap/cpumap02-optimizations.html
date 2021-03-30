@@ -234,7 +234,7 @@ Patch-5: Prefetch struct page to solve CPU stall
 <div id="outline-container-stg-mail-V1" class="outline-4">
 <h4 id="stg-mail-V1"><a href="#stg-mail-V1">stg mail V1</a></h4>
 <div class="outline-text-4" id="text-stg-mail-V1">
-<pre class="example" id="org4e1665c">
+<pre class="example" id="org076f981">
 stg mail --version=bpf-next --edit-cover --cc meup \
  --to netdev --cc bpf@vger.kernel.org \
  --to daniel --to alexei --to davem \
@@ -265,7 +265,7 @@ The processing and (deliberate) packet drops happens on same CPU as packet
 was RX-ed on, which have many cache advantages.
 </p>
 
-<pre class="example" id="org9bea82d">
+<pre class="example" id="orgb13b82c">
 $ uname -a
 Linux broadwell 5.1.0-rc2-bpf-next-cpumap-baseline+ #113 SMP PREEMPT Wed Apr 10 16:24:18 CEST 2019 x86_64 x86_64 x86_64 GNU/Linux
 </pre>
@@ -273,7 +273,7 @@ Linux broadwell 5.1.0-rc2-bpf-next-cpumap-baseline+ #113 SMP PREEMPT Wed Apr 10 
 <p>
 NIC: i40e1
 </p>
-<pre class="example" id="org6e29a55">
+<pre class="example" id="org7b8e47b">
 $ ethtool -i i40e1
 driver: i40e
 version: 2.8.10-k
@@ -295,7 +295,7 @@ supports-priv-flags: yes
 Unloaded all netfilter/iptables modules.
 </p>
 
-<pre class="example" id="orgc362272">
+<pre class="example" id="orgc57b552">
 $ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
 IpInReceives                    3326983            0.0
@@ -325,7 +325,7 @@ Command used to drop packets:
 <p>
 With (default) GRO enabled:
 </p>
-<pre class="example" id="org63a984e">
+<pre class="example" id="org6bc8d8b">
 $ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
 IpInReceives                    5705245            0.0
@@ -345,7 +345,7 @@ Command to disable GRO:
 <li>ethtool -K i40e1 gro off tso off</li>
 </ul>
 
-<pre class="example" id="orgfb74eac">
+<pre class="example" id="org4039168">
 $ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
 IpInReceives                    6701692            0.0
@@ -379,7 +379,7 @@ stealing CPU-time-slices from).
 <div id="outline-container-udp_sink--same-CPU-as-RX---718-135-pps" class="outline-5">
 <h5 id="udp_sink--same-CPU-as-RX---718-135-pps"><a href="#udp_sink--same-CPU-as-RX---718-135-pps">udp_sink: same CPU as RX = 718,135 pps</a></h5>
 <div class="outline-text-5" id="text-udp_sink--same-CPU-as-RX---718-135-pps">
-<pre class="example" id="org5f0226f">
+<pre class="example" id="org500679c">
 [jbrouer@broadwell src]$ sudo taskset -c 1 ./udp_sink --port 9 --recvmsg --repeat 1000 --reuse
           	run      count   	ns/pkt	pps		cycles	payload
 recvmsg   	run:  0	 1000000	1435.21	696761.84	5166	18	 demux:1
@@ -398,7 +398,7 @@ recvmsg   	run:  8	 1000000	1392.27	718250.94	5012	18	 demux:1
 <div id="outline-container-udp_sink--another-CPU-than-RX---2-311-585-pps" class="outline-5">
 <h5 id="udp_sink--another-CPU-than-RX---2-311-585-pps"><a href="#udp_sink--another-CPU-than-RX---2-311-585-pps">udp_sink: another CPU than RX = 2,311,585 pps</a></h5>
 <div class="outline-text-5" id="text-udp_sink--another-CPU-than-RX---2-311-585-pps">
-<pre class="example" id="org1dfa4be">
+<pre class="example" id="org5f106c7">
 [jbrouer@broadwell src]$ sudo taskset -c 3 ./udp_sink --port 9 --recvmsg --repeat 1000 --reuse
           	run      count   	ns/pkt	pps		cycles	payload
 recvmsg   	run:  0	 1000000	441.01	2267502.40	1587	18	 demux:1
@@ -427,7 +427,7 @@ What is the baseline CPUMAP redirect performance.
 <div id="outline-container-baseline-redirect--UdpNoPorts--2-727-840-pps" class="outline-5">
 <h5 id="baseline-redirect--UdpNoPorts--2-727-840-pps"><a href="#baseline-redirect--UdpNoPorts--2-727-840-pps">baseline-redirect: UdpNoPorts: 2,727,840 pps</a></h5>
 <div class="outline-text-5" id="text-baseline-redirect--UdpNoPorts--2-727-840-pps">
-<pre class="example" id="org6761545">
+<pre class="example" id="org9a16ff7">
 sudo ./xdp_redirect_cpu --dev i40e1 --qsize 128 --cpu 4 --prog xdp_cpu_map0
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -441,7 +441,7 @@ redirect_err    total   0              0
 xdp_exception   total   0              0          
 </pre>
 
-<pre class="example" id="orgb53f840">
+<pre class="example" id="orgdac8798">
 $ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
 IpInReceives                    2701784            0.0
@@ -461,7 +461,7 @@ IpExtInNoECTPkts                2701820            0.0
 <div id="outline-container-baseline-redirect--iptables-raw-drop--6-166-709-pps" class="outline-5">
 <h5 id="baseline-redirect--iptables-raw-drop--6-166-709-pps"><a href="#baseline-redirect--iptables-raw-drop--6-166-709-pps">baseline-redirect: iptables-raw drop: 6,166,709 pps</a></h5>
 <div class="outline-text-5" id="text-baseline-redirect--iptables-raw-drop--6-166-709-pps">
-<pre class="example" id="orgba041a6">
+<pre class="example" id="org40aa41a">
 sudo ./xdp_redirect_cpu --dev i40e1 --qsize 128 --cpu 4 --prog xdp_cpu_map0
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -475,7 +475,7 @@ redirect_err    total   0              0
 xdp_exception   total   0              0          
 </pre>
 
-<pre class="example" id="org37c756a">
+<pre class="example" id="org326e17c">
 $ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
 IpInReceives                    6167205            0.0
@@ -517,7 +517,7 @@ size being active.
 <div id="outline-container-redirect--UdpNoPorts--2-817-054" class="outline-5">
 <h5 id="redirect--UdpNoPorts--2-817-054"><a href="#redirect--UdpNoPorts--2-817-054">redirect: UdpNoPorts: 2,817,054</a></h5>
 <div class="outline-text-5" id="text-redirect--UdpNoPorts--2-817-054">
-<pre class="example" id="org01b5299">
+<pre class="example" id="org3e5d186">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          5       13,967,785     0           0          
@@ -530,7 +530,7 @@ redirect_err    total   0              0
 xdp_exception   total   0              0          
 </pre>
 
-<pre class="example" id="org49075d5">
+<pre class="example" id="org77b0358">
 $ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
 IpInReceives                    2829056            0.0
@@ -550,7 +550,7 @@ IpExtInNoECTPkts                2829076            0.0
 <div id="outline-container-redirect--iptables-raw-drop--6-328-978" class="outline-5">
 <h5 id="redirect--iptables-raw-drop--6-328-978"><a href="#redirect--iptables-raw-drop--6-328-978">redirect: iptables-raw drop: 6,328,978</a></h5>
 <div class="outline-text-5" id="text-redirect--iptables-raw-drop--6-328-978">
-<pre class="example" id="org8c00403">
+<pre class="example" id="org5aa1102">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          5       18,458,183     0           0          
@@ -563,7 +563,7 @@ redirect_err    total   0              0
 xdp_exception   total   0              0          
 </pre>
 
-<pre class="example" id="orgb6f2350">
+<pre class="example" id="orgb473a4d">
 $ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
 IpInReceives                    6358270            0.0
@@ -608,7 +608,7 @@ netif_receive_skb_list_core().
 <div id="outline-container-redirect--UdpNoPorts--2-846-583" class="outline-5">
 <h5 id="redirect--UdpNoPorts--2-846-583"><a href="#redirect--UdpNoPorts--2-846-583">redirect: UdpNoPorts: 2,846,583</a></h5>
 <div class="outline-text-5" id="text-redirect--UdpNoPorts--2-846-583">
-<pre class="example" id="org3c60540">
+<pre class="example" id="org0ed5ac7">
 sudo ./xdp_redirect_cpu --dev i40e1 --qsize 128 --cpu 4 --prog xdp_cpu_map0 --sec 3
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -631,7 +631,7 @@ xdp_exception   total   0              0
 Strange performance drop.
 </p>
 
-<pre class="example" id="org60c59b8">
+<pre class="example" id="org3ce4b4b">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          0       18,252,989     0           0          
@@ -665,7 +665,7 @@ netif_receive_skb_list_core to net/core/dev.c.
 <p>
 With (default) GRO enabled:
 </p>
-<pre class="example" id="org4fd3c06">
+<pre class="example" id="org04fc4ff">
 $ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
 IpInReceives                    5378828            0.0
@@ -676,7 +676,7 @@ IpExtInNoECTPkts                5378842            0.0
 <p>
 GRO-disable:
 </p>
-<pre class="example" id="orgd9da8ea">
+<pre class="example" id="orga7b2daa">
 $ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
 IpInReceives                    6269627            0.0
@@ -698,7 +698,7 @@ Re-organize code in net/core/dev.c.
 <div id="outline-container-redirect--UdpNoPorts--2-829-666" class="outline-5">
 <h5 id="redirect--UdpNoPorts--2-829-666"><a href="#redirect--UdpNoPorts--2-829-666">redirect: UdpNoPorts: 2,829,666</a></h5>
 <div class="outline-text-5" id="text-redirect--UdpNoPorts--2-829-666">
-<pre class="example" id="orga7600e5">
+<pre class="example" id="orgec2d970">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          4       14,996,383     0           0          
@@ -716,7 +716,7 @@ xdp_exception   total   0              0
 <div id="outline-container-redirect--iptables-raw-drop--5-529-818" class="outline-5">
 <h5 id="redirect--iptables-raw-drop--5-529-818"><a href="#redirect--iptables-raw-drop--5-529-818">redirect: iptables-raw drop: 5,529,818</a></h5>
 <div class="outline-text-5" id="text-redirect--iptables-raw-drop--5-529-818">
-<pre class="example" id="org2efb10d">
+<pre class="example" id="orga921ca1">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          4       18,256,809     0           0          
@@ -737,7 +737,7 @@ xdp_exception   total   0              0
 <p>
 Using standard Linux kernel and NAPI-RX iptables-raw drop.
 </p>
-<pre class="example" id="orga912de6">
+<pre class="example" id="org9cf1aff">
 $ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
 IpInReceives                    5420909            0.0
@@ -786,7 +786,7 @@ Next patch use this function combined with kmem_cache_alloc_bulk.
 <div id="outline-container-redirect--UdpNoPorts--2-832-411" class="outline-5">
 <h5 id="redirect--UdpNoPorts--2-832-411"><a href="#redirect--UdpNoPorts--2-832-411">redirect: UdpNoPorts: 2,832,411</a></h5>
 <div class="outline-text-5" id="text-redirect--UdpNoPorts--2-832-411">
-<pre class="example" id="orgfa52e34">
+<pre class="example" id="org415923b">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          5       14,951,827     0           0          
@@ -804,7 +804,7 @@ xdp_exception   total   0              0
 <div id="outline-container-redirect--iptables-raw-drop--5-522-555" class="outline-5">
 <h5 id="redirect--iptables-raw-drop--5-522-555"><a href="#redirect--iptables-raw-drop--5-522-555">redirect: iptables-raw drop: 5,522,555</a></h5>
 <div class="outline-text-5" id="text-redirect--iptables-raw-drop--5-522-555">
-<pre class="example" id="orgeff9792">
+<pre class="example" id="orgaeb8125">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          5       18,495,707     0           0          
@@ -822,7 +822,7 @@ xdp_exception   total   0              0
 <div id="outline-container-iptables-raw-drop--5-396-717" class="outline-5">
 <h5 id="iptables-raw-drop--5-396-717"><a href="#iptables-raw-drop--5-396-717">iptables-raw drop: 5,396,717</a></h5>
 <div class="outline-text-5" id="text-iptables-raw-drop--5-396-717">
-<pre class="example" id="orgb8a44cd">
+<pre class="example" id="org4498463">
 $ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
 IpInReceives                    5396717            0.0
@@ -862,7 +862,7 @@ then the Intel CPU memset rep stos will have a real performance gain.)
 <div id="outline-container-redirect--UdpNoPorts--2-943-928" class="outline-5">
 <h5 id="redirect--UdpNoPorts--2-943-928"><a href="#redirect--UdpNoPorts--2-943-928">redirect: UdpNoPorts: 2,943,928</a></h5>
 <div class="outline-text-5" id="text-redirect--UdpNoPorts--2-943-928">
-<pre class="example" id="orgefca2d1">
+<pre class="example" id="org6449767">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          4       13,650,238     0           0          
@@ -880,7 +880,7 @@ xdp_exception   total   0              0
 <div id="outline-container-redirect--iptables-raw-drop--5-908-032" class="outline-5">
 <h5 id="redirect--iptables-raw-drop--5-908-032"><a href="#redirect--iptables-raw-drop--5-908-032">redirect: iptables-raw drop: 5,908,032</a></h5>
 <div class="outline-text-5" id="text-redirect--iptables-raw-drop--5-908-032">
-<pre class="example" id="org71491ce">
+<pre class="example" id="org9e97a10">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          4       18,256,284     0           0          
@@ -893,7 +893,7 @@ redirect_err    total   0              0
 xdp_exception   total   0              0          
 </pre>
 
-<pre class="example" id="orgeb39981">
+<pre class="example" id="org8fd5e38">
 $ perf stat -C5 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -e L1-icache-load-misses -r 4 sleep 1
 
  Performance counter stats for 'CPU(s) 5' (4 runs):
@@ -910,7 +910,7 @@ $ perf stat -C5 -e cycles -e  instructions -e cache-references -e cache-misses -
             36.783      L1-icache-load-misses                                         ( +-  1,31% )
 </pre>
 
-<pre class="example" id="org0d6d6c1">
+<pre class="example" id="orgc63d929">
 $ perf stat -C5 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending -e l1d_pend_miss.pending_cycles  -r3 sleep 1
 
  Performance counter stats for 'CPU(s) 5' (3 runs):
@@ -958,7 +958,7 @@ prefetch into L2 will have the same benefit.
 <div id="outline-container-redirect--UdpNoPorts--3-270-640" class="outline-5">
 <h5 id="redirect--UdpNoPorts--3-270-640"><a href="#redirect--UdpNoPorts--3-270-640">redirect: UdpNoPorts: 3,270,640</a></h5>
 <div class="outline-text-5" id="text-redirect--UdpNoPorts--3-270-640">
-<pre class="example" id="org820a90b">
+<pre class="example" id="org151c8bf">
 unning XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          1       14,773,250     0           0          
@@ -976,7 +976,7 @@ xdp_exception   total   0              0
 <div id="outline-container-redirect--iptables-raw-drop--6-882-973" class="outline-5">
 <h5 id="redirect--iptables-raw-drop--6-882-973"><a href="#redirect--iptables-raw-drop--6-882-973">redirect: iptables-raw drop: 6,882,973</a></h5>
 <div class="outline-text-5" id="text-redirect--iptables-raw-drop--6-882-973">
-<pre class="example" id="orgb3781d7">
+<pre class="example" id="orgedf8594">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          1       19,235,746     0           0          
@@ -1011,7 +1011,7 @@ effected by iptables-filter being loaded or not.
 <div id="outline-container-redirect--UdpNoPorts--3-060-774" class="outline-5">
 <h5 id="redirect--UdpNoPorts--3-060-774"><a href="#redirect--UdpNoPorts--3-060-774">redirect: UdpNoPorts: 3,060,774</a></h5>
 <div class="outline-text-5" id="text-redirect--UdpNoPorts--3-060-774">
-<pre class="example" id="orgfe665cd">
+<pre class="example" id="orgbaf5faa">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          0       14,265,023     0           0          
@@ -1029,7 +1029,7 @@ xdp_exception   total   0              0
 <div id="outline-container-redirect--iptables-raw-drop--7-035-517" class="outline-5">
 <h5 id="redirect--iptables-raw-drop--7-035-517"><a href="#redirect--iptables-raw-drop--7-035-517">redirect: iptables-raw drop: 7,035,517</a></h5>
 <div class="outline-text-5" id="text-redirect--iptables-raw-drop--7-035-517">
-<pre class="example" id="org75338b1">
+<pre class="example" id="org48f3960">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          0       18,710,012     0           0          
@@ -1045,7 +1045,7 @@ xdp_exception   total   0              0
 <p>
 Perf stats results:
 </p>
-<pre class="example" id="orgbe430b3">
+<pre class="example" id="orgc97c628">
 $ perf stat -C5 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -e L1-icache-load-misses -r 4 sleep 1
 
  Performance counter stats for 'CPU(s) 5' (4 runs):
@@ -1062,7 +1062,7 @@ $ perf stat -C5 -e cycles -e  instructions -e cache-references -e cache-misses -
             17.866      L1-icache-load-misses                                         ( +-  0,90% )
 </pre>
 
-<pre class="example" id="org542050d">
+<pre class="example" id="orgeec52c4">
 $ perf stat -C5 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending -e l1d_pend_miss.pending_cycles  -r3 sleep 1
 
  Performance counter stats for 'CPU(s) 5' (3 runs):
@@ -1092,7 +1092,7 @@ Command used to drop packets:
 <p>
 Using standard Linux kernel and NAPI-RX iptables-raw drop.
 </p>
-<pre class="example" id="orgb88a73a">
+<pre class="example" id="orgd6c72c7">
 nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
 IpInReceives                    5412097            0.0
@@ -1136,7 +1136,7 @@ Conclusion: based on below, the prefetchw on struct-page is important.
 <div id="outline-container-page-prefetchw---i40e---batch-16---iptables-raw-drop" class="outline-3">
 <h3 id="page-prefetchw---i40e---batch-16---iptables-raw-drop"><a href="#page-prefetchw---i40e---batch-16---iptables-raw-drop">page-prefetchw + i40e + batch-16 + iptables-raw-drop</a></h3>
 <div class="outline-text-3" id="text-page-prefetchw---i40e---batch-16---iptables-raw-drop">
-<pre class="example" id="org8d0334f">
+<pre class="example" id="org51611d7">
 $ sudo ./xdp_redirect_cpu --prog 0 --dev i40e1 --qsize 128 --cpu 5
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -1155,7 +1155,7 @@ xdp_exception   total   0              0
 <div id="outline-container-page-prefetch--non-W----i40e---batch-16---iptables-raw-drop" class="outline-3">
 <h3 id="page-prefetch--non-W----i40e---batch-16---iptables-raw-drop"><a href="#page-prefetch--non-W----i40e---batch-16---iptables-raw-drop">page-prefetch (non-W) + i40e + batch-16 + iptables-raw-drop</a></h3>
 <div class="outline-text-3" id="text-page-prefetch--non-W----i40e---batch-16---iptables-raw-drop">
-<pre class="example" id="org27a4097">
+<pre class="example" id="orgfb0ed4e">
 $ sudo ./xdp_redirect_cpu --prog 0 --dev i40e1 --qsize 128 --cpu 5
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -1192,7 +1192,7 @@ index bdbb3c1131b5..74d4bc16dd67 100644
 <p>
 Not using CPUMAP redirect iptable-raw-drop performance is: 5,264,940 pps
 </p>
-<pre class="example" id="orga918e82">
+<pre class="example" id="orgff39cc9">
 $ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
 IpInReceives                    5264940            0.0
@@ -1229,7 +1229,7 @@ do a L2-cache prefetch.
 <p>
 Using prefetchw helped:
 </p>
-<pre class="example" id="org229ef6a">
+<pre class="example" id="org0887c2c">
 $ sudo ./xdp_redirect_cpu --prog 0 --dev i40e1 --qsize 64 --cpu 4
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -1243,7 +1243,7 @@ redirect_err    total   0              0
 xdp_exception   total   0              0          
 </pre>
 
-<pre class="example" id="org0b92e1a">
+<pre class="example" id="orgdadc582">
 $ perf stat -C4 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending -e l1d_pend_miss.pending_cycles -e l1d_pend_miss.pending_cycles_any  -r 4 sleep 1
 
  Performance counter stats for 'CPU(s) 4' (4 runs):
@@ -1262,7 +1262,7 @@ $ perf stat -C4 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.f
 <div id="outline-container-remove-any-prefetch-of-xdp_frame" class="outline-3">
 <h3 id="remove-any-prefetch-of-xdp_frame"><a href="#remove-any-prefetch-of-xdp_frame">remove any prefetch of xdp_frame</a></h3>
 <div class="outline-text-3" id="text-remove-any-prefetch-of-xdp_frame">
-<pre class="example" id="org079d332">
+<pre class="example" id="org34626b3">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          0       18,349,802     0           0          
@@ -1275,7 +1275,7 @@ redirect_err    total   0              0
 xdp_exception   total   0              0          
 </pre>
 
-<pre class="example" id="orgfabf896">
+<pre class="example" id="orgd6e87d4">
 $ perf stat -C4 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending -e l1d_pend_miss.pending_cycles -e l1d_pend_miss.pending_cycles_any  -r 4 sleep 1
  Performance counter stats for 'CPU(s) 4' (4 runs):
 
@@ -1291,7 +1291,7 @@ $ perf stat -C4 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.f
 <p>
 Info on perf events:
 </p>
-<pre class="example" id="org67079eb">
+<pre class="example" id="orgdf7f4ea">
 l1d.replacement                                   
      [L1D data line replacements]
 l1d_pend_miss.fb_full                             
@@ -1316,7 +1316,7 @@ Notice how: l1d_pend_miss.fb_full was reduced from 89.670.480 to 20.614.863.
 <p>
 This hurt performance:
 </p>
-<pre class="example" id="orgfe86430">
+<pre class="example" id="org2f98bab">
 sudo ./xdp_redirect_cpu --prog 0 --dev i40e1 --qsize 64 --cpu 5
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -1333,7 +1333,7 @@ xdp_exception   total   0              0
 <p>
 Using &#x2013;qsize 128 is slightly better:
 </p>
-<pre class="example" id="org96e2d21">
+<pre class="example" id="orgee919d3">
 sudo ./xdp_redirect_cpu --prog 0 --dev i40e1 --qsize 128 --cpu 5
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
@@ -1347,7 +1347,7 @@ redirect_err    total   0              0
 xdp_exception   total   0              0          
 </pre>
 
-<pre class="example" id="org39bb817">
+<pre class="example" id="org9396d72">
 $ perf stat -C5 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending -e l1d_pend_miss.pending_cycles -e l1d_pend_miss.pending_cycles_any  -r 10 sleep 1
 
  Performance counter stats for 'CPU(s) 5' (10 runs):
@@ -1410,7 +1410,7 @@ Test if prefetch xdp_frame i+1 before cpu_map_build_skb() works.
 <p>
 This helped a bit:
 </p>
-<pre class="example" id="org1716516">
+<pre class="example" id="orgeeadb4c">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          0       18,615,647     0           0          
@@ -1426,7 +1426,7 @@ xdp_exception   total   0              0
 <p>
 And Fill Buffer is not stalled:
 </p>
-<pre class="example" id="orge598aa5">
+<pre class="example" id="orgd5f0273">
 $ perf stat -C5 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending_cycles  -r 10 sleep 1
  Performance counter stats for 'CPU(s) 5' (10 runs):
      3.803.323.203   cycles                                               ( +-  0,00% )
@@ -1444,7 +1444,7 @@ $ perf stat -C5 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.f
 <p>
 Very significant performance drop:
 </p>
-<pre class="example" id="org95ca0ca">
+<pre class="example" id="orga18e9e8">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          0       17,295,937     0           0          
@@ -1462,7 +1462,7 @@ Want to see if 'l1d.replacement' number change, which is doesn't.  That is
 good, as it shows that our prefetch are not causing this.
 </p>
 
-<pre class="example" id="org92b4435">
+<pre class="example" id="org9078a06">
 $ perf stat -C5 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending_cycles  -r 10 sleep 1
  Performance counter stats for 'CPU(s) 5' (10 runs):
 
@@ -1489,7 +1489,7 @@ kfree_skb_list.
 <p>
 One baseline is iptables-raw drop in RX-CPU: 5,469,705 pps (GRO-enabled).
 </p>
-<pre class="example" id="orgdf365d1">
+<pre class="example" id="org925b1a8">
 iptables -t raw -I PREROUTING -p udp --dport 9 -j DROP
 $ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
@@ -1502,7 +1502,7 @@ IpExtInNoECTPkts                5469662            0.0
 Disable GRO baseline is iptables-raw drop in RX-CPU: 6378415 pps
 (GRO-disabled).
 </p>
-<pre class="example" id="orgde582b9">
+<pre class="example" id="org6258186">
 ethtool -K i40e1 gro off tso off
 $ nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
@@ -1550,7 +1550,7 @@ index 37269728a526..7f2e1eecd95a 100644
 </pre>
 </div>
 
-<pre class="example" id="org72e896e">
+<pre class="example" id="orgf3f4dc3">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          4       18,561,003     0           0          
@@ -1576,7 +1576,7 @@ The speedup is ashonishing:
 And the batch size is rather small = 8:  #define CPUMAP_BATCH 8
 </p>
 
-<pre class="example" id="org7faee5e">
+<pre class="example" id="orgaafbd30">
 $ perf stat -C5 -e cycles -e  instructions -e l1d.replacement -e l1d_pend_miss.fb_full -e l1d_pend_miss.pending -e l1d_pend_miss.pending_cycles  -r3 sleep 1
 
  Performance counter stats for 'CPU(s) 5' (3 runs):
@@ -1599,7 +1599,7 @@ reading xdp_frame first time, and when reading packet payload
 (xdp_frame-&gt;data).
 </p>
 
-<pre class="example" id="org2194326">
+<pre class="example" id="orga960c76">
 $ perf stat -C5 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -r 4 sleep 1
 
  Performance counter stats for 'CPU(s) 5' (4 runs):
@@ -1618,7 +1618,7 @@ $ perf stat -C5 -e cycles -e  instructions -e cache-references -e cache-misses -
 <p>
 Perf report on CPU 5:
 </p>
-<pre class="example" id="org3d1fa21">
+<pre class="example" id="org1e834dc">
 Samples: 120K of event 'cycles:ppp', Event count (approx.): 113416388646
   Overhead  CPU  Command          Shared Object     Symbol
 +   28,68%  005  cpumap/5/map:46  [kernel.vmlinux]  [k] cpu_map_kthread_run
@@ -1723,7 +1723,7 @@ Performance change:
 <li>diff-ns:  (1/13362498-1/14068307)*10^9 = 3.754548 ns</li>
 </ul>
 
-<pre class="example" id="org0dc26a6">
+<pre class="example" id="orgbfd0e04">
 sudo ./xdp_redirect_cpu --dev i40e1 --qsize 128 --cpu 4 --prog xdp_cpu_map0
 [...]
 Running XDP/eBPF prog_num:0
@@ -1746,7 +1746,7 @@ to this limited micro-benchmark, which makes the improvement impressive. The
 over <code>kmem_cache_free</code> once we move out-of this fast-path area).
 </p>
 
-<pre class="example" id="orgc27430e">
+<pre class="example" id="orgcfe9d98">
 Samples: 120K of event 'cycles:ppp', Event count (approx.): 113422085196
   Overhead  CPU  Command         Shared Object     Symbol
 +   27,50%  004  cpumap/4/map:1  [kernel.vmlinux]  [k] cpu_map_kthread_run
@@ -1780,7 +1780,7 @@ Samples: 120K of event 'cycles:ppp', Event count (approx.): 113422085196
 <div id="outline-container-Experiments" class="outline-3">
 <h3 id="Experiments"><a href="#Experiments">Experiments</a></h3>
 <div class="outline-text-3" id="text-Experiments">
-<pre class="example" id="org45ad647">
+<pre class="example" id="orgb4e180e">
 955.571564128                MUX:                                                14.29 +-     0.00 %       
 956.520987559 BE             Backend_Bound:                                      36.61 +-     0.00 % Slots 
 956.520987559 BE/Mem         Backend_Bound.Memory_Bound:                         15.48 +-     0.00 % Slots 
@@ -1826,7 +1826,7 @@ index 72cb19c3db6a..edcd49c11ba3 100644
 <p>
 On-top of: "Patch: bpf: cpumap use netif_receive_skb_list" and batch=16
 </p>
-<pre class="example" id="org5f4311e">
+<pre class="example" id="orgea0f6c5">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          1       19,193,940     0           0          
@@ -1842,7 +1842,7 @@ xdp_exception   total   0              0
 <p>
 Batch=64 (On-top of: "Patch: bpf: cpumap use netif_receive_skb_list")
 </p>
-<pre class="example" id="orgce98709">
+<pre class="example" id="org52b3f36">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          4       18,643,859     0           0          
@@ -1858,7 +1858,7 @@ xdp_exception   total   0              0
 <p>
 Batch=8 (On-top of: "bpf: cpumap memory prefetchw optimizations for struct page")
 </p>
-<pre class="example" id="orgc7f06c1">
+<pre class="example" id="org9df2bc3">
 Running XDP/eBPF prog_num:0
 XDP-cpumap      CPU:to  pps            drop-pps    extra-info
 XDP-RX          1       19,182,669     0           0          
@@ -1875,7 +1875,7 @@ xdp_exception   total   0              0
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-09-08 Tue 11:35</p>
+<p class="date">Date: 2020-09-08 Tue 12:15</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
