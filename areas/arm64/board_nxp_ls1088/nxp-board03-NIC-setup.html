@@ -81,7 +81,7 @@ for me, so I git-cloned and compiled it on the board:
 <p>
 Example output for default config:
 </p>
-<pre class="example" id="orge031dd9">
+<pre class="example" id="org2cb3e0d">
 root@localhost:~/git/restool# ls-listmac 
 dprc.1/dpmac.10 
 dprc.1/dpmac.9 
@@ -105,7 +105,7 @@ dprc.1/dpni.0 (interface: eth0, end point: dpmac.5)
 <p>
 Create interface:
 </p>
-<pre class="example" id="orge6fa341">
+<pre class="example" id="orgd973216">
 ls-addni dpmac.9
 Created interface: eth1 (object:dpni.1, endpoint: dpmac.9)
 </pre>
@@ -113,7 +113,7 @@ Created interface: eth1 (object:dpni.1, endpoint: dpmac.9)
 <p>
 Info for interface:
 </p>
-<pre class="example" id="org87f344f">
+<pre class="example" id="org7b4fa5b">
 # restool dpni info dpni.1
 dpni version: 7.9
 dpni id: 1
@@ -186,14 +186,14 @@ Install the compile tool software package:
 Compiling the file:
 </p>
 
-<pre class="example" id="org4b62617">
+<pre class="example" id="orgd527c82">
 dtc -I dts -O dtb dpl-ls1088-2x10-2x1.dts -o dpl-ls1088-2x10-2x1.dtb
 </pre>
 
 <p>
 File seems to work, but it give some warnings (reduced output):
 </p>
-<pre class="example" id="org692fe04">
+<pre class="example" id="org2e9741f">
 $ dtc -I dts -O dtb dpl-ls1088-2x10-2x1.dts -o dpl-ls1088-2x10-2x1.dtb
 dpl-ls1088-2x10-2x1.dtb: Warning (unit_address_vs_reg): /containers/dprc@1: node has a unit name, but no reg property
 dpl-ls1088-2x10-2x1.dtb: Warning (unit_address_vs_reg): /containers/dprc@1/objects/obj_set@dpbp: node has a unit name, but no reg property
@@ -226,7 +226,7 @@ device can be listed via command: <code>ext4ls mmc 0:2</code>.
 <p>
 U-Boot setup network with static IP (for dynamic-IP use cmd <code>dhcp</code>):
 </p>
-<pre class="example" id="orgbce696a">
+<pre class="example" id="org68437be">
 setenv ipaddr 192.168.42.10
 setenv netmask 255.255.255.0
 setenv serverip 192.168.42.3
@@ -240,7 +240,7 @@ Setup on TFTP server on 192.168.42.3 in /var/lib/tftpboot.
 <p>
 Start service:
 </p>
-<pre class="example" id="org171ba6d">
+<pre class="example" id="org8518891">
 sudo systemctl start tftp.service
 </pre>
 
@@ -248,7 +248,7 @@ sudo systemctl start tftp.service
 Loading via TFTP failed as wrong port was used (see "Using DPMAC1@xgmii
 device"):
 </p>
-<pre class="example" id="orga86098f">
+<pre class="example" id="org9a4aa74">
 =&gt; tftp 0x80010000 dpl-ls1088-2x10-2x1.dtb
 Using DPMAC1@xgmii device
 TFTP from server 192.168.42.3; our IP address is 192.168.42.10
@@ -267,7 +267,7 @@ DPMAC1@xgmii. If wanting to use MAC5 the port is DPMAC5@qsgmii.
 <p>
 Loading via TFTP:
 </p>
-<pre class="example" id="org19d905d">
+<pre class="example" id="orgcc13491">
 setenv ethact DPMAC5@qsgmii
 setenv serverip 192.168.42.3
 tftp 0x80010000 dpl-ls1088-2x10-2x1.dtb
@@ -277,7 +277,7 @@ tftp 0x80010000 dpl-ls1088-2x10-2x1.dtb
 After loading use the NXP/freescale command 'fsl_mc' to apply the data path
 layout (DPL):
 </p>
-<pre class="example" id="orgf9a7409">
+<pre class="example" id="org3518bd4">
 =&gt; fsl_mc apply dpl 0x80010000
 fsl-mc: Deploying data path layout ... SUCCESS
 </pre>
@@ -308,7 +308,7 @@ SD card.
 <p>
 Step-1: tftp load into memory as above:
 </p>
-<pre class="example" id="org544fbcf">
+<pre class="example" id="org44d7862">
 setenv ethact DPMAC5@qsgmii
 tftp 0x80010000 dpl-ls1088-2x10-2x1.dtb
 </pre>
@@ -317,7 +317,7 @@ tftp 0x80010000 dpl-ls1088-2x10-2x1.dtb
 Step-2: store into SD-card/mmc device. The 0x800 is the size, in blocks of
 512 bytes, reserved for the DPL image in the SD memory layout:
 </p>
-<pre class="example" id="org4ec94fd">
+<pre class="example" id="org36eead6">
 mmc write 0x80010000 0x06800 0x800
 </pre>
 </div>
@@ -362,7 +362,7 @@ After saving this file, run the following command to apply this netplan
 configuration and then reboot the board.
 </p>
 
-<pre class="example" id="orgaa41605">
+<pre class="example" id="org18f74ed">
 netplan apply
 </pre>
 </div>
@@ -370,7 +370,7 @@ netplan apply
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-09-08 Tue 08:24</p>
+<p class="date">Date: 2020-09-08 Tue 11:35</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

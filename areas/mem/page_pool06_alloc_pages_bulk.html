@@ -75,9 +75,18 @@
 <ul>
 <li><a href="#baseline-kernel">baseline kernel</a></li>
 <li><a href="#Use-list-variant">Use list variant</a></li>
-<li><a href="#Use-array-variant">Use array variant</a></li>
+<li><a href="#Use-array-variant">Use array variant</a>
+<ul>
+<li><a href="#Investigate-variation-seen">Investigate variation seen</a></li>
+</ul>
+</li>
 <li><a href="#Strange-code-layout">Strange code layout</a></li>
 <li><a href="#Send-patches-to-Mel">Send patches to Mel</a></li>
+</ul>
+</li>
+<li><a href="#Test-on-Mel-git-tree--mm-percpu-local_lock-v1r15">Test on Mel git-tree: mm-percpu-local_lock-v1r15</a>
+<ul>
+<li><a href="#micro-benchmark--page_bench04_bulk--local_lock-v1r15-">micro-benchmark: page_bench04_bulk (local_lock-v1r15)</a></li>
 </ul>
 </li>
 <li><a href="#Micro-optimisations">Micro optimisations</a>
@@ -137,6 +146,9 @@ Testing experimental patch from Mel Gorman that add alloc_pages_bulk() API.
 </ul></li>
 <li><ul class="org-ul">
 <li></li>
+</ul></li>
+<li><ul class="org-ul">
+<li></li>
 <li></li>
 <li></li>
 </ul></li>
@@ -184,7 +196,7 @@ ip link set veth2 up
 <p>
 Disable GRO/GSO/TSO on the veth devices
 </p>
-<pre class="example" id="org175b92a">
+<pre class="example" id="org61ac548">
 ethtool -K veth1 gso off gro off tso off
 ethtool -K veth2 gso off gro off tso off
 </pre>
@@ -227,7 +239,7 @@ suites our micro-benchmark test case.
 Kernel: Linux broadwell 5.11.0-net-next
 </p>
 
-<pre class="example" id="org3c22edc">
+<pre class="example" id="orgd0fce94">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      0       3,677,958   0          
@@ -239,7 +251,7 @@ rx_queue_index    0:sum 3,677,966
 
 </pre>
 
-<pre class="example" id="org47c1ed8">
+<pre class="example" id="orgffa3623">
 Samples: 81K of event 'cycles', Event count (approx.): 73929158590
   Overhead  Symbol                                               IPC   [IPC Coverage]
 +    4,87%  [k] __netif_receive_skb_core                         -      -
@@ -319,7 +331,7 @@ Same veth setup as above:
 Results below with page_pool using bulk=16 for alloc_pages_bulk().
 </p>
 
-<pre class="example" id="org667935a">
+<pre class="example" id="org39c96b8">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      5       4,066,028   0          
@@ -330,7 +342,7 @@ rx_queue_index    0:5   4,066,023   0
 rx_queue_index    0:sum 4,066,023  
 </pre>
 
-<pre class="example" id="org2fb3f73">
+<pre class="example" id="org04f737b">
 Samples: 51K of event 'cycles', Event count (approx.): 46934149161
   Overhead  Symbol                                               IPC   [IPC Coverage]
 +    4,94%  [k] __netif_receive_skb_core                         -      -
@@ -391,7 +403,7 @@ Same veth setup as above:
 Results below with page_pool using bulk=64 for alloc_pages_bulk().
 </p>
 
-<pre class="example" id="org35b52ca">
+<pre class="example" id="orgb93b6a2">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      1       4,297,656   0          
@@ -424,7 +436,7 @@ Test with new patchset from Mel
 bulk=64
 </p>
 
-<pre class="example" id="org1af54cd">
+<pre class="example" id="orgeb06f3f">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      3       4,368,926   0          
@@ -448,7 +460,7 @@ rx_queue_index    0:sum 4,368,917
 <p>
 Patchset V1:
 </p>
-<pre class="example" id="org8cc17d8">
+<pre class="example" id="org0d70e5f">
 stg mail --version='RFC net-next' --edit-cover --cc meup \
  --to mel --cc chuck.lever@oracle.com \
  --to mm --cc netdev --cc linux-nfs@vger.kernel.org --cc lkml \
@@ -462,7 +474,7 @@ Message-ID: &lt;161419296941.2718959.12575257358107256094.stgit@firesoul&gt;
 <p>
 V2 with minor changes and dropping micro-optimisation:
 </p>
-<pre class="example" id="orgc55d4f1">
+<pre class="example" id="org78562f6">
 stg mail --version='RFC V2 net-next' --edit-cover --cc meup \
  --to mel --cc chuck.lever@oracle.com \
  --to mm --cc netdev --cc linux-nfs@vger.kernel.org --cc lkml \
@@ -504,7 +516,7 @@ Maybe Mel Gorman will/can carry these patches?
 <p>
 Test again:
 </p>
-<pre class="example" id="org0449b47">
+<pre class="example" id="org5b57c59">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      0       4,302,291   0          
@@ -577,7 +589,7 @@ Promised to followup in Message-ID: &lt;20210315094038.22d6d79a@carbon&gt;
 <li>Below stg <a href="https://lore.kernel.org/netdev/161583677541.3715498.6118778324185171839.stgit@firesoul/">Message-ID</a></li>
 </ul>
 
-<pre class="example" id="orgc2ecc0a">
+<pre class="example" id="orgdd5779c">
 stg mail --version='mel-git' --edit-cover --cc meup \
  --to mel --cc chuck.lever@oracle.com --cc alex \
  --to mm --cc netdev --cc linux-nfs@vger.kernel.org --cc lkml \
@@ -648,7 +660,7 @@ Alexander Duyck point out there was a cleaner way to implement
 changes in function <code>__page_pool_alloc_pages_slow()</code>.
 </p>
 
-<pre class="example" id="orgd9d7d88">
+<pre class="example" id="org886ce5f">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      3       4,308,208   0          
@@ -664,7 +676,7 @@ rx_queue_index    0:sum 4,308,208
 <div id="outline-container-Pop-patch-using-__alloc_pages_bulk" class="outline-3">
 <h3 id="Pop-patch-using-__alloc_pages_bulk"><a href="#Pop-patch-using-__alloc_pages_bulk">Pop patch using __alloc_pages_bulk</a></h3>
 <div class="outline-text-3" id="text-Pop-patch-using-__alloc_pages_bulk">
-<pre class="example" id="orgd6eaa25">
+<pre class="example" id="org7457fd2">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      1       3,810,013   0          
@@ -708,7 +720,7 @@ page_bench04_bulk micro-benchmark on branch: mm-bulk-rebase-v5r9
 CPU: Intel(R) Xeon(R) CPU E5-1650 v4 @ 3.60GHz
 </p>
 
-<pre class="example" id="org03e2b83">
+<pre class="example" id="orge69aeca">
 BASELINE
  single_page alloc+put: Per elem: 199 cycles(tsc) 55.472 ns
 
@@ -807,7 +819,7 @@ Below tests include above patch.
 <div id="outline-container-page_pool--use-alloc_pages_bulk_list" class="outline-3">
 <h3 id="page_pool--use-alloc_pages_bulk_list"><a href="#page_pool--use-alloc_pages_bulk_list">page_pool: use alloc_pages_bulk_list</a></h3>
 <div class="outline-text-3" id="text-page_pool--use-alloc_pages_bulk_list">
-<pre class="example" id="org03f4fe8">
+<pre class="example" id="org40db7e2">
 unning XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      4       3,961,569   0          
@@ -823,7 +835,7 @@ rx_queue_index    0:sum 3,961,569
 <div id="outline-container-page_pool--use-alloc_pages_bulk_array" class="outline-3">
 <h3 id="page_pool--use-alloc_pages_bulk_array"><a href="#page_pool--use-alloc_pages_bulk_array">page_pool: use alloc_pages_bulk_array</a></h3>
 <div class="outline-text-3" id="text-page_pool--use-alloc_pages_bulk_array">
-<pre class="example" id="org3cfe3f7">
+<pre class="example" id="org037b4fc">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      5       4,067,120   0          
@@ -837,7 +849,7 @@ rx_queue_index    0:sum 4,067,127
 <p>
 The results a not super stable, as after a while I get this result:
 </p>
-<pre class="example" id="orgdf22c1a">
+<pre class="example" id="org271e1a3">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      3       4,218,956   0          
@@ -864,7 +876,7 @@ the CPU.
 <p>
 Perf-stat <b>BEFORE</b> during 4,174,649 pps:
 </p>
-<pre class="example" id="orgbd0783b">
+<pre class="example" id="org84c811d">
 $ perf stat -C3 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -e L1-icache-load-misses -e icache.hit -e icache.misses -e icache.ifdata_stall -r 4 sleep 1
 
  Performance counter stats for 'CPU(s) 3' (4 runs):
@@ -891,7 +903,7 @@ Above cycles 3.97 GHz indicate turbo-mode was engaged.
 <p>
 Perf-stat <b>AFTER</b> during 4,284,779 pps:
 </p>
-<pre class="example" id="org51f75b7">
+<pre class="example" id="org991f08b">
 $ perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -e L1-icache-load-misses -e icache.hit -e icache.misses -e icache.ifdata_stall -r 4 sleep 1
 
  Performance counter stats for 'CPU(s) 4' (4 runs):
@@ -925,7 +937,7 @@ did get "turbo-mode" enabled.
 <p>
 Perf-stat <b>AFTER</b> during 4,263,396 pps:
 </p>
-<pre class="example" id="org81ed7bb">
+<pre class="example" id="org9af7f99">
 perf stat -C3 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -e L1-icache-load-misses -e icache.hit -e icache.misses -e icache.ifdata_stall -r 4 sleep 1
 
 Performance counter stats for 'CPU(s) 3' (4 runs):
@@ -977,7 +989,7 @@ Branch: mm-bulk-rebase-v6r5
 <p>
 Kernel: 5.12.0-rc4-mel-mm-bulk-rebase-v6r5-baseline
 </p>
-<pre class="example" id="orgda2fa65">
+<pre class="example" id="org6fc20a6">
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      5       3,771,046   0          
 XDP-RX CPU      total   3,771,046  
@@ -987,7 +999,7 @@ rx_queue_index    0:5   3,771,054   0
 rx_queue_index    0:sum 3,771,054  
 </pre>
 
-<pre class="example" id="org4a2933a">
+<pre class="example" id="org62af608">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      0       3,690,327   0          
@@ -998,7 +1010,7 @@ rx_queue_index    0:0   3,690,335   0
 rx_queue_index    0:sum 3,690,335  
 </pre>
 
-<pre class="example" id="org116caf5">
+<pre class="example" id="org8dfd6e6">
 [broadwell ~]
 $ perf stat -C0 -e cycles -e  instructions -e cache-references \
  -e cache-misses -e branches:k -e branch-misses:k \
@@ -1031,7 +1043,7 @@ $ perf stat -C0 -e cycles -e  instructions -e cache-references \
 <p>
 Kernel: 5.12.0-rc4-mel-mm-bulk-rebase-v6r5-jesper05-list+
 </p>
-<pre class="example" id="orgf27054b">
+<pre class="example" id="org0e24376">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      4       3,940,242   0          
@@ -1042,7 +1054,7 @@ rx_queue_index    0:4   3,940,243   0
 rx_queue_index    0:sum 3,940,243  
 </pre>
 
-<pre class="example" id="orgb3501d9">
+<pre class="example" id="org5702146">
 3.780.991.660      cycles                                                        ( +-  0,01% )  (69,23%)
 8.983.214.383      instructions              #    2,38  insn per cycle           ( +-  0,03% )  (76,92%)
    40.349.872      cache-references                                              ( +-  0,10% )  (76,92%)
@@ -1066,7 +1078,7 @@ rx_queue_index    0:sum 3,940,243
 <p>
 Kernel: 5.12.0-rc4-mel-mm-bulk-rebase-v6r5-jesper05-array+
 </p>
-<pre class="example" id="org4616a4b">
+<pre class="example" id="orga8c2af9">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      4       4,249,224   0          
@@ -1077,7 +1089,7 @@ rx_queue_index    0:4   4,249,232   0
 rx_queue_index    0:sum 4,249,232  
 </pre>
 
-<pre class="example" id="orga781699">
+<pre class="example" id="org57e24bc">
 $ perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -e L1-icache-load-misses -e icache.hit -e icache.misses -e icache.ifdata_stall -r 4 sleep 1
 
  Performance counter stats for 'CPU(s) 4' (4 runs):
@@ -1100,7 +1112,7 @@ $ perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-misses -
 <p>
 Same kernel performance variations happens, this is lowest result:
 </p>
-<pre class="example" id="orge9fe11f">
+<pre class="example" id="orga25fb8b">
 Running XDP on dev:veth2 (ifindex:12) action:XDP_PASS options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      4       4,014,404   0          
@@ -1111,7 +1123,7 @@ rx_queue_index    0:4   4,014,402   0
 rx_queue_index    0:sum 4,014,402  
 </pre>
 
-<pre class="example" id="org661eb71">
+<pre class="example" id="org9d307c5">
 3.780.548.548      cycles                                                        ( +-  0,02% )  (69,22%)
 8.952.399.813      instructions              #    2,37  insn per cycle           ( +-  0,04% )  (76,92%)
    40.897.182      cache-references                                              ( +-  0,10% )  (76,92%)
@@ -1130,7 +1142,7 @@ rx_queue_index    0:sum 4,014,402
 <p>
 Another test, and perf stat with reduced PMU events (at 4,051,499 pps):
 </p>
-<pre class="example" id="org90322d8">
+<pre class="example" id="orgca99f8e">
 $ perf stat -C5 -e cycles -e  instructions -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -e icache.hit -e icache.misses -e icache.ifdata_stall -r 4 sleep 1
 
      3.804.088.394      cycles                                                        ( +-  0,02% )
@@ -1144,6 +1156,63 @@ $ perf stat -C5 -e cycles -e  instructions -e branches:k -e branch-misses:k -e l
          1.774.102      icache.misses                                                 ( +-  0,54% )
         17.786.226      icache.ifdata_stall                                           ( +-  0,18% )
 </pre>
+</div>
+
+<div id="outline-container-Investigate-variation-seen" class="outline-4">
+<h4 id="Investigate-variation-seen"><a href="#Investigate-variation-seen">Investigate variation seen</a></h4>
+<div class="outline-text-4" id="text-Investigate-variation-seen">
+<p>
+To investigate the variation seen, I ran a longer test, capturing the output
+from <code>xdp_redirect_map</code> (samples every 2 sec) for approx 20 hours. (One
+caveat is that program does a simple <code>sleep(2)</code> and assumes the cost of
+BPF-map calls are zero and also that sleep period was accurate, this can
+also screw the results).
+</p>
+
+<p>
+The output was run through:
+</p>
+<div class="org-src-container">
+<pre class="src src-sh">cat ~/out01-redir-mlx5p1-into-veth1 | <span style="font-style: italic;">\</span>
+ awk <span style="font-style: italic;">'BEGIN{max=0; min=0xFFFFFFFF; n=0; c=0}</span>
+<span style="font-style: italic;">      /ifindex/ {n++; c+=$3; avg=c/n; max=($3 &gt; max)?$3:max; min=($3 &lt; min)?$3:min; printf("n=%d\tcur-pps:%d\tavg=%d max=%d min=%d\n", n, $3, avg, max, min)}'</span>
+</pre>
+</div>
+
+<p>
+Result was average: 4,222,960 pps
+</p>
+<pre class="example" id="orgc2609a4">
+n=37004 cur-pps:4199584 avg=4222960 max=4448640 min=3797280
+</pre>
+
+<p>
+The min to max variation:
+</p>
+<ul class="org-ul">
+<li>4448640 - 3797280 = 651360 pps</li>
+<li>(1/4448640-1/3797280)*10^9 = -38.56 nanosec</li>
+<li>(1-(3797280/4448640))*100 = 14.64%</li>
+</ul>
+
+<p>
+Removing some outliers (35 records), that indicate that for 6 second
+periods the performance drops and then is restored afterwards:
+</p>
+<pre class="example" id="orgdb4ad4b">
+n=36968 cur-pps:4199584 avg=4223221 max=4448640 min=4016608
+</pre>
+
+<p>
+The min to max variation:
+</p>
+<ul class="org-ul">
+<li>4448640 - 4016608 = 432032 pps</li>
+<li>(1/4448640-1/4016608)*10^9 = -24.18 ns</li>
+<li>(1-(4016608/4448640))*100 = 9.71%</li>
+<li>Avg value only changed 261 (4222960-4223221)</li>
+</ul>
+</div>
 </div>
 </div>
 
@@ -1253,6 +1322,67 @@ Intent is for Mel to pickup these patches.
 </div>
 
 
+<div id="outline-container-Test-on-Mel-git-tree--mm-percpu-local_lock-v1r15" class="outline-2">
+<h2 id="Test-on-Mel-git-tree--mm-percpu-local_lock-v1r15"><a href="#Test-on-Mel-git-tree--mm-percpu-local_lock-v1r15">Test on Mel git-tree: mm-percpu-local_lock-v1r15</a></h2>
+<div class="outline-text-2" id="text-Test-on-Mel-git-tree--mm-percpu-local_lock-v1r15">
+<p>
+Mel Gorman's git tree:
+</p>
+<ul class="org-ul">
+<li>git://git.kernel.org/pub/scm/linux/kernel/git/mel/linux.git</li>
+</ul>
+
+<p>
+Branch: mm-percpu-local_lock-v1r15
+</p>
+</div>
+
+<div id="outline-container-micro-benchmark--page_bench04_bulk--local_lock-v1r15-" class="outline-3">
+<h3 id="micro-benchmark--page_bench04_bulk--local_lock-v1r15-"><a href="#micro-benchmark--page_bench04_bulk--local_lock-v1r15-">micro-benchmark: page_bench04_bulk (local_lock-v1r15)</a></h3>
+<div class="outline-text-3" id="text-micro-benchmark--page_bench04_bulk--local_lock-v1r15-">
+<p>
+Notice these "per elem" measurements are alloc+free cost for order-0 pages
+</p>
+
+<p>
+uname:
+</p>
+<ul class="org-ul">
+<li>5.12.0-rc4-mel-mm-percpu-local_lock-v1r15+ #52 SMP PREEMPT</li>
+</ul>
+
+<pre class="example" id="org04c7cb0">
+BASELINE
+ single_page alloc+put: 194 cycles(tsc) 54.106 ns
+
+LIST variant: time_bulk_page_alloc_free_list: step=bulk size
+
+ Per elem: 200 cycles(tsc) 55.667 ns (step:1)
+ Per elem: 143 cycles(tsc) 39.755 ns (step:2)
+ Per elem: 132 cycles(tsc) 36.758 ns (step:3)
+ Per elem: 128 cycles(tsc) 35.795 ns (step:4)
+ Per elem: 123 cycles(tsc) 34.339 ns (step:8)
+ Per elem: 120 cycles(tsc) 33.396 ns (step:16)
+ Per elem: 118 cycles(tsc) 32.806 ns (step:32)
+ Per elem: 115 cycles(tsc) 32.169 ns (step:64)
+ Per elem: 116 cycles(tsc) 32.258 ns (step:128)
+
+ARRAY variant: time_bulk_page_alloc_free_array: step=bulk size
+
+ Per elem: 195 cycles(tsc) 54.225 ns (step:1)
+ Per elem: 127 cycles(tsc) 35.492 ns (step:2)
+ Per elem: 117 cycles(tsc) 32.643 ns (step:3)
+ Per elem: 111 cycles(tsc) 30.992 ns (step:4)
+ Per elem: 106 cycles(tsc) 29.606 ns (step:8)
+ Per elem: 102 cycles(tsc) 28.532 ns (step:16)
+ Per elem: 99 cycles(tsc) 27.728 ns (step:32)
+ Per elem: 98 cycles(tsc) 27.252 ns (step:64)
+ Per elem: 97 cycles(tsc) 27.090 ns (step:128)
+</pre>
+</div>
+</div>
+</div>
+
 <div id="outline-container-Micro-optimisations" class="outline-2">
 <h2 id="Micro-optimisations"><a href="#Micro-optimisations">Micro optimisations</a></h2>
 <div class="outline-text-2" id="text-Micro-optimisations">
@@ -1275,7 +1405,7 @@ Document steps in micro optimizing page-alloactor code:
 <p>
 The code del_page_from_free_list() generate a strange imul operation:
 </p>
-<pre class="example" id="org05a9e88">
+<pre class="example" id="org5b0e983">
 imul   $0x58,%rax,%rax
 </pre>
 
@@ -1315,7 +1445,7 @@ This happens when accessing free_area like this:
 <p>
 Perf show hot-spot in: rmqueue_bulk.constprop.0 / rmqueue_bulk()
 </p>
-<pre class="example" id="orga99758b">
+<pre class="example" id="orgaea3889">
       │         mov    0x8(%rbx),%rax                                                                                            ▒
       │       __list_del():                                                                                                      ▒
       │         mov    %rax,0x8(%rdx)                                                                                            ▒
@@ -1372,7 +1502,7 @@ The reason for the code is to find the right struct free_area in struct
 zone.  The array of 11 comes from define MAX_ORDER.
 </p>
 
-<pre class="example" id="orgdf185c2">
+<pre class="example" id="org1f9f4d7">
 struct zone {
         long unsigned int          _watermark[3];        /*     0    24 */
  [...]
@@ -1505,7 +1635,7 @@ Move member 'nr_free':
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2021-03-24 Wed 22:40</p>
+<p class="date">Date: 2021-03-30 Tue 13:41</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

@@ -62,14 +62,14 @@ Trick to temporarily boot another kernel.
 <p>
 Copy over kernel to SD-card (while Linux is running on board):
 </p>
-<pre class="example" id="org5b9ed6c">
+<pre class="example" id="org5a8d502">
 rsync -av arch/arm64/boot/Image root@192.168.42.10:/boot/Image2
 </pre>
 
 <p>
 During power up break into U-Boot:
 </p>
-<pre class="example" id="orgeee28d7">
+<pre class="example" id="org15bac86">
 setenv kernel_image Image2
 boot
 </pre>
@@ -116,7 +116,7 @@ have not caught up with. (Likely in this commit <a href="https://git.kernel.org/
 <p>
 Error messages in dmesg looks like this:
 </p>
-<pre class="example" id="orgc99d8f9">
+<pre class="example" id="org2d35f2c">
 arm-smmu 5000000.iommu: Unexpected global fault, this could be serious
 arm-smmu 5000000.iommu:  GFSR 0x80000002, GFSYNR0 0x00000002
 </pre>
@@ -151,7 +151,7 @@ default qdisc not getting assigned correctly, resulting in device driver
 dpaa2-eth getting assigned qdisc <code>noop</code>.
 </p>
 
-<pre class="example" id="org51c9e80">
+<pre class="example" id="orgaf23a18">
 root@LS1088ARDB-PB:~# ip link show dev eth0
 3: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noop state UP mode DEFAULT group default qlen 1000
     link/ether 00:04:9f:06:08:f0 brd ff:ff:ff:ff:ff:ff
@@ -199,7 +199,7 @@ Config adjustments:
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-09-08 Tue 08:24</p>
+<p class="date">Date: 2020-09-08 Tue 11:35</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

@@ -91,7 +91,7 @@ Gitweb: on branch "dma-direct-calls"
 <p>
 Git checkout procedure:
 </p>
-<pre class="example" id="orgc079fe6">
+<pre class="example" id="org4cf36b7">
 $ git clone git://git.infradead.org/users/hch/misc.git hellwig
 $ cd hellwig
 $ git checkout dma-direct-calls
@@ -297,7 +297,7 @@ XDP_DROP performance okay, but AFAICR it was also okay before, as it was only
 affected by DMA-sync call.
 </p>
 
-<pre class="example" id="org50f4ae9">
+<pre class="example" id="org34eb9e9">
 Running XDP on dev:ixgbe2 (ifindex:9) action:XDP_DROP options:no_touch
 XDP stats       CPU     pps         issue-pps  
 XDP-RX CPU      3       14,435,891  0          
@@ -319,7 +319,7 @@ link-speed 10Gbit/s out TXC 40Gbit/s link-speed to make sure TX side is not
 bottleneck.
 </p>
 
-<pre class="example" id="org47b7a3e">
+<pre class="example" id="org57a0089">
 sudo ./xdp_redirect_map  $(&lt;/sys/class/net/ixgbe2/ifindex) \
   $(&lt;/sys/class/net/i40e1/ifindex)
 $ sudo ./xdp_redirect_map  $(&lt;/sys/class/net/ixgbe2/ifindex) \
@@ -341,7 +341,7 @@ timers to get correct time interval.
 <p>
 First <b>ALWAYS</b> make sure generator is sending fast enough:
 </p>
-<pre class="example" id="orgdd83b95">
+<pre class="example" id="org5ac7ec9">
 ./pktgen_sample03_burst_single_flow.sh -i ixgbe2 -d 10.10.10.2 -m 00:1b:21:bb:9a:86 -t2
 [generator ~]$ ~/git/network-testing/bin/ethtool_stats.pl --sec 2 --dev ixgbe2
 Show adapter(s) (ixgbe2) statistics (ONLY that changed!)
@@ -358,7 +358,7 @@ Ethtool(ixgbe2  ) stat:      7438308 (      7,438,308) &lt;= tx_queue_1_packets 
 <p>
 Device-Under-Test (DUT):
 </p>
-<pre class="example" id="org1498e1d">
+<pre class="example" id="org36daf0d">
 Show adapter(s) (ixgbe2 i40e1) statistics (ONLY that changed!)
 Ethtool(ixgbe2  ) stat:     12192478 (     12,192,478) &lt;= fdir_miss /sec
 Ethtool(ixgbe2  ) stat:    575904896 (    575,904,896) &lt;= rx_bytes /sec
@@ -384,7 +384,7 @@ The result: 9610088 (9,610,088) packets/sec
 <p>
 Some perf stats during this redirect (happend to run on CPU-3):
 </p>
-<pre class="example" id="org532b571">
+<pre class="example" id="org516b0b6">
 $ sudo ~/perf stat -C3 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -r 4 sleep 1
 
  Performance counter stats for 'CPU(s) 3' (4 runs):
@@ -414,7 +414,7 @@ Need a baseline kernel, just before Hellwigs patches:
 <li>Linux broadwell 4.20.0-rc4-hellwig-baseline+ #3 SMP PREEMPT</li>
 </ul>
 
-<pre class="example" id="org7cb9a33">
+<pre class="example" id="org8c98b3c">
 git checkout -b hellwig-baseline ef78e5ec9214
 </pre>
 </div>
@@ -426,7 +426,7 @@ git checkout -b hellwig-baseline ef78e5ec9214
 <div id="outline-container-ixgbe--XDP_DROP--baseline-RETPOLINE-" class="outline-4">
 <h4 id="ixgbe--XDP_DROP--baseline-RETPOLINE-"><a href="#ixgbe--XDP_DROP--baseline-RETPOLINE-">ixgbe: XDP_DROP (baseline-RETPOLINE)</a></h4>
 <div class="outline-text-4" id="text-ixgbe--XDP_DROP--baseline-RETPOLINE-">
-<pre class="example" id="orgacdbd37">
+<pre class="example" id="orge56bad1">
 sudo ./xdp_rxq_info --dev ixgbe2 --action XDP_DROP
 Running XDP on dev:ixgbe2 (ifindex:7) action:XDP_DROP options:no_touch
 XDP stats       CPU     pps         issue-pps  
@@ -449,7 +449,7 @@ link-speed 10Gbit/s out TXC 40Gbit/s link-speed to make sure TX side is not
 bottleneck.
 </p>
 
-<pre class="example" id="org33191d0">
+<pre class="example" id="orgaeaa682">
 [broadwell kernel-bpf-samples]$ sudo ./xdp_redirect_map  $(&lt;/sys/class/net/ixgbe2/ifindex) $(&lt;/sys/class/net/i40e1/ifindex)
 input: 7 output: 3
 map[0] (vports) = 4, map[1] (map) = 5, map[2] (count) = 0
@@ -462,7 +462,7 @@ ifindex 3:    7445031 pkt/s
 <p>
 Need ethtool_stats evidence:
 </p>
-<pre class="example" id="org7bc60d9">
+<pre class="example" id="orgcc1942f">
 $ ethtool_stats.pl --dev i40e1 --dev ixgbe2 --dev ixgbe1  --sec 2
 Show adapter(s) (i40e1 ixgbe2 ixgbe1) statistics (ONLY that changed!)
 Ethtool(i40e1   ) stat:    476049953 (    476,049,953) &lt;= port.tx_bytes /sec
@@ -486,7 +486,7 @@ Ethtool(ixgbe2  ) stat:      7435453 (      7,435,453) &lt;= rx_queue_4_packets 
 Result: i40e1 sending  7438283 (7,438,283) &lt;= tx_unicast /sec
 </p>
 
-<pre class="example" id="org46c1208">
+<pre class="example" id="org7a9218c">
 $ sudo ~/perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -r 4 sleep 1
 
  Performance counter stats for 'CPU(s) 4' (4 runs):
@@ -527,7 +527,7 @@ What was performance before RETPOLINE? Testing without CONFIG_RETPOLINE
 <div id="outline-container-ixgbe--XDP_REDIRECT-devmap--baseline-NO-retpoline-" class="outline-4">
 <h4 id="ixgbe--XDP_REDIRECT-devmap--baseline-NO-retpoline-"><a href="#ixgbe--XDP_REDIRECT-devmap--baseline-NO-retpoline-">ixgbe: XDP_REDIRECT devmap (baseline-NO-retpoline)</a></h4>
 <div class="outline-text-4" id="text-ixgbe--XDP_REDIRECT-devmap--baseline-NO-retpoline-">
-<pre class="example" id="orgc0f783e">
+<pre class="example" id="orgb38d70e">
 [jbrouer@broadwell kernel-bpf-samples]$ sudo ./xdp_redirect_map  $(&lt;/sys/class/net/ixgbe2/ifindex) $(&lt;/sys/class/net/i40e1/ifindex)
 input: 7 output: 2
 map[0] (vports) = 4, map[1] (map) = 5, map[2] (count) = 0
@@ -541,7 +541,7 @@ ifindex 2:   11930911 pkt/s
 <p>
 Need ethtool_stats evidence:
 </p>
-<pre class="example" id="org4867fd1">
+<pre class="example" id="orgeff4e79">
 Show adapter(s) (i40e1 ixgbe2 ixgbe1) statistics (ONLY that changed!)
 Ethtool(i40e1   ) stat:    762445780 (    762,445,780) &lt;= port.tx_bytes /sec
 Ethtool(i40e1   ) stat:     11913151 (     11,913,151) &lt;= port.tx_size_64 /sec
@@ -564,7 +564,7 @@ Ethtool(ixgbe2  ) stat:     11942630 (     11,942,630) &lt;= rx_queue_2_packets 
 Result: i40e1 = 11913154 (11,913,154) &lt;= tx_unicast /sec
 </p>
 
-<pre class="example" id="org20d7b48">
+<pre class="example" id="org74bb9e0">
 $ sudo ~/perf stat -C2 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -r 4 sleep 1
 
  Performance counter stats for 'CPU(s) 2' (4 runs):
@@ -601,7 +601,7 @@ Branch: dma-direct-calls.2
 <p>
 Redirect via:
 </p>
-<pre class="example" id="org0765628">
+<pre class="example" id="orge5c2687">
 $ sudo ./xdp_redirect_map  $(&lt;/sys/class/net/ixgbe2/ifindex) $(&lt;/syslass/net/i40e1/ifindex)
 </pre>
 
@@ -612,7 +612,7 @@ Evidence from ethtool_stats.pl of TX:
 <li>Result: 10049223 (10,049,223) &lt;= tx_unicast /sec</li>
 </ul>
 
-<pre class="example" id="org035d122">
+<pre class="example" id="org98ddcba">
 Show adapter(s) (i40e1 ixgbe2 ixgbe1) statistics (ONLY that changed!)
 Ethtool(i40e1   ) stat:    643150456 (    643,150,456) &lt;= port.tx_bytes /sec
 Ethtool(i40e1   ) stat:     10049223 (     10,049,223) &lt;= port.tx_size_64 /sec
@@ -634,7 +634,7 @@ Ethtool(ixgbe2  ) stat:     10062218 (     10,062,218) &lt;= rx_queue_5_packets 
 <p>
 Perf stat:
 </p>
-<pre class="example" id="orgc80be87">
+<pre class="example" id="org52aa545">
 $ sudo ~/perf stat -C5 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -r 4 sleep 1
 
  Performance counter stats for 'CPU(s) 5' (4 runs):
@@ -667,7 +667,7 @@ on fixing/mitigating retpoline.
 Result: 11762603 (11,762,603) &lt;= tx_unicast /sec
 </p>
 
-<pre class="example" id="orgfbd9574">
+<pre class="example" id="org0a78454">
 Show adapter(s) (i40e1 ixgbe2 ixgbe1) statistics (ONLY that changed!)
 Ethtool(i40e1   ) stat:    752806181 (    752,806,181) &lt;= port.tx_bytes /sec
 Ethtool(i40e1   ) stat:     11762598 (     11,762,598) &lt;= port.tx_size_64 /sec
@@ -686,7 +686,7 @@ Ethtool(ixgbe2  ) stat:    706543665 (    706,543,665) &lt;= rx_queue_0_bytes /s
 Ethtool(ixgbe2  ) stat:     11775728 (     11,775,728) &lt;= rx_queue_0_packets /sec
 </pre>
 
-<pre class="example" id="orgf8d17f7">
+<pre class="example" id="org494e71f">
 $ sudo ~/perf stat -C0 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -r 4 sleep 1
 
  Performance counter stats for 'CPU(s) 0' (4 runs):
@@ -767,7 +767,7 @@ index de629b706d1d..ed0a5153e2a0 100644
 <p>
 Not much difference:
 </p>
-<pre class="example" id="orge400ebb">
+<pre class="example" id="org7b23c22">
 Show adapter(s) (i40e1 ixgbe2 ixgbe1) statistics (ONLY that changed!)
 Ethtool(i40e1   ) stat:    658856830 (    658,856,830) &lt;= port.tx_bytes /sec
 Ethtool(i40e1   ) stat:     10294638 (     10,294,638) &lt;= port.tx_size_64 /sec
@@ -786,7 +786,7 @@ Ethtool(ixgbe2  ) stat:    616748552 (    616,748,552) &lt;= rx_queue_1_bytes /s
 Ethtool(ixgbe2  ) stat:     10279143 (     10,279,143) &lt;= rx_queue_1_packets /sec
 </pre>
 
-<pre class="example" id="org65e45a1">
+<pre class="example" id="orge9d6ad5">
 $ sudo ~/perf stat -C1 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -r 4 sleep 1
 
  Performance counter stats for 'CPU(s) 1' (4 runs):
@@ -910,7 +910,7 @@ That seems to work!
 <li>Result: 11700004 (11,700,004) &lt;= tx_unicast /sec</li>
 </ul>
 
-<pre class="example" id="org84f2621">
+<pre class="example" id="org8b7c8e0">
 Show adapter(s) (i40e1 ixgbe2 ixgbe1) statistics (ONLY that changed!)
 Ethtool(i40e1   ) stat:    748800324 (    748,800,324) &lt;= port.tx_bytes /sec
 Ethtool(i40e1   ) stat:     11700005 (     11,700,005) &lt;= port.tx_size_64 /sec
@@ -932,7 +932,7 @@ Ethtool(ixgbe2  ) stat:     11709238 (     11,709,238) &lt;= rx_queue_4_packets 
 <p>
 Perf show very high insn per cycle:
 </p>
-<pre class="example" id="org62c47a3">
+<pre class="example" id="org221c88e">
 $ sudo ~/perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -r 4 sleep 1
 
  Performance counter stats for 'CPU(s) 4' (4 runs):
@@ -952,7 +952,7 @@ $ sudo ~/perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-m
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-09-08 Tue 08:24</p>
+<p class="date">Date: 2020-09-08 Tue 11:35</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

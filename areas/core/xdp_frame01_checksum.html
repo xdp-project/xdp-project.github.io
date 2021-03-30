@@ -153,7 +153,7 @@ This checksum procedure is the same as is used in TCP.
 <p>
 The pseudo header:
 </p>
-<pre class="example" id="orga829bdd">
+<pre class="example" id="org4e878fc">
  0      7 8     15 16    23 24    31
 +--------+--------+--------+--------+
 |         source address            |
@@ -338,7 +338,7 @@ optimizations (also described in linked file).
 The perf diff result (10 sec measurement) with csum vs. zero-csum:
 </p>
 
-<pre class="example" id="org92f9266">
+<pre class="example" id="orga453d8a">
 # Event 'cycles'
 #
 # Baseline  Delta Abs  Shared Object                                      Symbol                              &gt;
@@ -393,7 +393,7 @@ The perf diff result (10 sec measurement) with csum vs. zero-csum:
 The perf diff result against netstack (10 sec measurement) below:
 </p>
 
-<pre class="example" id="org8269127">
+<pre class="example" id="org0f8f723">
 # Event 'cycles'
 #
 # Baseline  Delta Abs  Shared Object                                      Symbol                                               
@@ -449,7 +449,7 @@ So, I now have a test that shows the problem. It is very clear that +11.93%
 <p>
 Example call-stack for <code>do_csum</code> :
 </p>
-<pre class="example" id="orgd938b3d">
+<pre class="example" id="org552a3be">
 ksoftirqd/2    24 [002] 68022.158164:    1133633   cycles: 
         ffffffff81506047 do_csum+0x77 (/boot/vmlinux-5.12.0-rc2-mel-git-alloc_pages_bulk+)
         ffffffff8150614d csum_partial+0xd (/boot/vmlinux-5.12.0-rc2-mel-git-alloc_pages_bulk+)
@@ -472,7 +472,7 @@ ksoftirqd/2    24 [002] 68022.158164:    1133633   cycles:
 <p>
 Decode <code>__udp4_lib_rcv+0xb84</code>:
 </p>
-<pre class="example" id="org808d949">
+<pre class="example" id="orgebc20d1">
 $ ./scripts/faddr2line vmlinux __udp4_lib_rcv+0xb84
 __udp4_lib_rcv+0xb84/0xb90:
 __udp_lib_checksum_complete at include/net/udp.h:112
@@ -514,7 +514,7 @@ this is happening. (Included CPU column below to show RX happens on CPU-3
 and udp_sink program runs on CPU-4).
 </p>
 
-<pre class="example" id="org885b136">
+<pre class="example" id="org871c27b">
 # Overhead  CPU  Symbol
 # ........  ...  .....................................................
 #
@@ -559,7 +559,7 @@ and udp_sink program runs on CPU-4).
 <p>
 Perf call stack for: csum_partial_copy_generic
 </p>
-<pre class="example" id="org9b0d5aa">
+<pre class="example" id="orgd29d5b2">
 udp_sink 90008 [004] 161320.394594:    1218198   cycles:
         ffffffff81505e43 csum_partial_copy_generic+0x53 (/boot/vmlinux-5.12.0-rc2-mel-git-alloc_pages_bulk+)
         ffffffff81506243 csum_and_copy_to_user+0x43 (/boot/vmlinux-5.12.0-rc2-mel-git-alloc_pages_bulk+)
@@ -591,7 +591,7 @@ The cmdline for <a href="https://github.com/netoptimizer/network-testing/blob/ma
 <p>
 Output:
 </p>
-<pre class="example" id="org5de7899">
+<pre class="example" id="orgdd31b72">
 $ sudo taskset -c 4 ./udp_sink -l6666 --repeat 10000 --recv
           	run      count   	ns/pkt	pps		cycles	payload
 recv      	run:  0	 1000000	735.43	1359742.86	2647	1472	 demux:1
@@ -607,7 +607,7 @@ recv      	run:  2	 1000000	730.43	1369047.89	2629	1472	 demux:1
 <p>
 Change trafgen conf to use UDP checksum zero:
 </p>
-<pre class="example" id="orgf2e7ebf">
+<pre class="example" id="org8d9b1af">
 recv      	run: 339	 1000000	679.13	1472481.98	2444	1472	 demux:1
 recv      	run: 340	 1000000	676.17	1478920.63	2434	1472	 demux:1
 recv      	run: 341	 1000000	676.15	1478969.08	2434	1472	 demux:1
@@ -679,7 +679,7 @@ checksumming, but the overhead is still significant.
 <div id="outline-container-Measurements--perf-diff" class="outline-4">
 <h4 id="Measurements--perf-diff"><a href="#Measurements--perf-diff">Measurements: perf diff</a></h4>
 <div class="outline-text-4" id="text-Measurements--perf-diff">
-<pre class="example" id="org3811829">
+<pre class="example" id="orga361810">
 # Event 'cycles'
 #
 # Baseline  Delta Abs    Symbol
