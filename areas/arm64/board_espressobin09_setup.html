@@ -123,7 +123,7 @@ This is connected with LLVM9 can produce BTF (BPF Type Format).
 <p>
 Jesper's new board:
 </p>
-<pre class="example" id="org0de06e7">
+<pre class="example" id="org4f73c98">
 U-Boot 2017.03-armada-17.10.2-g255b9cc9c1 (Jun 10 2019 - 17:35:12 +0800)
 
 Model: Marvell Armada 3720 Community Board ESPRESSOBin
@@ -146,7 +146,7 @@ Comphy-2: SATA0         6 Gbps
 List existing env via printenv:
 </p>
 
-<pre class="example" id="orgf06771c">
+<pre class="example" id="org37a1796">
 Marvell&gt;&gt; printenv
 baudrate=115200
 bootargs=console=ttyMV0,115200 earlycon=ar3700_uart,0xd0012000 root=/dev/mmcblk0p1 rw rootwait net.ifnames=00
@@ -290,7 +290,7 @@ Getting LVM help from guide:
 The <code>lvscan</code> shows an <b>inactive</b> <code>/dev/fedora/root</code> device.
 </p>
 
-<pre class="example" id="org66b98ac">
+<pre class="example" id="org34779c2">
 $ sudo lvscan
   /dev/sda: open failed: No medium found
   /dev/sdb: open failed: No medium found
@@ -317,7 +317,7 @@ Now <code>/dev/fedora/root</code> have appeared, lets mount it. Mounting the RAW
 as root is important to get the file ownership permissions correct.
 </p>
 
-<pre class="example" id="orga8ca7e1">
+<pre class="example" id="org05a77b9">
 sudo mkdir /mnt/fedora-rootfs
 sudo mount /dev/fedora/root /mnt/fedora-rootfs
 </pre>
@@ -360,7 +360,7 @@ as root-dev is called <code>/dev/mmcblk0p1</code>. Thus, update <code>rootfs-f31
 with e.g.:
 </p>
 
-<pre class="example" id="org2ce73e2">
+<pre class="example" id="org5f58f85">
 # From: /etc/fstab
 /dev/mmcblk0p1	/	ext4	defaults	0 0
 </pre>
@@ -463,7 +463,7 @@ In the kernel source, after compiling, the binary 'Image' file is located in
 <code>arch/arm64/boot/Image</code>
 </p>
 
-<pre class="example" id="orged1e236">
+<pre class="example" id="orgd92ed39">
 # git kernel source
 cp arch/arm64/boot/Image /mnt/sdcard/boot/
 </pre>
@@ -484,7 +484,7 @@ Copy over that file too:
 <p>
 Contents in <i>mnt/sdcard/boot</i> :
 </p>
-<pre class="example" id="orgfe4ef4b">
+<pre class="example" id="org2611766">
 [laptop sdcard]# ll /mnt/sdcard/boot/
 total 26972
 -rw-r--r--. 1 root root    10826 Nov 20 12:34 armada-3720-espressobin.dtb
@@ -562,7 +562,7 @@ Marvell&gt;&gt;
 Listing contents of mmc:
 </p>
 
-<pre class="example" id="org59c50da">
+<pre class="example" id="org039461e">
 Marvell&gt;&gt; ext4ls mmc 0:1 boot
 &lt;DIR&gt;       4096 .
 &lt;DIR&gt;       4096 ..
@@ -575,7 +575,7 @@ Marvell&gt;&gt;
 <p>
 First, set the proper boot image name and device tree path and name:
 </p>
-<pre class="example" id="org18e681b">
+<pre class="example" id="org877cf05">
 Marvell&gt;&gt; setenv image_name boot/Image
 Marvell&gt;&gt; setenv fdt_name boot/armada-3720-espressobin.dtb
 </pre>
@@ -584,7 +584,7 @@ Marvell&gt;&gt; setenv fdt_name boot/armada-3720-espressobin.dtb
 Next, define the bootmmc variable which we will use to boot from the microSD
 card:
 </p>
-<pre class="example" id="orgb67a955">
+<pre class="example" id="orgc5e2439">
 setenv bootmmc 'mmc dev 0; ext4load mmc 0:1 $kernel_addr $image_name;ext4load mmc 0:1 $fdt_addr $fdt_name;setenv bootargs $console root=/dev/mmcblk0p1 rw rootwait; booti $kernel_addr - $fdt_addr'
 saveenv
 </pre>
@@ -592,7 +592,7 @@ saveenv
 <p>
 Booting fails:
 </p>
-<pre class="example" id="org137c1e5">
+<pre class="example" id="orgf14ae3d">
 Marvell&gt;&gt; run bootmmc
 switch to partitions #0, OK
 mmc0 is current device
@@ -620,7 +620,7 @@ In the kernel source, after compiling, the binary 'Image' file is located in
 <code>arch/arm64/boot/Image</code>
 </p>
 
-<pre class="example" id="org4b6b146">
+<pre class="example" id="org3722c14">
 cp Image /mnt/sdcard/boot/
 umount /mnt/sdcard
 </pre>
@@ -632,7 +632,7 @@ Booting kernel worked.
 <p>
 But new distro challenges:
 </p>
-<pre class="example" id="orgb52afa8">
+<pre class="example" id="org7b10e89">
 You are in emergency mode. After logging in, type "journalctl -xb" to view
 system logs, "systemctl reboot" to reboot, "systemctl default" or "exit"
 to boot into
@@ -700,7 +700,7 @@ Issue: System still doesn't boot.
 Real issue seems to be related to not mounting rootfs:
 </p>
 
-<pre class="example" id="org9336af3">
+<pre class="example" id="orgfed7b50">
 [ TIME ] Timed out waiting for device ¦e-687a-49e0-9a7c-b9a403fc4027.
 [DEPEND] Dependency failed for /boot.
 [DEPEND] Dependency failed for /boot/efi.
@@ -712,7 +712,7 @@ Real issue seems to be related to not mounting rootfs:
 <p>
 Original /mnt/sdcard/etc/fstab contained:
 </p>
-<pre class="example" id="org3603472">
+<pre class="example" id="orgfdf98b9">
 /dev/mapper/fedora-root /                       xfs     defaults        0 0
 UUID=983cb62e-687a-49e0-9a7c-b9a403fc4027 /boot                   xfs     defaults        0 0
 UUID=B7C7-D61F          /boot/efi               vfat    umask=0077,shortname=winnt 0 2
@@ -721,7 +721,7 @@ UUID=B7C7-D61F          /boot/efi               vfat    umask=0077,shortname=win
 <p>
 New entry in /mnt/sdcard/etc/fstab:
 </p>
-<pre class="example" id="org917f252">
+<pre class="example" id="org6c67f13">
 /dev/mmcblk0p1   /boot                   ext4     defaults        0 0
 </pre>
 
@@ -751,7 +751,7 @@ files.
 <p>
 Network interfaces available:
 </p>
-<pre class="example" id="org5db2ff0">
+<pre class="example" id="orgd2f9810">
 [root@localhost /]# ip link ls
 1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
@@ -767,7 +767,7 @@ Network interfaces available:
     link/ether 8a:a3:cf:35:00:5a brd ff:ff:ff:ff:ff:ff
 </pre>
 
-<pre class="example" id="orgafc48a2">
+<pre class="example" id="orgddc47b1">
 ethtool -i wan | grep driver
 driver: dsa
 </pre>
@@ -781,7 +781,7 @@ driver: dsa
 File: /etc/sysconfig/network-scripts/ifcfg-wan
 </p>
 
-<pre class="example" id="org6c15002">
+<pre class="example" id="orgf3cba02">
 NM_CONTROLLED="no"
 NAME="wan"
 ONBOOT="yes"
@@ -803,7 +803,7 @@ PREFIX=24
 Very strange, command <code>ifup</code> says it cannot load the file, even-though it
 does exist:
 </p>
-<pre class="example" id="orgd22cf80">
+<pre class="example" id="org952fd19">
 [root@localhost /]# ls -l /etc/sysconfig/network-scripts/ifcfg-wan
 -rw-r--r-- 1 root root 245 Oct 10 09:19 /etc/sysconfig/network-scripts/ifcfg-wan
 
@@ -864,7 +864,7 @@ lan1: unavailable
 <p>
 List connections:
 </p>
-<pre class="example" id="org5275e00">
+<pre class="example" id="org2396cc6">
 # nmcli connection
 NAME                UUID                                  TYPE      DEVICE 
 Wired connection 4  7b62939e-5b3c-3876-84f6-87aa08be43f3  ethernet  wan    
@@ -911,7 +911,7 @@ nmcli connection up   7b62939e-5b3c-3876-84f6-87aa08be43f3
 <p>
 It is a priority to get LLVM9 working on arm64.
 </p>
-<pre class="example" id="orga0e6447">
+<pre class="example" id="org26789f3">
 dnf install -y llvm
 
 Last metadata expiration check: 0:00:03 ago on Tue 19 Nov 2019 09:20:48 AM EST.
@@ -935,7 +935,7 @@ Installed size: 107 M
 <p>
 Success and 'llc &#x2013;version' shows a lot of targets, including BPF.
 </p>
-<pre class="example" id="org2536393">
+<pre class="example" id="orgf919505">
 # llc --version
 LLVM (http://llvm.org/):
   LLVM version 9.0.0
@@ -988,7 +988,7 @@ LLVM (http://llvm.org/):
 Also install <code>clang</code>:
 </p>
 
-<pre class="example" id="orgb0d7e8f">
+<pre class="example" id="org9ecd89e">
 dnf install -y clang
 </pre>
 </div>
@@ -1042,7 +1042,7 @@ Getting pahole:
 <div id="outline-container-Dependencies-for-compiling-bpftool" class="outline-3">
 <h3 id="Dependencies-for-compiling-bpftool"><a href="#Dependencies-for-compiling-bpftool">Dependencies for compiling bpftool</a></h3>
 <div class="outline-text-3" id="text-Dependencies-for-compiling-bpftool">
-<pre class="example" id="org6c9cb3b">
+<pre class="example" id="org2748d41">
 dnf install binutils-devel  # bfd.h
 dnf builddep -y bpftool
 dnf install -y readline-devel  # readline/readline.h
@@ -1054,7 +1054,7 @@ dnf install -y readline-devel  # readline/readline.h
 <div id="outline-container-BCC-and-bpftrace" class="outline-3">
 <h3 id="BCC-and-bpftrace"><a href="#BCC-and-bpftrace">BCC and bpftrace</a></h3>
 <div class="outline-text-3" id="text-BCC-and-bpftrace">
-<pre class="example" id="org6c04b38">
+<pre class="example" id="orgf577a8b">
 dnf install -y bcc
 
 Dependencies resolved.
@@ -1084,7 +1084,7 @@ dnf install -y cmake stow bcc
 Getting all build dependencies for bpftrace via: <code>dnf builddep bpftrace</code>
 </p>
 
-<pre class="example" id="org0b14d1b">
+<pre class="example" id="orga1ace15">
 sudo dnf builddep -y bpftrace
 
 Dependencies resolved.
@@ -1136,7 +1136,7 @@ Loading libs from <i>usr/local</i>
 <div id="outline-container-Disable-audit" class="outline-3">
 <h3 id="Disable-audit"><a href="#Disable-audit">Disable audit</a></h3>
 <div class="outline-text-3" id="text-Disable-audit">
-<pre class="example" id="orgc8a6115">
+<pre class="example" id="org6e43884">
 systemctl disable auditd.service
 systemctl mask systemd-journald-audit.socket
 </pre>
@@ -1145,7 +1145,7 @@ systemctl mask systemd-journald-audit.socket
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-09-08 Tue 12:15</p>
+<p class="date">Date: 2020-09-11 Fri 13:25</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

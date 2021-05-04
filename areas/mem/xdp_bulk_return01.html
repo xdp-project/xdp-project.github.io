@@ -125,7 +125,7 @@ code infrastructure.
 <p>
 Max XDP_TX performance:
 </p>
-<pre class="example" id="orgb8df9e2">
+<pre class="example" id="org67b7735">
 sudo ./xdp_rxq_info --dev mlx5p1 --act XDP_TX
 [...]
 Running XDP on dev:mlx5p1 (ifindex:7) action:XDP_TX options:swapmac
@@ -144,7 +144,7 @@ count the RX-events. Something is wrong, as we see only 9,184,940
 tx_packets_phy/sec (phy level transmits).
 </p>
 
-<pre class="example" id="org89bedf6">
+<pre class="example" id="orgcd9a377">
 Show adapter(s) (mlx5p1) statistics (ONLY that changed!)
 Ethtool(mlx5p1  ) stat:     253253 (        253,253) &lt;= ch1_poll /sec
 Ethtool(mlx5p1  ) stat:     253253 (        253,253) &lt;= ch_poll /sec
@@ -194,7 +194,7 @@ driver code (I-cache) active.
 <p>
 Testing xdp_redirect_map:
 </p>
-<pre class="example" id="orgd247123">
+<pre class="example" id="org9528697">
 jbrouer@broadwell kernel-bpf-samples]$ sudo ./xdp_redirect_map mlx5p1 mlx5p1
 input: 7 output: 7
 libbpf: Kernel error message: XDP program already attached
@@ -209,7 +209,7 @@ ifindex 7:    8988103 pkt/s
 <p>
 Ethtool stats to verify packets are transmitted:
 </p>
-<pre class="example" id="org624ebd6">
+<pre class="example" id="org1faf961">
 Show adapter(s) (mlx5p1) statistics (ONLY that changed!)
 Ethtool(mlx5p1  ) stat:       140436 (        140,436) &lt;= ch1_poll /sec
 Ethtool(mlx5p1  ) stat:       140436 (        140,436) &lt;= ch_poll /sec
@@ -270,7 +270,7 @@ Testing this git tree + branch:
 <div id="outline-container-Testing-patchset--XDP_TX-test" class="outline-3">
 <h3 id="Testing-patchset--XDP_TX-test"><a href="#Testing-patchset--XDP_TX-test">XDP_TX test</a></h3>
 <div class="outline-text-3" id="text-Testing-patchset--XDP_TX-test">
-<pre class="example" id="orge27e87e">
+<pre class="example" id="org4aef2dd">
 sudo ./xdp_rxq_info --dev mlx5p1 --act XDP_TX
 [...]
 Running XDP on dev:mlx5p1 (ifindex:7) action:XDP_TX options:swapmac
@@ -292,7 +292,7 @@ from the XDP side can be trusted.
 <p>
 Ethtool stats to verify packets are transmitted:
 </p>
-<pre class="example" id="orgda4334f">
+<pre class="example" id="org4b8400c">
 Show adapter(s) (mlx5p1) statistics (ONLY that changed!)
 Ethtool(mlx5p1  ) stat:       233354 (        233,354) &lt;= ch5_poll /sec
 Ethtool(mlx5p1  ) stat:       233355 (        233,355) &lt;= ch_poll /sec
@@ -341,7 +341,7 @@ Ethtool(mlx5p1  ) stat:      9353664 (      9,353,664) &lt;= tx_vport_unicast_pa
 Testing xdp_redirect_map back-out same interface.
 </p>
 
-<pre class="example" id="orgac270e0">
+<pre class="example" id="org0bfde13">
 brouer@broadwell kernel-bpf-samples]$ sudo ./xdp_redirect_map mlx5p1 mlx5p1
 input: 7 output: 7
 libbpf: Kernel error message: XDP program already attached
@@ -355,7 +355,7 @@ ifindex 7:    9545295 pkt/s
 <p>
 Ethtool stats to verify packets are transmitted:
 </p>
-<pre class="example" id="org14d0398">
+<pre class="example" id="org138e12a">
 Show adapter(s) (mlx5p1) statistics (ONLY that changed!)
 Ethtool(mlx5p1  ) stat:       149101 (        149,101) &lt;= ch5_poll /sec
 Ethtool(mlx5p1  ) stat:       149101 (        149,101) &lt;= ch_poll /sec
@@ -408,7 +408,7 @@ pkt/s (8,514,144 pps).  Something need investing.
 <div id="outline-container-Details--perf-stat-measurement" class="outline-4">
 <h4 id="Details--perf-stat-measurement"><a href="#Details--perf-stat-measurement">Details: perf stat measurement</a></h4>
 <div class="outline-text-4" id="text-Details--perf-stat-measurement">
-<pre class="example" id="org6e960fc">
+<pre class="example" id="org30a10b2">
 $ perf stat -C5 -e cycles -e  instructions -e cache-references -e cache-misses -e branches:k -e branch-misses:k -e l2_rqsts.all_code_rd -e l2_rqsts.code_rd_hit -e l2_rqsts.code_rd_miss -e L1-icache-load-misses -r 4 sleep 1
 
  Performance counter stats for 'CPU(s) 5' (4 runs):
@@ -634,7 +634,7 @@ index ff7c801bd40c..a5ab053ae178 100644
 <div id="outline-container-Optimize-code--attempt-02---results" class="outline-3">
 <h3 id="Optimize-code--attempt-02---results"><a href="#Optimize-code--attempt-02---results">Optimize code: attempt 02 - results</a></h3>
 <div class="outline-text-3" id="text-Optimize-code--attempt-02---results">
-<pre class="example" id="orgacda63f">
+<pre class="example" id="orgd55e2ac">
 sudo ./xdp_redirect_map mlx5p1 mlx5p1
 [...]
 ifindex 7:   10258717 pkt/s
@@ -644,7 +644,7 @@ ifindex 7:   10256871 pkt/s
 ifindex 7:   10263568 pkt/s
 </pre>
 
-<pre class="example" id="org174fbf2">
+<pre class="example" id="orgb5f92f3">
 Show adapter(s) (mlx5p1) statistics (ONLY that changed!)
 Ethtool(mlx5p1  ) stat:       160388 (        160,388) &lt;= ch1_poll /sec
 Ethtool(mlx5p1  ) stat:       160388 (        160,388) &lt;= ch_poll /sec
