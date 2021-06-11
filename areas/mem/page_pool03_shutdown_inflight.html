@@ -333,7 +333,7 @@ sense, consider removing this section later.
 <p>
 Removed comment.
 </p>
-<pre class="example" id="orgb6c6fef">
+<pre class="example" id="org28d5a34">
 +void __page_pool_free(struct page_pool *pool)
 +{
 +       /* API user must call page_pool_request_shutdown first, and
@@ -555,7 +555,7 @@ accounting is added.
 <p>
 Stg mail command V1:
 </p>
-<pre class="example" id="org9b64609">
+<pre class="example" id="org2991809">
 stg mail --edit-cover --version="net-next v1" --to meup \
  --to netdev \
  --to ilias --to toke --to tariq \
@@ -575,7 +575,7 @@ Link: <a href="https://lore.kernel.org/netdev/156045046024.29115.118028950159734
 <p>
 Stg mail command V2:
 </p>
-<pre class="example" id="orgda1317f">
+<pre class="example" id="org70b589e">
 stg mail --edit-cover --version="net-next v2" --to meup \
  --to netdev \
  --to ilias --to toke --to tariq \
@@ -770,7 +770,7 @@ program is attached it "close" and free all the "channels", where
 trace:
 </p>
 
-<pre class="example" id="org484e0b4">
+<pre class="example" id="orgfd98492">
 xdp_rxq_info  1745 [001]  1529.547422: probe:xdp_rxq_info_unreg_2: (ffffffff8179caa6)
         ffffffff8179caa7 xdp_rxq_info_unreg+0x17 (/boot/vmlinux-5.1.0-bpf-next-page-pool+)
         ffffffffa022d32a mlx5e_free_rq+0x3a ([mlx5_core])
@@ -789,7 +789,7 @@ And <code>xdp_rxq_info_reg</code> is called by <code>mlx5e_alloc_rq</code>, but 
 (below) call stack as it is inlined in <code>mlx5e_open_rq</code>.
 </p>
 
-<pre class="example" id="orgd761ca6">
+<pre class="example" id="orgb7a3187">
 xdp_rxq_info  1806 [000]  1883.326305:     probe:xdp_rxq_info_reg: (ffffffff8179cae0)
         ffffffff8179cae1 xdp_rxq_info_reg+0x1 (/boot/vmlinux-5.1.0-bpf-next-page-pool+)
         ffffffffa022e6e3 mlx5e_open_rq+0x153 ([mlx5_core])
@@ -817,7 +817,7 @@ xdp_rxq_info  1806 [000]  1883.326305:     probe:xdp_rxq_info_reg: (ffffffff8179
 For testing, I used XDP redirect map command:
 </p>
 
-<pre class="example" id="org5d6a8e0">
+<pre class="example" id="org474e122">
 sudo ./xdp_redirect_map  $(&lt;/sys/class/net/mlx5p1/ifindex) \
                          $(&lt;/sys/class/net/ixgbe1/ifindex)
 </pre>
@@ -828,7 +828,7 @@ program was stopped, while having a packet generator running. It might have
 increased the chance that the ixgbe adaptor was causing resets:
 </p>
 
-<pre class="example" id="orgb9565f0">
+<pre class="example" id="orgd257c06">
 May 21 16:36:14 broadwell kernel: ixgbe 0000:01:00.1 ixgbe2: initiating reset to clear Tx work after link loss
 May 21 16:36:14 broadwell kernel: ixgbe 0000:01:00.1 ixgbe2: Reset adapter
 May 21 16:36:15 broadwell kernel: ixgbe 0000:01:00.1 ixgbe2: detected SFP+: 4
@@ -869,7 +869,7 @@ After fixing mlx5 to call <code>xdp_rxq_info_unreg(&amp;rq-&gt;xdp_rxq)</code> l
 the non-recycle path call <code>page_pool_put_page()</code>.  The basics work:
 </p>
 
-<pre class="example" id="org78a2982">
+<pre class="example" id="orge65bf21">
 [ 1290.790220] XXX __mem_id_disconnect() id:184
 [ 1290.797905] XXX mlx5e_free_rq()
 [ 1290.802080] XXX __mem_id_disconnect() id:185
@@ -890,7 +890,7 @@ the non-recycle path call <code>page_pool_put_page()</code>.  The basics work:
 <p>
 <b>Update</b>: this bug was caused by CPUMAP redirect not calling page_pool_unmap_page():
 </p>
-<pre class="example" id="org1253dc1">
+<pre class="example" id="org6422e75">
 [ 7600.046747] XXX mem_id_disconnect_defer_retry() id:121 call __mem_id_disconnect again
 [ 7600.064706] XXX __mem_id_disconnect() id:121
 [ 7600.070009] XXX page_pool_inflight() inflight:17102512 hold:17103469 released:957
@@ -928,7 +928,7 @@ used.
 When debugging, I was seeing (XDP case) only 960 pages "tracked" on a unused
 page_pool ring (for non-XDP case 448):
 </p>
-<pre class="example" id="org15c079b">
+<pre class="example" id="org571045d">
 [  370.223589] XXX page_pool_inflight() inflight:960 hold:960 released:0
 [  370.231079] XXX __page_pool_request_shutdown() inflight:960
 </pre>
@@ -1011,7 +1011,7 @@ Using my tool: ethtool_stats.pl
 <p>
 It was clear that the mlx5 driver page-cache was not working:
 </p>
-<pre class="example" id="org4667557">
+<pre class="example" id="org2f1d0d4">
 Ethtool(mlx5p1  ) stat:     6653761 (   6,653,761) &lt;= rx_cache_busy /sec
 Ethtool(mlx5p1  ) stat:     6653732 (   6,653,732) &lt;= rx_cache_full /sec
 Ethtool(mlx5p1  ) stat:      669481 (     669,481) &lt;= rx_cache_reuse /sec
@@ -1025,7 +1025,7 @@ Ethtool(mlx5p1  ) stat:     7324244 (   7,324,244) &lt;= rx_packets_phy /sec
 <p>
 While the non-XDP case looked like this:
 </p>
-<pre class="example" id="orgc470a33">
+<pre class="example" id="org9c9d0b7">
 Ethtool(mlx5p1  ) stat:      298929 (     298,929) &lt;= rx_cache_busy /sec
 Ethtool(mlx5p1  ) stat:      298971 (     298,971) &lt;= rx_cache_full /sec
 Ethtool(mlx5p1  ) stat:     3548789 (   3,548,789) &lt;= rx_cache_reuse /sec
@@ -1039,7 +1039,7 @@ Manual consistence calc: 7695476-((3548789*2)+(298971*2)) = -44
 With the increased TCP window size, the mlx5 driver cache is working better,
 but not optimally, see below. I'm getting 88.0 Gbits/sec with 68% CPU usage.
 </p>
-<pre class="example" id="orgad1b232">
+<pre class="example" id="org63196a3">
 Ethtool(mlx5p1  ) stat:      894438 (     894,438) &lt;= rx_cache_busy /sec
 Ethtool(mlx5p1  ) stat:      894453 (     894,453) &lt;= rx_cache_full /sec
 Ethtool(mlx5p1  ) stat:     6638518 (   6,638,518) &lt;= rx_cache_reuse /sec
@@ -1068,7 +1068,7 @@ solved the issue to increase the window size manually.
 <p>
 Case: XDP_PASS and 6 parallel iperf TCP flows:
 </p>
-<pre class="example" id="org3dc529d">
+<pre class="example" id="org16d9242">
 May 31 15:24:23 broadwell kernel: XXX mlx5e_free_rq()
 May 31 15:24:23 broadwell kernel: XXX __mem_id_disconnect() id:49
 May 31 15:24:23 broadwell kernel: XXX page_pool_inflight() inflight:1136 hold:10665185 released:10664049
@@ -1124,7 +1124,7 @@ IpExtInNoECTPkts                7357218            0.0
 <p>
 Case: non-XDP and 6 parallel iperf TCP flows:
 </p>
-<pre class="example" id="org1c33a31">
+<pre class="example" id="org4a844a3">
 May 31 15:24:24 broadwell kernel: XXX mlx5e_alloc_rq() pool_size: 512
 May 31 15:24:24 broadwell kernel: XXX mlx5e_alloc_rq() pool_size: 512
 May 31 15:24:24 broadwell kernel: mlx5_core 0000:03:00.0 mlx5p1: Link up
@@ -1199,7 +1199,7 @@ Produced shutdown issue via:
 <p>
 Netperf TCP_STREAM and meanwhile stop XDP program.
 </p>
-<pre class="example" id="org57050be">
+<pre class="example" id="org0188aac">
 Jun 04 17:52:10 broadwell kernel: XXX __mem_id_disconnect() id:61
 Jun 04 17:52:10 broadwell kernel: XXX page_pool_inflight() inflight:8092173 hold:8093040 released:867
 Jun 04 17:52:10 broadwell kernel: XXX __page_pool_request_shutdown() inflight:8092173
@@ -1283,7 +1283,7 @@ bpftrace -e 'tracepoint:xdp:xdp_redirect_map { @[comm] = count(); }'
 <p>
 List avail: bpftrace -lv tracepoint:xdp:xdp_redirect_map
 </p>
-<pre class="example" id="org9994144">
+<pre class="example" id="org081bdc8">
 $ sudo bpftrace -lv tracepoint:xdp:xdp_redirect_map
 tracepoint:xdp:xdp_redirect_map
     int prog_id;
@@ -1303,7 +1303,7 @@ tracepoint:xdp:xdp_redirect_map
 <p>
 Currently all XDP tracepoints have "act" for XDP action:
 </p>
-<pre class="example" id="org32de9f8">
+<pre class="example" id="org6095b1f">
 $ sudo bpftrace -e 'tracepoint:xdp:xdp_* { @action[args-&gt;act] = count(); }'
 Attaching 8 probes...
 ^C
@@ -1314,7 +1314,7 @@ Attaching 8 probes...
 <p>
 Examples: attach to all map XDP tracepoints:
 </p>
-<pre class="example" id="org837ee0c">
+<pre class="example" id="org97d9925">
 sudo bpftrace -e 'tracepoint:xdp:xdp_*map* { @map_id[comm, args-&gt;map_id] = count(); }'
 Attaching 5 probes...
 ^C
@@ -1332,7 +1332,7 @@ Could not find a native bpftrace way to exit after N seconds, so I used this
 shell trick instead:
 </p>
 
-<pre class="example" id="org4bdecd7">
+<pre class="example" id="org6da0666">
 sudo bpftrace -e \
  'tracepoint:xdp:xdp_devmap_xmit { @[args-&gt;map_id] = @[args-&gt;map_id] + args-&gt;sent; }' &amp;\
 PID=$! ; sleep 10 &amp;&amp; sudo kill -SIGINT $PID
@@ -1341,7 +1341,7 @@ PID=$! ; sleep 10 &amp;&amp; sudo kill -SIGINT $PID
 <p>
 Output:
 </p>
-<pre class="example" id="org06fc3b9">
+<pre class="example" id="org53ac6dd">
 $ sudo bpftrace -e \
 &gt;  'tracepoint:xdp:xdp_devmap_xmit { @[args-&gt;map_id] = @[args-&gt;map_id] + args-&gt;sent; }' &amp;\
 &gt; PID=$! ; sleep 10 &amp;&amp; sudo kill -SIGINT $PID
@@ -1366,7 +1366,7 @@ sudo bpftrace -e  'kprobe:__mem_id_disconnect { @[kstack] = count(); }'
 Re-introduce bug in CPUMAP to provoke shutdown/disconnect issue.
 </p>
 
-<pre class="example" id="org07d99bf">
+<pre class="example" id="org2dd071d">
 $  sudo bpftrace -e  'kprobe:__mem_id_disconnect { @[kstack] = count(); }'
 Attaching 1 probe...
 ^C
@@ -1430,7 +1430,7 @@ Attaching 1 probe...
 Coded up a force-shutdown mechanism after 120 attempts:
 </p>
 
-<pre class="example" id="orgf3cb3fa">
+<pre class="example" id="org79705a1">
 Jun 09 13:03:57 broadwell kernel: mlx5_core 0000:03:00.0 mlx5p1: Link up
 Jun 09 13:04:28 broadwell kernel: mem_id_disconnect_defer_retry() stalled mem.id=28 shutdown 31 attempts 30 sec
 Jun 09 13:04:58 broadwell kernel: mem_id_disconnect_defer_retry() stalled mem.id=28 shutdown 61 attempts 61 sec
@@ -1507,7 +1507,7 @@ Adding tracepoint xdp:mem_disconnect
 <p>
 Base tests for it tracepoint exists:
 </p>
-<pre class="example" id="org9e20ba2">
+<pre class="example" id="org010e435">
 perf record -e xdp:mem_disconnect
 sudo bpftrace -e 'tracepoint:xdp:mem_disconnect { @[comm] = count(); }'
 </pre>
@@ -1519,7 +1519,7 @@ Question: can we extract <code>xa-&gt;allocator</code> info ?
 <p>
 First need to mount kernel source:
 </p>
-<pre class="example" id="orge6f31c0">
+<pre class="example" id="org56a5ad8">
 sshfs -o allow_other 192.168.42.3:git/kernel/bpf-next ~/git/kernel/bpf-next
 </pre>
 
@@ -1530,7 +1530,7 @@ sudo bpftrace -e 'tracepoint:xdp:mem_disconnect { @[comm] = count(); }'
 <p>
 More advanced fails:
 </p>
-<pre class="example" id="org51be29d">
+<pre class="example" id="orgee7c88a">
 sudo bpftrace -e 'tracepoint:xdp:mem_disconnect { @[comm] = args-&gt;xa-&gt;mem.id; }'
 Unknown struct/union: 'const struct xdp_mem_allocator'
 </pre>
@@ -1696,7 +1696,7 @@ sudo stow -D bpftrace-git01/
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-09-11 Fri 13:25</p>
+<p class="date">Date: 2020-10-19 Mon 10:32</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
