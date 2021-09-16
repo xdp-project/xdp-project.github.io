@@ -105,7 +105,7 @@ The overall goals of the page_pool is:
 
 <p>
 (1) Keep pages DMA-mapped (driver only use DMA-sync where needed).
-(2) Faster recycle API than page-allocator (see <a href="#org88c1e13">No description for this link</a>)
+(2) Faster recycle API than page-allocator (see <a href="#org565a67c">No description for this link</a>)
 (3) Common allocator API for simplifying NIC drivers.
 (4) Better integration with network stack, not just XDP usage.
 </p>
@@ -349,12 +349,12 @@ path expanding code-inside for reaching freeing the page addr:
 <div class="org-src-container">
 <pre class="src src-C"><span style="font-weight: bold; text-decoration: underline;">void</span> <span style="font-weight: bold;">__kfree_skb</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">sk_buff</span> *<span style="font-weight: bold; font-style: italic;">skb</span>)
 {
-        <span style="font-weight: bold;">skb_release_all</span>(skb) {
+        skb_release_all(skb) {
                 <span style="font-weight: bold;">if</span> (likely(skb-&gt;head)) {
-                        <span style="font-weight: bold;">skb_release_data</span>(skb) {
-                                <span style="font-weight: bold;">skb_free_head</span>(skb) {
+                        skb_release_data(skb) {
+                                skb_free_head(skb) {
                                         <span style="font-weight: bold;">if</span> (skb-&gt;head_frag) {
-                                                <span style="font-weight: bold;">skb_free_frag</span>(skb-&gt;head) {
+                                                skb_free_frag(skb-&gt;head) {
                                                         page_frag_free(addr);
                                                 }
                                         }
@@ -572,7 +572,7 @@ same RX-queue.
 </p>
 
 <p>
-See <a href="#org88c1e13">No description for this link</a> for benchmarks showing this is still very fast, in the non-lock
+See <a href="#org565a67c">No description for this link</a> for benchmarks showing this is still very fast, in the non-lock
 congested case.
 </p>
 
@@ -596,7 +596,7 @@ kernel is running in (softirq/bh, hardirq, process-context).
 <h2 id="Benchmark-based-development"><a href="#Benchmark-based-development">Benchmark based development</a></h2>
 <div class="outline-text-2" id="text-Benchmark-based-development">
 <p>
-<a id="org88c1e13"></a>
+<a id="org565a67c"></a>
 </p>
 
 <p>
@@ -637,7 +637,7 @@ always hitting the PCP fast-path, measured with prototype kernel module
 <a href="https://github.com/netoptimizer/prototype-kernel/blob/master/kernel/mm/bench/page_bench01.c#L54-L57">page_bench01</a>.
 </p>
 
-<pre class="example" id="org691bad1">
+<pre class="example" id="org589fbed">
 dmesg output
 [ 1315.759541] page_bench01: alloc_pages order:0(4096B/x1) 223 cycles per-4096B 223 cycles
 [ 1315.768139] time_bench: Type:alloc_pages_order_step Per elem: 223 cycles(tsc) 62.096 ns (step:0)
@@ -681,7 +681,7 @@ be used for TX.
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-10-19 Mon 10:32</p>
+<p class="date">Date: 2021-09-16 Thu 15:54</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

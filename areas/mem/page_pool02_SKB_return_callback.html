@@ -73,13 +73,13 @@ return hook.
 <div class="org-src-container">
 <pre class="src src-C"><span style="font-weight: bold; text-decoration: underline;">void</span> <span style="font-weight: bold;">__kfree_skb</span>(<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">sk_buff</span> *<span style="font-weight: bold; font-style: italic;">skb</span>)
 {
-        <span style="font-weight: bold;">skb_release_all</span>(skb) {
+        skb_release_all(skb) {
                 <span style="font-weight: bold;">if</span> (likely(skb-&gt;head)) {
-                        <span style="font-weight: bold;">skb_release_data</span>(skb) {
-                                <span style="font-weight: bold;">skb_free_head</span>(skb) {
+                        skb_release_data(skb) {
+                                skb_free_head(skb) {
                                         <span style="font-weight: bold; font-style: italic;">// </span><span style="font-weight: bold; font-style: italic;">Catch page_pool pages here via xdp_return_skb_page</span>
                                         <span style="font-weight: bold;">if</span> (skb-&gt;head_frag) {
-                                                <span style="font-weight: bold;">skb_free_frag</span>(skb-&gt;head) {
+                                                skb_free_frag(skb-&gt;head) {
                                                         page_frag_free(addr);
                                                 }
                                         }
@@ -284,7 +284,7 @@ Question: Who of the maintainers MM or netdev will take these changes?
 <div id="outline-container-Stgit-mail-command" class="outline-3">
 <h3 id="Stgit-mail-command"><a href="#Stgit-mail-command">Stgit mail command</a></h3>
 <div class="outline-text-3" id="text-Stgit-mail-command">
-<pre class="example" id="org0bf97b8">
+<pre class="example" id="org30fa67a">
 stg mail --prefix=net-next --version="V3" --edit-cover  --cc meup \
  --to netdev --to linux-mm@kvack.org \
  --cc willy@infradead.org --cc davem \
@@ -343,7 +343,7 @@ I setup:
 On espressobin start iperf server:
 </p>
 
-<pre class="example" id="org982beb2">
+<pre class="example" id="orga42bdb1">
 ifconfig eth0 192.168.200.1
 route add -net 224.0.0.0 netmask 240.0.0.0 eth0
 iperf -s -u -B 226.94.1.1 -i 1
@@ -353,7 +353,7 @@ iperf -s -u -B 226.94.1.1 -i 1
 On client/PC start iperf client::
 </p>
 
-<pre class="example" id="org7a76b4b">
+<pre class="example" id="org68a0681">
 iperf -c 226.94.1.1 -u -T 32 -t 30 -i 1 -B 192.168.200.2 -b1000Mbit
 </pre>
 
@@ -374,12 +374,12 @@ Both scp and iperf seem to trigger skb_try_coalesce()
 <p>
 On espressobin start iperf server:
 </p>
-<pre class="example" id="org4050aea">
+<pre class="example" id="orgd0501e4">
 ifconfig eth0 192.168.200.1
 iperf -s
 </pre>
 
-<pre class="example" id="orgefb7bed">
+<pre class="example" id="org0f3d17a">
 iperf -c 192.168.200.1
 </pre>
 
@@ -391,7 +391,7 @@ or from a host send a file to espressobin via scp
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-10-19 Mon 10:32</p>
+<p class="date">Date: 2021-09-16 Thu 15:54</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

@@ -109,7 +109,7 @@ documented in kernel config recommendations <a href="configs/README_espressobin.
 pps: 389660 pkt/s
 </p>
 
-<pre class="example" id="org38aeab1">
+<pre class="example" id="orgc1d96c6">
 xdp1 `cat /sys/class/net/eth0/ifindex` &amp;
 perf stat -C0 -r3 sleep 1
 
@@ -136,7 +136,7 @@ Performance counter stats for 'CPU(s) 0' (3 runs):
 pps: 514312 pkt/s
 </p>
 
-<pre class="example" id="orgec9ca7d">
+<pre class="example" id="orgf0d8d5b">
 xdp1 `cat /sys/class/net/eth0/ifindex` &amp;
 perf stat -C0 -r3 sleep 1
 
@@ -159,7 +159,7 @@ Performance counter stats for 'CPU(s) 0' (3 runs):
 <div id="outline-container-XDP_DROP--net.core.bpf_jit_enable-1--64b-packet--Instruction-cache-misses" class="outline-3">
 <h3 id="XDP_DROP--net.core.bpf_jit_enable-1--64b-packet--Instruction-cache-misses"><a href="#XDP_DROP--net.core.bpf_jit_enable-1--64b-packet--Instruction-cache-misses">XDP_DROP, net.core.bpf_jit_enable=1, 64b packet, Instruction cache misses</a></h3>
 <div class="outline-text-3" id="text-XDP_DROP--net.core.bpf_jit_enable-1--64b-packet--Instruction-cache-misses">
-<pre class="example" id="org1e7afe1">
+<pre class="example" id="org5552fb3">
 perf stat -C0 -r 3 -e L1-icache-load -e L1-icache-load-misses \
                    -e L1-dcache-loads -e L1-dcache-load-misses \
 		   -e L1-dcache-stores -e L1-dcache-store-misses \
@@ -181,7 +181,7 @@ Performance counter stats for 'CPU(s) 0' (3 runs):
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-10-19 Mon 10:32</p>
+<p class="date">Date: 2021-09-16 Thu 15:54</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

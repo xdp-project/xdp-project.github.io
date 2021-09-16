@@ -147,8 +147,8 @@ Should we create a workqueue?
 wq = alloc_workqueue(<span style="font-style: italic;">"xdp_mem_dismantle_wq"</span>, 0, 0);
 <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">work_struct</span> <span style="font-weight: bold; font-style: italic;">free_work</span>; <span style="font-weight: bold; font-style: italic;">// </span><span style="font-weight: bold; font-style: italic;">embed in struct xdp_mem_allocator?</span>
 INIT_WORK(&amp;free_work, __unreg_mem_model_schedule);
-queue_work(wq, &amp;free_work);
-queue_delayed_work(wq, <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">delayed_work</span> *<span style="font-weight: bold; font-style: italic;">dwork</span>, delay);
+<span style="font-weight: bold;">queue_work</span>(wq, &amp;free_work);
+<span style="font-weight: bold;">queue_delayed_work</span>(wq, <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">delayed_work</span> *<span style="font-weight: bold; font-style: italic;">dwork</span>, delay);
 </pre>
 </div>
 
@@ -161,8 +161,8 @@ default worker thread 'events/n'.
 The function calls used instead of <code>queue_work</code> and <code>queue_delayed_work</code>.
 </p>
 <div class="org-src-container">
-<pre class="src src-C">schedule_work(wq);
-schedule_delayed_work(wq, delay);
+<pre class="src src-C"><span style="font-weight: bold;">schedule_work</span>(wq);
+<span style="font-weight: bold;">schedule_delayed_work</span>(wq, delay);
 </pre>
 </div>
 
@@ -216,7 +216,7 @@ development. These are included in the following list:
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-10-19 Mon 10:32</p>
+<p class="date">Date: 2021-09-16 Thu 15:54</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

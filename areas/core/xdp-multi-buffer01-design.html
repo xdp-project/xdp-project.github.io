@@ -274,7 +274,7 @@ Layout of <code>skb_frag_struct</code>:
 </p>
 <div class="org-src-container">
 <pre class="src src-C">$ pahole -C skb_frag_struct vmlinux
-<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">skb_frag_struct</span> {
+<span style="font-weight: bold;">struct</span> skb_frag_struct {
         <span style="font-weight: bold;">struct</span> {
                 <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">page</span> * <span style="font-weight: bold; font-style: italic;">p</span>;                         <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">0     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
         } <span style="font-weight: bold; font-style: italic;">page</span>;                                          <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">0     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
@@ -292,7 +292,7 @@ Layout of <code>bio_vec</code>:
 </p>
 <div class="org-src-container">
 <pre class="src src-C">$ pahole -C bio_vec vmlinux
-<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">bio_vec</span> {
+<span style="font-weight: bold;">struct</span> bio_vec {
         <span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">page</span>              * <span style="font-weight: bold; font-style: italic;">bv_page</span>;              <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">0     8 </span><span style="font-weight: bold; font-style: italic;">*/</span>
         <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>               <span style="font-weight: bold; font-style: italic;">bv_len</span>;               <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">8     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
         <span style="font-weight: bold; text-decoration: underline;">unsigned</span> <span style="font-weight: bold; text-decoration: underline;">int</span>               <span style="font-weight: bold; font-style: italic;">bv_offset</span>;            <span style="font-weight: bold; font-style: italic;">/*    </span><span style="font-weight: bold; font-style: italic;">12     4 </span><span style="font-weight: bold; font-style: italic;">*/</span>
@@ -310,7 +310,7 @@ creating an SKB, in <code>skb_shared_info</code> area. Which layout looks like t
 
 <div class="org-src-container">
 <pre class="src src-C">$ pahole -C skb_shared_info vmlinux
-<span style="font-weight: bold;">struct</span> <span style="font-weight: bold; text-decoration: underline;">skb_shared_info</span> {
+<span style="font-weight: bold;">struct</span> skb_shared_info {
         <span style="font-weight: bold; text-decoration: underline;">__u8</span>                       <span style="font-weight: bold; font-style: italic;">__unused</span>;             <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">0     1 </span><span style="font-weight: bold; font-style: italic;">*/</span>
         <span style="font-weight: bold; text-decoration: underline;">__u8</span>                       <span style="font-weight: bold; font-style: italic;">meta_len</span>;             <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">1     1 </span><span style="font-weight: bold; font-style: italic;">*/</span>
         <span style="font-weight: bold; text-decoration: underline;">__u8</span>                       <span style="font-weight: bold; font-style: italic;">nr_frags</span>;             <span style="font-weight: bold; font-style: italic;">/*     </span><span style="font-weight: bold; font-style: italic;">2     1 </span><span style="font-weight: bold; font-style: italic;">*/</span>
@@ -514,7 +514,7 @@ Sameeh have proposed :
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2020-10-19 Mon 10:32</p>
+<p class="date">Date: 2021-09-16 Thu 15:54</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
