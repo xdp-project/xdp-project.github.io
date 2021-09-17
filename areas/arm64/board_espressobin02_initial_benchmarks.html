@@ -46,7 +46,7 @@
 <div id="outline-container-Hardware" class="outline-2">
 <h2 id="Hardware"><a href="#Hardware">Hardware</a></h2>
 <div class="outline-text-2" id="text-Hardware">
-<pre class="example" id="org884428f">
+<pre class="example" id="org86f907c">
 root@espressobin:~# lscpu
 Architecture:        aarch64
 Byte Order:          Little Endian
@@ -106,11 +106,11 @@ Performance baseline when dropping packets as early as possible with
 in iptables raw table:
 </p>
 
-<pre class="example" id="org055cbc0">
+<pre class="example" id="org98a22f8">
 # iptables -t raw -I PREROUTING -p udp --dport 9 -j DROP
 </pre>
 
-<pre class="example" id="org8331e30">
+<pre class="example" id="org3a31ea3">
 Show adapter(s) (wan) statistics (ONLY that changed!)
 Ethtool(wan     ) stat:      1230687 (      1,230,687) &lt;= hist_64bytes /sec
 Ethtool(wan     ) stat:      1230687 (      1,230,687) &lt;= in_accepted /sec
@@ -130,7 +130,7 @@ Ethtool(wan     ) stat:       211261 (        211,261) &lt;= rx_packets /sec
 The config CONFIG_NET_PTP_CLASSIFY caused a funny issue.
 </p>
 
-<pre class="example" id="orgb687419">
+<pre class="example" id="org833f627">
 # iptables -t raw -I PREROUTING -p udp --dport 9 -j DROP
 # nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
@@ -146,7 +146,7 @@ program were activated.  (This also show that I forgot to enable
 JIT'ing of BPF).
 </p>
 
-<pre class="example" id="org316e95d">
+<pre class="example" id="org19a1d3b">
 # Overhead  Command          Shared Object       Symbol
 # ........  ...............  ..................  .........................................
 #
@@ -182,7 +182,7 @@ clock support").
 After removing this config:
 </p>
 
-<pre class="example" id="orgee35b9d">
+<pre class="example" id="orge2ce2f7">
 # iptables -t raw -I PREROUTING -p udp --dport 9 -j DROP
 # nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
@@ -209,7 +209,7 @@ seen in PPS numbers.
 Iptables raw drop UDP port 9, page_pool return via SKB hook
 </p>
 
-<pre class="example" id="org0b0a783">
+<pre class="example" id="org23bf872">
 root@espressobin:~# /root/git/network-testing/bin/ethtool_stats.pl --dev wan
 Show adapter(s) (wan) statistics (ONLY that changed!)
 Ethtool(wan     ) stat:      1232139 (      1,232,139) &lt;= hist_64bytes /sec
@@ -229,7 +229,7 @@ IpExtInNoECTPkts                258791             0.0
 <p>
 Before:
 </p>
-<pre class="example" id="orga40d46a">
+<pre class="example" id="org5aa89d4">
 /root/bin/perf stat -C0 -r 3 -e instructions -e cycles -e branches -e branch-misses sleep 1
 
  Performance counter stats for 'CPU(s) 0' (3 runs):
@@ -289,7 +289,7 @@ index 0ffcbdd55fa9..591b25ca7d6b 100644
 Branch misses reduced but PPS performance almost same
 </p>
 
-<pre class="example" id="org5781186">
+<pre class="example" id="org01e6fbb">
 Performance counter stats for 'CPU(s) 0' (3 runs):
 
         570457425      instructions              #    0.57  insn per cycle           ( +-  0.03% )
@@ -300,7 +300,7 @@ Performance counter stats for 'CPU(s) 0' (3 runs):
         1.0040329 +- 0.0000472 seconds time elapsed  ( +-  0.00% )
 </pre>
 
-<pre class="example" id="org307dfbc">
+<pre class="example" id="orgc46d018">
 Show adapter(s) (wan) statistics (ONLY that changed!)
 Ethtool(wan     ) stat:      1229617 (      1,229,617) &lt;= hist_64bytes /sec
 Ethtool(wan     ) stat:      1229616 (      1,229,616) &lt;= in_accepted /sec
@@ -322,7 +322,7 @@ Ethtool(wan     ) stat:       258104 (        258,104) &lt;= rx_packets /sec
 ./scripts/faddr2line net/core/xdp.o __xdp_return+0x140
 </p>
 
-<pre class="example" id="org82c5f30">
+<pre class="example" id="org6b84ad9">
 $ ./scripts/faddr2line net/core/xdp.o __xdp_return+0x140
 __xdp_return+0x140/0x2b8:
 __read_once_size at /home/jbrouer/git/kernel/apalos-bpf-next/./include/linux/compiler.h:182
@@ -334,7 +334,7 @@ __read_once_size at /home/jbrouer/git/kernel/apalos-bpf-next/./include/linux/com
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2021-09-16 Thu 15:54</p>
+<p class="date">Date: 2021-09-17 Fri 14:04</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
