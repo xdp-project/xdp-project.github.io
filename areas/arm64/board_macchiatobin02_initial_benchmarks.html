@@ -52,7 +52,7 @@
 The initial benchmarks show something is wrong:
 </p>
 
-<pre class="example" id="org724c5e6">
+<pre class="example" id="org3785547">
 # Overhead  Command       Shared Object        Symbol                          
 # ........  ............  ...................  ................................
 #
@@ -69,7 +69,7 @@ The initial benchmarks show something is wrong:
 The pps performance is around 588 Kpps:
 </p>
 
-<pre class="example" id="org280c22e">
+<pre class="example" id="orgefa61e5">
 root@localhost:~# nstat -n &amp;&amp; sleep 1 &amp;&amp; nstat
 #kernel
 IpInReceives                    587932             0.0
@@ -115,7 +115,7 @@ Only 1-CPU active
 Fix via:
 </p>
 
-<pre class="example" id="org598c498">
+<pre class="example" id="orgef79eb4">
 ethtool -K eth0 rxhash on
 ethtool -X eth0 equal 4
 </pre>
@@ -133,7 +133,7 @@ ethtool -X eth0 equal 4
 netperf TCP_RR localhost:  35,591 Trans/sec
 </p>
 
-<pre class="example" id="org4cc3789">
+<pre class="example" id="org8c157e1">
 # ./netperf -l 10 127.0.0.1 -t TCP_RR
 MIGRATED TCP REQUEST/RESPONSE TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost () port 0 AF_INET : first burst 0
 Local /Remote
@@ -149,7 +149,7 @@ bytes  Bytes  bytes    bytes   secs.    per sec
 netperf TCP_STREAM localhost: 18.4 Gbit/s
 </p>
 
-<pre class="example" id="org2a4094c">
+<pre class="example" id="orgfc0cbaa">
 # ./netperf -l 10 127.0.0.1 -t TCP_STREAM
 MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to localhost () port 0 AF_INET
 Recv   Send    Send                          
@@ -170,7 +170,7 @@ bytes  bytes   bytes    secs.    10^6bits/sec
 netperf TCP_RR from-remote-host:  8,064 Trans/sec
 </p>
 
-<pre class="example" id="orgd203273">
+<pre class="example" id="org33c0fb2">
 Local /Remote
 Socket Size   Request  Resp.   Elapsed  Trans.
 Send   Recv   Size     Size    Time     Rate         
@@ -184,7 +184,7 @@ bytes  Bytes  bytes    bytes   secs.    per sec
 netperf TCP_STREAM from-remote-host: 4.7Gbit/s
 </p>
 
-<pre class="example" id="orgd05a06c">
+<pre class="example" id="orgf71d5bb">
 Recv   Send    Send                          
 Socket Socket  Message  Elapsed              
 Size   Size    Size     Time     Throughput  
@@ -260,7 +260,7 @@ It seems the DMA overhead does not exist with the SolidRun kernel
 4.4.52-armada-17.10.3-g6adee55.
 </p>
 
-<pre class="example" id="org2cbf46c">
+<pre class="example" id="org6100cf3">
 softirqd/0     3 [000]   232.996180:     399703 cycles:ppp: 
        ffffffc00044012c swiotlb_unmap_page ([kernel.kallsyms])
        ffffffc000093678 __swiotlb_unmap_page ([kernel.kallsyms])
@@ -336,7 +336,7 @@ Benchmark after work-around with GFP_DMA32:
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2021-09-17 Fri 14:04</p>
+<p class="date">Date: 2021-09-18 Sat 16:44</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
