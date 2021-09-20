@@ -196,7 +196,7 @@ Function netif_skb_features() access:
 <div id="outline-container-send-patch" class="outline-3">
 <h3 id="send-patch"><a href="#send-patch">send patch</a></h3>
 <div class="outline-text-3" id="text-send-patch">
-<pre class="example" id="orgcfae177">
+<pre class="example" id="orge43d9ff">
 stg mail --version='net-next V1' --cc meup \
  --to ahern --cc bpf --to netdev \
  --to jakub --to davem --cc dumazet \
@@ -224,7 +224,7 @@ Uname:
 <li>5.11.0-rc3-bpf-next-calico08-mtu+ #37 SMP PREEMPT</li>
 </ul>
 
-<pre class="example" id="org0d19761">
+<pre class="example" id="org971bd7d">
 [jbrouer@broadwell kernel-bpf-samples]$ sudo ./xdp_redirect_map i40e2 i40e2
 
 ifindex 6:   12118961 pkt/s
@@ -237,7 +237,7 @@ ifindex 6:   12115872 pkt/s
 ifindex 6:   12115061 pkt/s
 </pre>
 
-<pre class="example" id="org1fb6d6c">
+<pre class="example" id="org4e7f2d1">
 $ perf stat -C2 -e cycles -e  instructions -e cache-references -e cache-misses \
  -e L1-dcache-loads:k -e L1-dcache-load-misses:k  -e LLC-loads:k -r 4 sleep 1
 
@@ -259,7 +259,7 @@ $ perf stat -C2 -e cycles -e  instructions -e cache-references -e cache-misses \
 <div id="outline-container-Quick-reorder" class="outline-2">
 <h2 id="Quick-reorder"><a href="#Quick-reorder">Quick reorder</a></h2>
 <div class="outline-text-2" id="text-Quick-reorder">
-<pre class="example" id="org4ea7b62">
+<pre class="example" id="org0c64053">
 ifindex 6:   12729273 pkt/s
 ifindex 6:   12723535 pkt/s
 ifindex 6:   12724046 pkt/s
@@ -278,7 +278,7 @@ Calc improvements:
 </ul>
 
 
-<pre class="example" id="org7456c9a">
+<pre class="example" id="org113cbe0">
 $ perf stat -C4 -e cycles -e  instructions -e cache-references -e cache-misses -e L1-dcache-loads:k -e L1-dcache-load-misses:k  -e LLC-loads:k -r 4 sleep 1
 
  Performance counter stats for 'CPU(s) 4' (4 runs):
@@ -428,7 +428,7 @@ More structured patch.
 <p>
 Slightly better results:
 </p>
-<pre class="example" id="orgfd39ece">
+<pre class="example" id="orgdb524e4">
 ifindex 6:   12852408 pkt/s
 ifindex 6:   12906785 pkt/s
 ifindex 6:   12875935 pkt/s
@@ -446,7 +446,7 @@ Calc improvements:
 <p>
 Somehow turbo-state kicked in:
 </p>
-<pre class="example" id="org211fd86">
+<pre class="example" id="org22439c9">
 ifindex 6:   13518833 pkt/s
 ifindex 6:   13502071 pkt/s
 ifindex 6:   13521122 pkt/s
@@ -455,7 +455,7 @@ ifindex 6:   13521122 pkt/s
 <p>
 The turbo-state can be seen by 3.969 M-cycles.
 </p>
-<pre class="example" id="org87e9c3b">
+<pre class="example" id="orgb189a06">
 $ perf stat -C3 -e cycles -e  instructions -e cache-references -e cache-misses \
   -e L1-dcache-loads:k -e L1-dcache-load-misses:k  -e LLC-loads:k -r 4 sleep 1
 
@@ -666,17 +666,17 @@ index b7915484369c..71ba72e68414 100644
 <div id="outline-container-patched-kernel" class="outline-3">
 <h3 id="patched-kernel"><a href="#patched-kernel">patched kernel</a></h3>
 <div class="outline-text-3" id="text-patched-kernel">
-<pre class="example" id="org84f4082">
+<pre class="example" id="org6a596a3">
 [firesoul pktgen]$ ./pktgen_sample03_burst_single_flow.sh -vi mlx5p2 \
  -d 198.18.1.3 -m 3c:fd:fe:b3:31:49 -t 12
 </pre>
 
-<pre class="example" id="org627865f">
+<pre class="example" id="org74e06be">
 ip ne add 198.18.1.3 dev mlx5p1 lladdr 00:11:22:33:44:55
 ip ne add 10.40.40.66 dev i40e2  lladdr 00:11:22:33:44:66
 </pre>
 
-<pre class="example" id="orgf73c8fa">
+<pre class="example" id="org380b114">
 Average:        IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s   rxcmp/s   txcmp/s  rxmcst/s   %ifutil
 Average:           lo      0,00      0,00      0,00      0,00      0,00      0,00      0,00      0,00
 Average:        eth42     11,88     23,50      0,77      3,21      0,00      0,00      0,00      0,00
@@ -708,7 +708,7 @@ Average:    virbr0-nic      0,00      0,00      0,00      0,00      0,00      0,
 <p>
 Other direction:
 </p>
-<pre class="example" id="org1284c95">
+<pre class="example" id="orgd4abadc">
 ./pktgen_sample03_burst_single_flow.sh -vi mlx5p1 -d 10.40.40.66 -m ec:0d:9a:db:11:c4 -t 12
 </pre>
 </div>
@@ -849,7 +849,7 @@ Suggested-by: Eric Dumazet &lt;edumazet@google.com&gt;
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: 2021-09-18 Sat 16:44</p>
+<p class="date">Date: 2021-09-20 Mon 18:33</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
